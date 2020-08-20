@@ -1,13 +1,13 @@
-# Dialog script for pbrt_film_image automatically generated
+# Dialog script for pbrt_film_gbuffer automatically generated
 
 {
-    name	pbrt_film_image
-    script	image
-    label	"PBRT ImageFilm"
+    name	pbrt_film_gbuffer
+    script	gbuffer
+    label	"PBRT GBufferFilm"
 
     rendermask	PBRT
     externalshader 1
-    shadertype	integrator
+    shadertype	generic
     signature	"Default Inputs"	default	{ }
 
     outputoverrides	default
@@ -21,7 +21,7 @@
         name    "xresolution"
         label   "Resolution X"
         type    integer
-        default { "640" }
+        default { "1280" }
         help    "The number of pixels in the x direction."
         range   { 1! 4096 }
     }
@@ -29,7 +29,7 @@
         name    "yresolution"
         label   "Resolution Y"
         type    integer
-        default { "480" }
+        default { "720" }
         help    "The number of pixels in the y direction."
         range   { 1! 4096 }
     }
@@ -40,7 +40,27 @@
         size    4
         default { "0" "1" "0" "1" }
         help    "The subregion of the image to render. The four values specified should be fractions in the range [0,1], and they represent x_min, x_max, y_min, and y_max, respectively. These values are in normalized device coordinates, with (0,0) in the upper-left corner of the image."
+        disablewhen "{ do_pixelbounds 1 }"
         range   { -1 1 }
+    }
+    parm {
+        name    "do_pixelbounds"
+        label   "Pixel Bounds"
+        type    toggle
+        nolabel
+        joinnext
+        default { "0" }
+        parmtag { "pbrt.meta" "1" }
+    }
+    parm {
+        name    "pixelbounds"
+        label   "Pixel Bounds"
+        type    integer
+        size    4
+        default { "0" "1280" "0" "720" }
+        help    ""
+        disablewhen "{ do_pixelbounds 0 }"
+        range   { 0 1024 }
     }
     parm {
         name    "scale"
@@ -51,8 +71,16 @@
         range   { 0 10 }
     }
     parm {
-        name    "do_maxsampleluminance"
-        label   "Max Luminance"
+        name    "diagonal"
+        label   "Diagonal"
+        type    float
+        default { "35" }
+        help    " Diagonal length of the film, in mm. (This value is only used when the RealisticCamera is used.)"
+        range   { 0 10 }
+    }
+    parm {
+        name    "do_maxcomponentvalue"
+        label   "Max Component Value"
         type    toggle
         nolabel
         joinnext
@@ -60,21 +88,19 @@
         parmtag { "pbrt.meta" "1" }
     }
     parm {
-        name    "maxsampleluminance"
-        label   "Max Luminance"
+        name    "maxcomponentvalue"
+        label   "Max Component Value"
         type    float
         default { "1e+38" }
         help    "Image sample values with luminance greater than this value are clamped to have this luminance. (This is a hack, but can be useful for eliminating large variance spikes in scenes with difficult light transport.)"
-        disablewhen "{ do_maxsampleluminance == 0 }"
+        disablewhen "{ do_maxcomponentvalue == 0 }"
         range   { 0 10 }
     }
     parm {
-        name    "diagonal"
-        label   "Diagonal"
-        type    float
-        default { "35" }
-        help    " Diagonal length of the film, in mm. (This value is only used when the RealisticCamera is used.)"
-        range   { 0 10 }
+        name    "savefp16"
+        label   "Save Half (16bit)"
+        type    toggle
+        default { "1" }
     }
     parm {
         name    "filename"

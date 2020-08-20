@@ -362,9 +362,11 @@ def wrangle_film(obj, wrangler, now):
     paramset = ParamSet()
 
     parm_selection = {
+        "film": SohoPBRT("film", "string", ["rgb"], False),
         "filename": SohoPBRT("filename", "string", ["pbrt.exr"], False),
-        "maxsampleluminance": SohoPBRT("maxsampleluminance", "float", [1e38], True),
+        "maxcomponentvalue": SohoPBRT("maxcomponentvalue", "float", [1e38], True),
         "diagonal": SohoPBRT("diagonal", "float", [35], True),
+        "savefp16": SohoPBRT("savefp16", "toggle", [True], False),
     }
     parms = obj.evaluate(parm_selection, now)
     for parm_name, parm in parms.iteritems():

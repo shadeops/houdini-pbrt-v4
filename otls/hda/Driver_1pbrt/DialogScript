@@ -640,7 +640,17 @@
             name    "film_group"
             label   "Film"
             disablewhentab "{ film_node != \"\" }"
-
+            
+			parm {
+                name    "film"
+                label   "Film"
+                type    ordinal
+                default { "rgb" }
+                menu {
+                    "rgb"      "RGB"
+                    "gbuffer"  "G-Buffer"
+                }
+            }
             parm {
                 name    "filename"
                 label   "Filename"
@@ -650,11 +660,11 @@
                 parmtag { "filechooser_mode" "write" }
             }
             parm {
-                name    "maxsampleluminance"
-                label   "Max Sample Luniance"
+                name    "maxcomponentvalue"
+                label   "Max Component Value"
                 type    float
                 default { "1e+38" }
-                help    "Image sample values with luminance greater than this value are clamped to have this luminance. (This is a hack, but can be useful for eliminating large variance spikes in scenes with difficult light transport.) "
+                help    "Image sample are clamped to this value"
                 range   { 0 10 }
             }
             parm {
@@ -665,6 +675,13 @@
                 help    " Diagonal length of the film, in mm. (This value is only used when the RealisticCamera is used.)"
                 range   { 0 10 }
                 parmtag { "autoscope" "0000000000000000" }
+            }
+            parm {
+                name    "savefp16"
+                label   "Save as Half (16-bit)"
+                type    toggle
+                default { "1" }
+                help    "Write a half (16-bit) OpenEXR instead of a full 32-bit float"
             }
         }
 

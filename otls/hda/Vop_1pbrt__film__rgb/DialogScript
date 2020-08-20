@@ -1,0 +1,112 @@
+# Dialog script for pbrt_film_rgb automatically generated
+
+{
+    name	pbrt_film_rgb
+    script	image
+    label	"PBRT RGBFilm"
+
+    rendermask	PBRT
+    externalshader 1
+    shadertype	generic
+    signature	"Default Inputs"	default	{ }
+
+    outputoverrides	default
+    {
+    }
+
+    help {
+    }
+
+    parm {
+        name    "xresolution"
+        label   "Resolution X"
+        type    integer
+        default { "1280" }
+        help    "The number of pixels in the x direction."
+        range   { 1! 4096 }
+    }
+    parm {
+        name    "yresolution"
+        label   "Resolution Y"
+        type    integer
+        default { "720" }
+        help    "The number of pixels in the y direction."
+        range   { 1! 4096 }
+    }
+    parm {
+        name    "cropwindow"
+        label   "Crop Window"
+        type    float
+        size    4
+        default { "0" "1" "0" "1" }
+        help    "The subregion of the image to render. The four values specified should be fractions in the range [0,1], and they represent x_min, x_max, y_min, and y_max, respectively. These values are in normalized device coordinates, with (0,0) in the upper-left corner of the image."
+        disablewhen "{ do_pixelbounds 1 }"
+        range   { -1 1 }
+    }
+    parm {
+        name    "do_pixelbounds"
+        label   "Pixel Bounds"
+        type    toggle
+        nolabel
+        joinnext
+        default { "0" }
+        parmtag { "pbrt.meta" "1" }
+    }
+    parm {
+        name    "pixelbounds"
+        label   "Pixel Bounds"
+        type    integer
+        size    4
+        default { "0" "1280" "0" "720" }
+        help    ""
+        disablewhen "{ do_pixelbounds 0 }"
+        range   { 0 1024 }
+    }
+    parm {
+        name    "scale"
+        label   "Scale"
+        type    float
+        default { "1" }
+        help    "Scale factor to apply to film pixel values before saving the image."
+        range   { 0 10 }
+    }
+    parm {
+        name    "diagonal"
+        label   "Diagonal"
+        type    float
+        default { "35" }
+        help    " Diagonal length of the film, in mm. (This value is only used when the RealisticCamera is used.)"
+        range   { 0 10 }
+    }
+    parm {
+        name    "do_maxcomponentvalue"
+        label   "Max Component Value"
+        type    toggle
+        nolabel
+        joinnext
+        default { "0" }
+        parmtag { "pbrt.meta" "1" }
+    }
+    parm {
+        name    "maxcomponentvalue"
+        label   "Max Component Value"
+        type    float
+        default { "1e+38" }
+        help    "Image sample values with luminance greater than this value are clamped to have this luminance. (This is a hack, but can be useful for eliminating large variance spikes in scenes with difficult light transport.)"
+        disablewhen "{ do_maxcomponentvalue == 0 }"
+        range   { 0 10 }
+    }
+    parm {
+        name    "savefp16"
+        label   "Save Half (16bit)"
+        type    toggle
+        default { "1" }
+    }
+    parm {
+        name    "filename"
+        label   "Filename"
+        type    file
+        default { "pbrt.exr" }
+        parmtag { "filechooser_mode" "write" }
+    }
+}
