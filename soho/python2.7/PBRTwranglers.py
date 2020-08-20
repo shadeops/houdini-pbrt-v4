@@ -559,7 +559,7 @@ def output_cam_xform(obj, projection, now):
     #       are applied to the camera (outside the World block)
     if projection in ("perspective", "orthographic", "realistic"):
         output_xform(obj, now, no_motionblur=True, invert=True, flipz=True)
-    elif projection in ("environment",):
+    elif projection in ("spherical",):
         api.Rotate(-180, 0, 1, 0)
         output_xform(obj, now, invert=True, flipx=True, flipz=True)
     return
@@ -636,7 +636,7 @@ def wrangle_camera(obj, wrangler, now):
         paramset.add(PBRTParam("float", "screenwindow", screen))
 
     elif projection == "sphere":
-        projection_name = "environment"
+        projection_name = "spherical"
     else:
         soho.error("Camera projection setting of %s not supported by PBRT" % projection)
 

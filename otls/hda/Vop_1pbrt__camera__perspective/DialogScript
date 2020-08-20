@@ -55,25 +55,6 @@
         type    float
         default { "90" }
         help    "Specifies the field of view for the perspective camera. This is the spread angle of the viewing frustum along the narrower of the image's width and height."
-        disablewhen "{ do_halffov == 1 }"
-        range   { 0 10 }
-    }
-    parm {
-        name    "do_halffov"
-        label   "Half FOV"
-        type    toggle
-        nolabel
-        joinnext
-        default { "0" }
-        parmtag { "pbrt.meta" "1" }
-    }
-    parm {
-        name    "halffov"
-        label   "Half FOV"
-        type    float
-        default { "45" }
-        help    "For convenience to some programs that export from modeling systems, the camera's field of view can also be specified via the half-angle between the view direction and the edge of the viewing frustum. If this parameter isn't provided, then fov is used to set the field of view instead."
-        disablewhen "{ do_halffov == 0 }"
         range   { 0 10 }
     }
     parm {

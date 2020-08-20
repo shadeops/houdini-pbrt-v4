@@ -40,14 +40,14 @@ Python:       false
 Empty:        false
 Modified:     Tue May 15 23:03:30 2018
 
-Operator:     pbrt_camera_environment
-Label:        PBRT EnvironmentCamera
-Path:         oplib:/Vop/pbrt_camera_environment?Vop/pbrt_camera_environment
-Icon:         opdef:/Vop/pbrt_camera_environment?IconImage
+Operator:     pbrt_camera_spherical
+Label:        PBRT SphericalCamera
+Path:         oplib:/Vop/pbrt_camera_spherical?Vop/pbrt_camera_spherical
+Icon:         opdef:/Vop/pbrt_camera_spherical?IconImage
 Table:        Vop
 License:      
 Extra:        
-User:         {"dtype": "environment", "directive": "camera"}
+User:         {"dtype": "spherical", "directive": "camera"}
 Inputs:       0 to 0
 Subnet:       false
 Python:       false

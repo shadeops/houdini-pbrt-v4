@@ -1,16 +1,16 @@
-# Dialog script for pbrt_camera_environment automatically generated
+# Dialog script for pbrt_camera_spherical automatically generated
 
 {
-    name	pbrt_camera_environment
-    script	environment
-    label	"PBRT EnvironmentCamera"
+    name        pbrt_camera_spherical
+    script      spherical
+    label       "PBRT SphericalCamera"
 
-    rendermask	PBRT
+    rendermask  PBRT
     externalshader 1
-    shadertype	generic
-    signature	"Default Inputs"	default	{ }
+    shadertype  generic
+    signature   "Default Inputs"        default { }
 
-    outputoverrides	default
+    outputoverrides     default
     {
     }
 
@@ -46,6 +46,17 @@
         type    float
         default { "1e+30" }
         range   { 0 10 }
+    }
+    parm {
+        name    "mapping"
+        label   "Mapping"
+        type    ordinal
+        default { "equiarea" }
+        help    ""
+        menu {
+            "equiarea"   "EquiArea"
+            "equirect"     "EquiRect"
+        }
     }
     parm {
         name    "do_frameaspectratio"
