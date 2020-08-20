@@ -3,8 +3,8 @@
 
 {
     
-    name        pbrt-v3
-    label       "PBRT-v3"
+    name        pbrt-v4
+    label       "PBRT-v4"
     parmtag     { spare_opfilter "!!SHOP/PROPERTIES!!" }
     parmtag     { spare_classtags "render" } 
 

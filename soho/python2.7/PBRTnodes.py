@@ -37,7 +37,7 @@ class PBRTParam(object):
     #       currently according to core/parser.cpp only normal is supported
     #       and not normal. (Most likely a typo since internally the type is
     #       Normal3f
-    #       http://www.pbrt.org/fileformat-v3.html#parameter-lists
+    #       http://www.pbrt.org/fileformat-v4.html#parameter-lists
 
     pbrt_types = (
         "texture",

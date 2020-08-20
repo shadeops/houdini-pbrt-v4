@@ -8,9 +8,9 @@ hda:
 
 .PHONY: package
 package: hda
-	/bin/rm -fv package/soho_pbrt-v3.zip
+	/bin/rm -fv package/soho_pbrt-v4.zip
 	mkdir -p package/
-	zip -r package/soho_pbrt-v3.zip \
+	zip -r package/soho_pbrt-v4.zip \
 		otls/pbrt.hda \
 		soho \
 		vop \

@@ -1,8 +1,8 @@
-#ifndef __PBRT_SOHO_PARAMETERS__
-#define __PBRT_SOHO_PARAMETERS__
+#ifndef __PBRT_4_SOHO_PARAMETERS__
+#define __PBRT_4_SOHO_PARAMETERS__
 
 #include "$HFS/houdini/soho/parameters/SOHOparameters"
 
-#include "PBRT-v3.ds"
+#include "PBRT-v4.ds"
 
 #endif

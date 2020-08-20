@@ -1,8 +1,8 @@
-Houdini Exporter for pbrt Version 3
+Houdini Exporter for pbrt Version 4
 ===================================
 
-**houdini-pbrt-v3** for [SideFX's Software Houdini](http://www.sidefx.com) is a scene exporter for the
-[pbrt-v3 renderer](http://pbrt.org/). The goal is to provide complete coverage for the features avaiable within pbrt-v3 through
+**houdini-pbrt-v4** for [SideFX's Software Houdini](http://www.sidefx.com) is a scene exporter for the
+[pbrt-v4 renderer](http://pbrt.org/). The goal is to provide complete coverage for the features avaiable within pbrt-v4 through
 an interface familiar with Houdini user.
 
 Motivation
@@ -21,7 +21,7 @@ Design Goals
 
 Installation
 ------------
-For now clone the repo in anywhere within the HOUDINI_PATH. More details in the wiki.
+For now clone the repo in anywhere within the $HOUDINI_PATH. More details in the wiki.
 
 Usage
 -----

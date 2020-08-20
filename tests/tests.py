@@ -84,8 +84,8 @@ def build_ground():
 def build_rop(filename=None, diskfile=None):
     rop = hou.node("/out").createNode("pbrt")
     ptg = rop.parmTemplateGroup()
-    precision = hou.properties.parmTemplate("pbrt-v3", "soho_precision")
-    almostzero = hou.properties.parmTemplate("pbrt-v3", "soho_almostzero")
+    precision = hou.properties.parmTemplate("pbrt-v4", "soho_precision")
+    almostzero = hou.properties.parmTemplate("pbrt-v4", "soho_almostzero")
     ptg.append(precision)
     ptg.append(almostzero)
     rop.setParmTemplateGroup(ptg)
@@ -102,8 +102,8 @@ def build_rop(filename=None, diskfile=None):
 def build_archive(diskfile=None):
     rop = hou.node("/out").createNode("pbrtarchive")
     ptg = rop.parmTemplateGroup()
-    precision = hou.properties.parmTemplate("pbrt-v3", "soho_precision")
-    almostzero = hou.properties.parmTemplate("pbrt-v3", "soho_almostzero")
+    precision = hou.properties.parmTemplate("pbrt-v4", "soho_precision")
+    almostzero = hou.properties.parmTemplate("pbrt-v4", "soho_almostzero")
     ptg.append(precision)
     ptg.append(almostzero)
     rop.setParmTemplateGroup(ptg)
@@ -510,8 +510,8 @@ class TestMediums(TestGeo):
         self.geo = build_geo()
         self.geo.createNode("sphere")
         ptg = self.geo.parmTemplateGroup()
-        interior = hou.properties.parmTemplate("pbrt-v3", "pbrt_interior")
-        exterior = hou.properties.parmTemplate("pbrt-v3", "pbrt_exterior")
+        interior = hou.properties.parmTemplate("pbrt-v4", "pbrt_interior")
+        exterior = hou.properties.parmTemplate("pbrt-v4", "pbrt_exterior")
         ptg.append(interior)
         ptg.append(exterior)
         self.geo.setParmTemplateGroup(ptg)
@@ -557,7 +557,7 @@ class TestProperties(TestGeo):
 
     def test_include(self):
         ptg = self.geo.parmTemplateGroup()
-        parm = hou.properties.parmTemplate("pbrt-v3", "pbrt_include")
+        parm = hou.properties.parmTemplate("pbrt-v4", "pbrt_include")
         ptg.append(parm)
         self.geo.setParmTemplateGroup(ptg)
         self.geo.parm("pbrt_include").set("test.pbrt")
@@ -714,7 +714,7 @@ class TestMotionBlur(TestBase):
         self.geo.parm("tx").setExpression("$FF-1")
         self.rop.parm("allowmotionblur").set(True)
         ptg = self.cam.parmTemplateGroup()
-        parm = hou.properties.parmTemplate("pbrt-v3", "pbrt_motionwindow")
+        parm = hou.properties.parmTemplate("pbrt-v4", "pbrt_motionwindow")
         ptg.append(parm)
         self.cam.setParmTemplateGroup(ptg)
         self.cam.parmTuple("pbrt_motionwindow").set([0.25, 0.75])
@@ -809,7 +809,7 @@ class TestShapes(TestGeo):
     def test_trianglemesh_noauto_ptN(self):
         self.geo.createNode("box")
         ptg = self.geo.parmTemplateGroup()
-        parm = hou.properties.parmTemplate("pbrt-v3", "pbrt_computeN")
+        parm = hou.properties.parmTemplate("pbrt-v4", "pbrt_computeN")
         ptg.append(parm)
         self.geo.setParmTemplateGroup(ptg)
         self.geo.parm("pbrt_computeN").set(False)
@@ -837,7 +837,7 @@ class TestShapes(TestGeo):
     def test_loopsubdiv(self):
         self.geo.createNode("box")
         ptg = self.geo.parmTemplateGroup()
-        parm = hou.properties.parmTemplate("pbrt-v3", "pbrt_rendersubd")
+        parm = hou.properties.parmTemplate("pbrt-v4", "pbrt_rendersubd")
         ptg.append(parm)
         self.geo.setParmTemplateGroup(ptg)
         self.geo.parm("pbrt_rendersubd").set(True)
@@ -846,8 +846,8 @@ class TestShapes(TestGeo):
     def test_loopsubdiv_level_1(self):
         self.geo.createNode("box")
         ptg = self.geo.parmTemplateGroup()
-        subd_parm = hou.properties.parmTemplate("pbrt-v3", "pbrt_rendersubd")
-        level_parm = hou.properties.parmTemplate("pbrt-v3", "pbrt_subdlevels")
+        subd_parm = hou.properties.parmTemplate("pbrt-v4", "pbrt_rendersubd")
+        level_parm = hou.properties.parmTemplate("pbrt-v4", "pbrt_subdlevels")
         ptg.append(subd_parm)
         ptg.append(level_parm)
         self.geo.setParmTemplateGroup(ptg)
@@ -966,7 +966,7 @@ class TestShapes(TestGeo):
         self.compare_scene()
 
     def test_curves_curvetype(self):
-        parm = hou.properties.parmTemplate("pbrt-v3", "pbrt_curvetype")
+        parm = hou.properties.parmTemplate("pbrt-v4", "pbrt_curvetype")
         ptg = self.geo.parmTemplateGroup()
         ptg.append(parm)
         self.geo.setParmTemplateGroup(ptg)
@@ -1093,7 +1093,7 @@ class TestShapes(TestGeo):
         self.compare_scene()
 
     def test_geo_ignore_materials(self):
-        parm = hou.properties.parmTemplate("pbrt-v3", "pbrt_ignorematerials")
+        parm = hou.properties.parmTemplate("pbrt-v4", "pbrt_ignorematerials")
         ptg = self.geo.parmTemplateGroup()
         ptg.append(parm)
         self.geo.setParmTemplateGroup(ptg)

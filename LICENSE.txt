@@ -1,6 +1,6 @@
 BSD 2-Clause License
 
-Copyright (c) 2018, Jim Price
+Copyright (c) 2020, Jim Price
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
