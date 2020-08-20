@@ -392,8 +392,8 @@ def wrangle_filter(obj, wrangler, now):
 
     parm_selection = {
         "filter": SohoPBRT("filter", "string", ["gaussian"], False),
-        "filter_width": SohoPBRT("filter_width", "float", [2.0, 2.0], False),
-        "alpha": SohoPBRT("gauss_alpha", "float", [2.0], True, key="alpha"),
+        "filter_radius": SohoPBRT("filter_radius", "float", [1.5, 1.5], False),
+        "sigma": SohoPBRT("gauss_alpha", "float", [0.5], True, key="sigma"),
         "B": SohoPBRT("mitchell_B", "float", [0.333333], True, key="B"),
         "C": SohoPBRT("mitchell_C", "float", [0.333333], True, key="C"),
         "tau": SohoPBRT("sinc_tau", "float", [3], True, key="tau"),
@@ -402,10 +402,10 @@ def wrangle_filter(obj, wrangler, now):
 
     filter_name = parms["filter"].Value[0]
     paramset = ParamSet()
-    xwidth = parms["filter_width"].Value[0]
-    ywidth = parms["filter_width"].Value[1]
-    paramset.add(PBRTParam("float", "xwidth", xwidth))
-    paramset.add(PBRTParam("float", "ywidth", ywidth))
+    xradius = parms["filter_radius"].Value[0]
+    yradius = parms["filter_radius"].Value[1]
+    paramset.add(PBRTParam("float", "xradius", xradius))
+    paramset.add(PBRTParam("float", "yradius", yradius))
 
     if filter_name == "gaussian" and "alpha" in parms:
         paramset.add(parms["alpha"].to_pbrt())

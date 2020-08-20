@@ -18,19 +18,19 @@
     }
 
     parm {
-        name    "xwidth"
-        label   "Width X"
+        name    "xradius"
+        label   "Radius X"
         type    float
         default { "2" }
-        help    "The width of the filter in the x direction. "
+        help    "The radius of the filter in the x direction. "
         range   { 0 10 }
     }
     parm {
-        name    "ywidth"
-        label   "Width Y"
+        name    "yradius"
+        label   "Radius Y"
         type    float
         default { "2" }
-        help    "The width of the filter in the y direction. "
+        help    "The radius of the filter in the y direction. "
         range   { 0 10 }
     }
 }

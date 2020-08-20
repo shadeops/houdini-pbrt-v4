@@ -18,27 +18,27 @@
     }
 
     parm {
-        name    "xwidth"
-        label   "Width X"
+        name    "xradius"
+        label   "Radius X"
         type    float
-        default { "2" }
-        help    "The width of the filter in the x direction. "
+        default { "1.5" }
+        help    "The radius of the filter in the x direction. "
         range   { 0 10 }
     }
     parm {
-        name    "ywidth"
-        label   "Width Y"
+        name    "yradius"
+        label   "Radius Y"
         type    float
-        default { "2" }
-        help    "The width of the filter in the y direction. "
+        default { "1.5" }
+        help    "The radius of the filter in the y direction. "
         range   { 0 10 }
     }
     parm {
-        name    "alpha"
-        label   "Alpha"
+        name    "sigma"
+        label   "Sigma"
         type    float
-        default { "2" }
-        help    "alpha controls the falloff rate of the Gaussian filter. Smaller values give a blurrier image. "
+        default { "0.5" }
+        help    ""
         range   { 0 10 }
     }
 }

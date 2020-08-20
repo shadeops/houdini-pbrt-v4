@@ -704,8 +704,8 @@
                 }
             }
             parm {
-                name    "filter_width"
-                label   "Filter Width"
+                name    "filter_radius"
+                label   "Filter Radius"
                 type    vector2
                 size    2
                 default { "2" "2" }
