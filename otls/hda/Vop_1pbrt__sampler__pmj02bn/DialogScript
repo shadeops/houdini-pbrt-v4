@@ -1,9 +1,9 @@
-# Dialog script for pbrt_sampler_02sequence automatically generated
+# Dialog script for pbrt_sampler_pmj02bn automatically generated
 
 {
-    name	pbrt_sampler_02sequence
-    script	02sequence
-    label	"PBRT ZeroTwoSequenceSampler"
+    name	pbrt_sampler_pmj02bn
+    script	pmj02bn
+    label	"PBRT PMJ02BNSampler"
 
     rendermask	PBRT
     externalshader 1
@@ -21,15 +21,8 @@
         name    "pixelsamples"
         label   "Pixel Samples"
         type    integer
-        default { "16" }
+        default { "4" }
         help    "The number of samples to take, per pixel. Note that the number of samples is taken per pixel on average; depending on the actual sampling algorithm being used, individual pixel areas may have slightly more or slightly fewer."
         range   { 1! 1024 }
-    }
-    parm {
-        name    "dimensions"
-        label   "Dimensions"
-        type    integer
-        default { "4" }
-        range   { 0 10 }
     }
 }

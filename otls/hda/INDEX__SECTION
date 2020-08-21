@@ -96,20 +96,6 @@ Python:       false
 Empty:        false
 Modified:     Tue May 15 00:01:03 2018
 
-Operator:     pbrt_sampler_02sequence
-Label:        PBRT ZeroTwoSequenceSampler
-Path:         oplib:/Vop/pbrt_sampler_02sequence?Vop/pbrt_sampler_02sequence
-Icon:         opdef:/Vop/pbrt_sampler_02sequence?IconImage
-Table:        Vop
-License:      
-Extra:        
-User:         {"dtype": "02sequence", "directive": "sampler"}
-Inputs:       0 to 0
-Subnet:       false
-Python:       false
-Empty:        false
-Modified:     Tue May 15 00:01:03 2018
-
 Operator:     pbrt_sampler_halton
 Label:        PBRT HaltonSampler
 Path:         oplib:/Vop/pbrt_sampler_halton?Vop/pbrt_sampler_halton
@@ -123,20 +109,6 @@ Subnet:       false
 Python:       false
 Empty:        false
 Modified:     Tue May 15 00:01:03 2018
-
-Operator:     pbrt_sampler_maxmindist
-Label:        PBRT MaxMinDistSampler
-Path:         oplib:/Vop/pbrt_sampler_maxmindist?Vop/pbrt_sampler_maxmindist
-Icon:         opdef:/Vop/pbrt_sampler_maxmindist?IconImage
-Table:        Vop
-License:      
-Extra:        
-User:         {"dtype": "maxmindist", "directive": "sampler"}
-Inputs:       0 to 0
-Subnet:       false
-Python:       false
-Empty:        false
-Modified:     Tue May 15 00:01:04 2018
 
 Operator:     pbrt_sampler_random
 Label:        PBRT RandomSampler
@@ -152,6 +124,20 @@ Python:       false
 Empty:        false
 Modified:     Tue May 15 00:01:04 2018
 
+Operator:     pbrt_sampler_pmj02bn
+Label:        PBRT SobolSampler
+Path:         oplib:/Vop/pbrt_sampler_pmj02bn?Vop/pbrt_sampler_pmj02bn
+Icon:         opdef:/Vop/pbrt_sampler_pmj02bn?IconImage
+Table:        Vop
+License:      
+Extra:        
+User:         {"dtype": "pmj02bn", "directive": "sampler"}
+Inputs:       0 to 0
+Subnet:       false
+Python:       false
+Empty:        false
+Modified:     Tue May 15 00:01:04 2018
+
 Operator:     pbrt_sampler_sobol
 Label:        PBRT SobolSampler
 Path:         oplib:/Vop/pbrt_sampler_sobol?Vop/pbrt_sampler_sobol
@@ -160,6 +146,20 @@ Table:        Vop
 License:      
 Extra:        
 User:         {"dtype": "sobol", "directive": "sampler"}
+Inputs:       0 to 0
+Subnet:       false
+Python:       false
+Empty:        false
+Modified:     Tue May 15 00:01:04 2018
+
+Operator:     pbrt_sampler_paddedsobol
+Label:        PBRT PaddedSobolSampler
+Path:         oplib:/Vop/pbrt_sampler_paddedsobol?Vop/pbrt_sampler_paddedsobol
+Icon:         opdef:/Vop/pbrt_sampler_paddedsobol?IconImage
+Table:        Vop
+License:      
+Extra:        
+User:         {"dtype": "paddedsobol", "directive": "sampler"}
 Inputs:       0 to 0
 Subnet:       false
 Python:       false

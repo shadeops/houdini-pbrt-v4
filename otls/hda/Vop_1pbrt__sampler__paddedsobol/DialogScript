@@ -1,9 +1,9 @@
-# Dialog script for pbrt_sampler_sobol automatically generated
+# Dialog script for pbrt_sampler_paddedsobol automatically generated
 
 {
-    name        pbrt_sampler_sobol
-    script      sobol
-    label       "PBRT SobolSampler"
+    name        pbrt_sampler_paddedsobol
+    script      paddedsobol
+    label       "PBRT PaddedSobolSampler"
 
     rendermask  PBRT
     externalshader 1

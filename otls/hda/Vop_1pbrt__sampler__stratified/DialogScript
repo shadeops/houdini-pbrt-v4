@@ -40,12 +40,4 @@
         help    " The number of samples per pixel to take in the y direction. In general, \"xsamples\" and \"ysamples\" should be set to the same value for best results."
         range   { 1! 1024 }
     }
-    parm {
-        name    "dimensions"
-        label   "Dimensions"
-        type    integer
-        default { "4" }
-        help    " The number of samples per pixel to take in the y direction. In general, \"xsamples\" and \"ysamples\" should be set to the same value for best results."
-        range   { 1! 16 }
-    }
 }

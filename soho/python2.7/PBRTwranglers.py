@@ -425,11 +425,11 @@ def wrangle_sampler(obj, wrangler, now):
         return node.type_and_paramset
 
     parm_selection = {
-        "sampler": SohoPBRT("sampler", "string", ["halton"], False),
+        "sampler": SohoPBRT("sampler", "string", ["pmj02bn"], False),
         "pixelsamples": SohoPBRT("pixelsamples", "integer", [16], False),
+        "randomization": SohoPBRT("randomization", "string", ["owen"], False),
         "jitter": SohoPBRT("jitter", "bool", [1], False),
         "samples": SohoPBRT("samples", "integer", [4, 4], False),
-        "dimensions": SohoPBRT("dimensions", "integer", [4], False),
     }
     parms = obj.evaluate(parm_selection, now)
 
@@ -442,8 +442,9 @@ def wrangle_sampler(obj, wrangler, now):
         paramset.add(PBRTParam("integer", "xsamples", xsamples))
         paramset.add(PBRTParam("integer", "ysamples", ysamples))
         paramset.add(parms["jitter"].to_pbrt())
-        paramset.add(parms["dimensions"].to_pbrt())
     else:
+        if sampler_name in ("sobol", "paddedsobol"):
+            paramset.add(parms["randomization"].to_pbrt())
         paramset.add(parms["pixelsamples"].to_pbrt())
 
     return (sampler_name, paramset)
