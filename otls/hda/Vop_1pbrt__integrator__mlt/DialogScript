@@ -65,4 +65,11 @@
         help    "Standard deviation of the perturbation applied to random samples in [0,1] used for small path mutations."
         range   { 0 10 }
     }
+    parm {
+        name    "regularize"
+        label   "Regularize"
+        type    toggle
+        default { "0" }
+        help    ""
+    }
 }

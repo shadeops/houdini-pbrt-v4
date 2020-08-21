@@ -292,14 +292,42 @@ Python:       false
 Empty:        false
 Modified:     Tue May 15 00:01:04 2018
 
-Operator:     pbrt_integrator_directlighting
-Label:        PBRT DirectLightingIntegrator
-Path:         oplib:/Vop/pbrt_integrator_directlighting?Vop/pbrt_integrator_directlighting
-Icon:         opdef:/Vop/pbrt_integrator_directlighting?IconImage
+Operator:     pbrt_integrator_simplepath
+Label:        PBRT SimplePathIntegrator
+Path:         oplib:/Vop/pbrt_integrator_simplepath?Vop/pbrt_integrator_simplepath
+Icon:         opdef:/Vop/pbrt_integrator_simplepath?IconImage
 Table:        Vop
 License:      
 Extra:        
-User:         {"dtype": "directlighting", "directive": "integrator"}
+User:         {"dtype": "simplepath", "directive": "integrator"}
+Inputs:       0 to 0
+Subnet:       false
+Python:       false
+Empty:        false
+Modified:     Tue May 15 00:01:04 2018
+
+Operator:     pbrt_integrator_lightpath
+Label:        PBRT LightPathIntegrator
+Path:         oplib:/Vop/pbrt_integrator_lightpath?Vop/pbrt_integrator_lightpath
+Icon:         opdef:/Vop/pbrt_integrator_lightpath?IconImage
+Table:        Vop
+License:      
+Extra:        
+User:         {"dtype": "lightpath", "directive": "integrator"}
+Inputs:       0 to 0
+Subnet:       false
+Python:       false
+Empty:        false
+Modified:     Tue May 15 00:01:04 2018
+
+Operator:     pbrt_integrator_simplevolpath
+Label:        PBRT SimpleVolPathIntegrator
+Path:         oplib:/Vop/pbrt_integrator_simplevolpath?Vop/pbrt_integrator_simplevolpath
+Icon:         opdef:/Vop/pbrt_integrator_simplevolpath?IconImage
+Table:        Vop
+License:      
+Extra:        
+User:         {"dtype": "simplevolpath", "directive": "integrator"}
 Inputs:       0 to 0
 Subnet:       false
 Python:       false
@@ -348,28 +376,28 @@ Python:       false
 Empty:        false
 Modified:     Tue May 15 00:01:04 2018
 
-Operator:     pbrt_integrator_whitted
-Label:        PBRT WhittedIntegrator
-Path:         oplib:/Vop/pbrt_integrator_whitted?Vop/pbrt_integrator_whitted
-Icon:         opdef:/Vop/pbrt_integrator_whitted?IconImage
+Operator:     pbrt_integrator_randomwalk
+Label:        PBRT RandomWalkIntegrator
+Path:         oplib:/Vop/pbrt_integrator_randomwalk?Vop/pbrt_integrator_randomwalk
+Icon:         opdef:/Vop/pbrt_integrator_randomwalk?IconImage
 Table:        Vop
 License:      
 Extra:        
-User:         {"dtype": "whitted", "directive": "integrator"}
+User:         {"dtype": "randomwalk", "directive": "integrator"}
 Inputs:       0 to 0
 Subnet:       false
 Python:       false
 Empty:        false
 Modified:     Tue May 15 00:01:04 2018
 
-Operator:     pbrt_integrator_ao
+Operator:     pbrt_integrator_ambientocclusion
 Label:        PBRT AOIntegrator
-Path:         oplib:/Vop/pbrt_integrator_ao?Vop/pbrt_integrator_ao
-Icon:         opdef:/Vop/pbrt_integrator_ao?IconImage
+Path:         oplib:/Vop/pbrt_integrator_ambientocclusion?Vop/pbrt_integrator_ambientocclusion
+Icon:         opdef:/Vop/pbrt_integrator_ambientocclusion?IconImage
 Table:        Vop
 License:      
 Extra:        
-User:         {"dtype": "ao", "directive": "integrator"}
+User:         {"dtype": "ambientocclusion", "directive": "integrator"}
 Inputs:       0 to 0
 Subnet:       false
 Python:       false

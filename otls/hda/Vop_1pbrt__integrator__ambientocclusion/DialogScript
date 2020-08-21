@@ -1,0 +1,36 @@
+# Dialog script for pbrt_integrator_ambientocclusion automatically generated
+
+{
+    name	pbrt_integrator_ambientocclusion
+    script	ambientocclusion
+    label	"PBRT AOIntegrator"
+
+    rendermask	PBRT
+    externalshader 1
+    shadertype	generic
+    signature	"Default Inputs"	default	{ }
+
+    outputoverrides	default
+    {
+    }
+
+    help {
+    }
+
+    parm {
+        name    "maxdistance"
+        label   "Max Distance"
+        type    float
+        default { "1e38" }
+        help    ""
+        range   { 1 1000 }
+    }
+    parm {
+        name    "cossample"
+        label   "Cosine Sample"
+        type    toggle
+        default { "1" }
+        help    "Sample using a cosine distribution."
+        range   { -1 1 }
+    }
+}

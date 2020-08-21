@@ -816,14 +816,16 @@
                 type    ordinal
                 default { "path" }
                 menu {
+                    "simplepath"        "Simple Pathtracer"
                     "path"              "Pathtracer"
-                    "bdpt"              "Bi-Directional Pathtarcer"
-                    "mlt"               "Metropolis Light Transport"
-                    "sppm"              "Stochastic Progressive Photon Mapping"
-                    "whitted"           "Whitted Raytracing"
+                    "lightpath"         "Light Pathtracer"
+                    "simplevolpath"     "Simple Volume Pathtracer"
                     "volpath"           "Volume Pathtracer"
-                    "directlighting"    "Direct Lighting"
-                    "ao"                "Ambient Occlusion"
+                    "bdpt"              "Bi-Directional Pathtracer"
+                    "mlt"               "Metropolis Light Transport"
+                    "ambientocclusion"  "Ambient Occlusion"
+                    "randomwalk"        "Random Walk Pathtracer"
+                    "sppm"              "Stochastic Progressive Photon Mapping"
                 }
             }
             parm {
@@ -832,9 +834,16 @@
                 type    integer
                 default { "5" }
                 help    "Maximum length of a light-carrying path sampled by the integrator."
-                hidewhen "{ integrator == ao }"
+                hidewhen "{ integrator == ambientocclusion }"
                 range   { 0 10 }
-                parmtag { "autoscope" "0000000000000000" }
+            }
+            parm {
+                name    "regularize"
+                label   "Regularize"
+                type    toggle
+                default { "0" }
+                hidewhen "{ integrator == ambientocclusion } { integrator == simplepath } { integrator == simplevolpath } { integrator == lightpath } { integrator == randomwalk }"
+                help    ""
             }
             parm {
                 name    "rrthreshold"
@@ -842,23 +851,22 @@
                 type    float
                 default { "1" }
                 help    "Determines when Russian roulette is applied to paths: when the maximum spectral component of the path contribution falls beneath this value, Russian roulette starts to be used."
-                hidewhen "{ integrator == ao } { integrator == whitted } { integrator == directlighting } { integrator == sppm } { integrator == mlt }"
+                hidewhen "{ integrator != path integrator != volpath }"
                 range   { 0 10 }
-                parmtag { "autoscope" "0000000000000000" }
             }
             parm {
-                name    "lightsamplestrategy"
-                label   "Light Sample Strategy"
+                name    "lightsampler"
+                label   "Light Sampler"
                 type    ordinal
-                default { "spatial" }
-                help    "Technique used for sampling light sources. Options include \"uniform\", which samples all light sources uniformly, \"power\", which samples light sources according to their emitted power, and \"spatial\", which computes light contributions in regions of the scene and samples from a related distribution."
-                hidewhen "{ integrator == ao } { integrator == whitted } { integrator == directlighting } { integrator == sppm } { integrator == mlt }"
+                default { "bvh" }
+                help    "Technique used for sampling light sources."
                 menu {
                     "uniform"   "Uniform"
                     "power"     "Power"
-                    "spatial"   "Spatial"
+                    "bvh"     "BVH"
+                    "exhaustive"   "Exhaustive"
                 }
-                parmtag { "autoscope" "0000000000000000" }
+                hidewhen "{ integrator != path integrator != volpath integrator != bdpt }"
             }
             parm {
                 name    "visualizestrategies"
@@ -867,7 +875,6 @@
                 default { "off" }
                 help    "If true, an image is saved for each (s,t) bidirectional path generation strategy used by the integrator. These images can be helpful for understanding which sampling strategies are effective for sampling various types of light transport paths."
                 hidewhen "{ integrator != bdpt }"
-                parmtag { "autoscope" "0000000000000000" }
             }
             parm {
                 name    "visualizeweights"
@@ -876,7 +883,6 @@
                 default { "off" }
                 help    "If true, an image is saved with the multiple importance sampling weights for each (s,t) bidirectional path generation strategy. These images can be helpful for understanding which sampling strategies are effective for sampling various types of light transport paths."
                 hidewhen "{ integrator != bdpt }"
-                parmtag { "autoscope" "0000000000000000" }
             }
             parm {
                 name    "iterations"
@@ -886,7 +892,6 @@
                 help    "Total number of iterations of photon shooting from light sources. (After each iteration, photon statistics are updated.) "
                 hidewhen "{ integrator != sppm }"
                 range   { 0 10 }
-                parmtag { "autoscope" "0000000000000000" }
             }
             parm {
                 name    "photonsperiteration"
@@ -896,17 +901,15 @@
                 help    "Number of photons to shoot from light sources in each iteration. With the default value, -1, the number is automatically set to be equal to the number of pixels in the image."
                 hidewhen "{ integrator != sppm }"
                 range   { 0 10 }
-                parmtag { "autoscope" "0000000000000000" }
             }
             parm {
-                name    "imagewritefrequency"
-                label   "Image Write Frequency"
+                name    "seed"
+                label   "Seed"
                 type    integer
-                default { "2.14748e+09" }
-                help    "Frequency at which to write out the current image, in photon shooting iterations. (The default value means that the image will effectively only be written once when rendering has finished.)"
+                default { "0" }
+                help    ""
                 hidewhen "{ integrator != sppm }"
                 range   { 0 10 }
-                parmtag { "autoscope" "0000000000000000" }
             }
             parm {
                 name    "radius"
@@ -916,7 +919,6 @@
                 help    "Initial photon search radius. (This value will be reduced as photons are accumulated at each pixel.) "
                 hidewhen "{ integrator != sppm }"
                 range   { 0 10 }
-                parmtag { "autoscope" "0000000000000000" }
             }
             parm {
                 name    "bootstrapsamples"
@@ -969,27 +971,13 @@
                 parmtag { "autoscope" "0000000000000000" }
             }
             parm {
-                name    "strategy"
-                label   "Sample Strategy"
-                type    ordinal
-                default { "all" }
-                help    "The strategy to use for sampling direct lighting. Valid options are \"all\", which samples all the lights uniformly and averages their contributions, and \"one\", which chooses a single light uniformly at random."
-                hidewhen "{ integrator != directlighting }"
-                menu {
-                    "one"   "One Light"
-                    "all"   "All Lights"
-                }
-                parmtag { "autoscope" "0000000000000000" }
-            }
-            parm {
-                name    "nsamples"
-                label   "Number Samples"
-                type    integer
-                default { "64" }
-                help    "Number of occlusion samples"
-                hidewhen "{ integrator != ao }"
-                range   { 1 256 }
-                parmtag { "autoscope" "0000000000000000" }
+                name    "maxdistance"
+                label   "Max Distance"
+                type    float
+                default { "1e38" }
+                help    ""
+                hidewhen "{ integrator != ambientocclusion }"
+                range   { 1 10000 }
             }
             parm {
                 name    "cossample"
@@ -997,9 +985,23 @@
                 type    toggle
                 default { "on" }
                 help    "Sample using a cosine distribution."
-                hidewhen "{ integrator != ao }"
-                range   { -1 1 }
-                parmtag { "autoscope" "0000000000000000" }
+                hidewhen "{ integrator != ambientocclusion }"
+            }
+            parm {
+                name    "samplelights"
+                label   "Sample Lights"
+                type    toggle
+                default { "on" }
+                help    ""
+                hidewhen "{ integrator != simplepath }"
+            }
+            parm {
+                name    "samplebsdf"
+                label   "Sample BSDF"
+                type    toggle
+                default { "on" }
+                help    ""
+                hidewhen "{ integrator != simplepath }"
             }
         }
 

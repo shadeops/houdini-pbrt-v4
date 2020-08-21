@@ -1,0 +1,28 @@
+# Dialog script for pbrt_integrator_randomwalk automatically generated
+
+{
+    name	pbrt_integrator_randomwalk
+    script	randomwalk
+    label	"PBRT RandomWalkIntegrator"
+
+    rendermask	PBRT
+    externalshader 1
+    shadertype	generic
+    signature	"Default Inputs"	default	{ }
+
+    outputoverrides	default
+    {
+    }
+
+    help {
+    }
+
+    parm {
+        name    "maxdepth"
+        label   "Max Depth"
+        type    integer
+        default { "5" }
+        help    "Maximum length of a light-carrying path sampled by the integrator."
+        range   { 0 10 }
+    }
+}

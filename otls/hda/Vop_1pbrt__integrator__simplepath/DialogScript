@@ -1,0 +1,42 @@
+# Dialog script for pbrt_integrator_simplepath automatically generated
+
+{
+    name	pbrt_integrator_simplepath
+    script	simplepath
+    label	"PBRT SimplePathIntegrator"
+
+    rendermask	PBRT
+    externalshader 1
+    shadertype	generic
+    signature	"Default Inputs"	default	{ }
+
+    outputoverrides	default
+    {
+    }
+
+    help {
+    }
+
+    parm {
+        name    "maxdepth"
+        label   "Max Depth"
+        type    integer
+        default { "5" }
+        help    "Maximum length of a light-carrying path sampled by the integrator."
+        range   { 0 10 }
+    }
+    parm {
+        name    "samplelights"
+        label   "Sample Lights"
+        type    toggle
+        default { "1" }
+        help    ""
+    }
+    parm {
+        name    "samplebsdf"
+        label   "Sample BSDF"
+        type    toggle
+        default { "1" }
+        help    ""
+    }
+}

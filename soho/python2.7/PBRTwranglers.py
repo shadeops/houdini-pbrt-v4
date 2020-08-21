@@ -459,35 +459,38 @@ def wrangle_integrator(obj, wrangler, now):
     parm_selection = {
         "integrator": SohoPBRT("integrator", "string", ["path"], False),
         "maxdepth": SohoPBRT("maxdepth", "integer", [5], False),
+        "regularize": SohoPBRT("regularize", "toggle", [False], True),
         "rrthreshold": SohoPBRT("rrthreshold", "float", [1], True),
-        "lightsamplestrategy": SohoPBRT(
-            "lightsamplestrategy", "string", ["spatial"], True
-        ),
+        "lightsampler": SohoPBRT("lightsampler", "string", ["bvh"], True),
         "visualizestrategies": SohoPBRT("visualizestrategies", "toggle", [False], True),
         "visualizeweights": SohoPBRT("visualizeweights", "toggle", [False], True),
         "iterations": SohoPBRT("iterations", "integer", [64], True),
         "photonsperiterations": SohoPBRT("photonsperiterations", "integer", [-1], True),
-        "imagewritefrequency": SohoPBRT(
-            "imagewritefrequency", "integer", [2.14748e09], True
-        ),
+        "seed": SohoPBRT("seed", "integer", [0], True),
         "radius": SohoPBRT("radius", "float", [1], True),
         "bootstrapsamples": SohoPBRT("bootstrapsamples", "integer", [100000], True),
         "chains": SohoPBRT("chains", "integer", [1000], True),
         "mutationsperpixel": SohoPBRT("mutataionsperpixel", "integer", [100], True),
         "largestepprobability": SohoPBRT("largestepprobability", "float", [0.3], True),
         "sigma": SohoPBRT("sigma", "float", [0.01], True),
-        "strategy": SohoPBRT("strategy", "string", ["all"], True),
-        "nsamples": SohoPBRT("nsamples", "integer", ["64"], True),
+        "maxdistance": SohoPBRT("maxdistance", "float", ["1e38"], True),
         "cossample": SohoPBRT("cossample", "toggle", [True], True),
+        "samplelights": SohoPBRT("samplelights", "toggle", [True], True),
+        "samplebsdf": SohoPBRT("samplebsdf", "toggle", [True], True),
     }
 
     integrator_parms = {
-        "ao": ["nsamples", "cossample"],
-        "path": ["maxdepth", "rrthreshold", "lightsamplestrategy"],
+        "ambientocclusion": ["maxdistance", "cossample"],
+        "path": ["maxdepth",
+                 "rrthreshold",
+                 "regularize",
+                 "lightsampler",
+        ],
         "bdpt": [
             "maxdepth",
             "rrthreshold",
-            "lightsamplestrategy",
+            "lightsampler",
+            "regularize",
             "visualizestrategies",
             "visualizeweights",
         ],
@@ -498,17 +501,21 @@ def wrangle_integrator(obj, wrangler, now):
             "mutationsperpixel",
             "largestepprobability",
             "sigma",
+            "regularize",
         ],
         "sppm": [
             "maxdepth",
             "iterations",
             "photonsperiteration",
-            "imagewritefrequency",
+            "seed",
             "radius",
+            "regularize",
         ],
-        "whitted": ["maxdepth"],
-        "volpath": ["maxdepth", "rrthreshold", "lightsamplestrategy"],
-        "directlighting": ["maxdepth", "strategy"],
+        "lightpath": ["maxdepth"],
+        "randomwalk": ["maxdepth"],
+        "simplepath": ["maxdepth", "samplelights", "samplebsdf"],
+        "simplevolpath": ["maxdepth"],
+        "volpath": ["maxdepth", "rrthreshold", "lightsampler", "regularize"],
     }
     parms = obj.evaluate(parm_selection, now)
 

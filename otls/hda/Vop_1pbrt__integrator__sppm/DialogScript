@@ -42,19 +42,26 @@
         range   { 0 10 }
     }
     parm {
-        name    "imagewritefrequency"
-        label   "Image Write Frequency"
-        type    integer
-        default { "2.14748e+09" }
-        help    "Frequency at which to write out the current image, in photon shooting iterations. (The default value means that the image will effectively only be written once when rendering has finished.)"
-        range   { 0 10 }
-    }
-    parm {
         name    "radius"
         label   "Radius"
         type    float
         default { "1" }
         help    "Initial photon search radius. (This value will be reduced as photons are accumulated at each pixel.) "
+        range   { 0 10 }
+    }
+    parm {
+        name    "regularize"
+        label   "Regularize"
+        type    toggle
+        default { "0" }
+        help    ""
+    }
+    parm {
+        name    "seed"
+        label   "Seed"
+        type    integer
+        default { "0" }
+        help    ""
         range   { 0 10 }
     }
 }

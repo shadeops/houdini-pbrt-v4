@@ -26,35 +26,24 @@
         range   { 0 10 }
     }
     parm {
-        name    "do_pixelbounds"
-        label   "Pixel Bounds"
-        type    toggle
-        nolabel
-        joinnext
-        default { "0" }
-        parmtag { "pbrt.meta" "1" }
-    }
-    parm {
-        name    "pixelbounds"
-        label   "Pixel Bounds"
-        type    intvector4
-        size    4
-        default { "0" "640" "0" "480" }
-        help    "Subset of image to sample during rendering; in order, values given specify the starting and ending x coordinates and then starting and ending y coordinates. (This functionality is primarily useful for narrowing down to a few pixels for debugging.)"
-        disablewhen "{ do_pixelbounds == 0 }"
-        range   { -1 1 }
-    }
-    parm {
-        name    "lightsamplestrategy"
-        label   "Light Sample Strategy"
+        name    "lightsampler"
+        label   "Light Sampler"
         type    ordinal
         default { "power" }
-        help    "Technique used for sampling light sources. Options include \"uniform\", which samples all light sources uniformly, \"power\", which samples light sources according to their emitted power, and \"spatial\", which computes light contributions in regions of the scene and samples from a related distribution"
+        help    "Technique used for sampling light sources."
         menu {
             "uniform"   "Uniform"
             "power"     "Power"
-            "spatial"   "Spatial"
+            "bvh"     "BVH"
+            "exhaustive"   "Exhaustive"
         }
+    }
+    parm {
+        name    "regularize"
+        label   "Regularize"
+        type    toggle
+        default { "0" }
+        help    ""
     }
     parm {
         name    "visualizestrategies"
