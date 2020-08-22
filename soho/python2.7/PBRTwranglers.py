@@ -673,7 +673,7 @@ def _to_light_scale(parms):
     intensity = parms["light_intensity"].Value[0]
     exposure = parms["light_exposure"].Value[0]
     scale = intensity * (2.0 ** exposure)
-    return PBRTParam("rgb", "scale", [scale] * 3)
+    return PBRTParam("float", "scale", [scale] )
 
 
 def _light_api_wrapper(wrangler_light_type, wrangler_paramset, node):
@@ -691,6 +691,16 @@ def _light_api_wrapper(wrangler_light_type, wrangler_paramset, node):
     else:
         api.LightSource(ltype, paramset)
 
+def _portal_helper(portal):
+    gdp = SohoGeometry(portal)
+    pt_count = gdp.globalAttrib("geo:pointcount")
+    if pointcount < 4:
+        return None
+    P = gdp.attribute("geo:point", "P")
+    portal_pts = []
+    for i in range(4):
+        portal_pts.append(gdp.Value(P,i))
+    return portal_pts
 
 def wrangle_light(light, wrangler, now):
 
@@ -713,9 +723,18 @@ def wrangle_light(light, wrangler, now):
 
     if light_wrangler == "HoudiniEnvLight":
         env_map = []
-        paramset.add(PBRTParam("rgb", "L", parms["light_color"].Value))
         if light.evalString("env_map", now, env_map):
-            paramset.add(PBRTParam("string", "mapname", env_map))
+            paramset.add(PBRTParam("string", "filename", env_map))
+        else:
+            paramset.add(PBRTParam("rgb", "L", parms["light_color"].Value))
+
+        portal = []
+        if light.evalString("portal", now, portal):
+            portal_pts = _portal_helper(portal)
+            if portal_pts is not None:
+                # TODO PBRT-v4 we may need to invert the Houdini -> PBRT xform
+                paramset.add(PBRTParam("point", "portal", portal_pts))
+
         output_xform(light, now, no_motionblur=True)
         api.Scale(1, 1, -1)
         api.Rotate(90, 0, 0, 1)
@@ -819,29 +838,30 @@ def wrangle_light(light, wrangler, now):
     api_calls.append(_apiclosure(api.Scale, 1, -1, 1))
 
     if light_type == "point":
-        paramset.add(PBRTParam("rgb", "I", parms["light_color"].Value))
         if areamap:
             light_name = "goniometric"
-            paramset.add(PBRTParam("string", "mapname", [areamap]))
+            paramset.add(PBRTParam("rgb", "I", parms["light_color"].Value))
+            paramset.add(PBRTParam("string", "filename", [areamap]))
             api_calls = []
             api_calls.append(_apiclosure(output_xform, light, now, no_motionblur=True))
             api_calls.append(_apiclosure(api.Scale, 1, -1, 1))
             api_calls.append(_apiclosure(api.Rotate, 90, 0, 1, 0))
         elif not cone_enable:
             light_name = "point"
-        else:
-            conedelta = light.wrangleFloat(wrangler, "conedelta", now, [10])[0]
-            coneangle = light.wrangleFloat(wrangler, "coneangle", now, [45])[0]
-            if projmap:
+            paramset.add(PBRTParam("rgb", "I", parms["light_color"].Value))
+        elif projmap:
                 light_name = "projection"
                 paramset.add(PBRTParam("float", "fov", [coneangle]))
-                paramset.add(PBRTParam("string", "mapname", [projmap]))
-            else:
-                light_name = "spot"
-                coneangle *= 0.5
-                coneangle += conedelta
-                paramset.add(PBRTParam("float", "coneangle", [coneangle]))
-                paramset.add(PBRTParam("float", "conedeltaangle", [conedelta]))
+                paramset.add(PBRTParam("string", "filename", [projmap]))
+        else:
+            light_name = "spot"
+            paramset.add(PBRTParam("rgb", "I", parms["light_color"].Value))
+            conedelta = light.wrangleFloat(wrangler, "conedelta", now, [10])[0]
+            coneangle = light.wrangleFloat(wrangler, "coneangle", now, [45])[0]
+            coneangle *= 0.5
+            coneangle += conedelta
+            paramset.add(PBRTParam("float", "coneangle", [coneangle]))
+            paramset.add(PBRTParam("float", "conedeltaangle", [conedelta]))
     elif light_type == "distant":
         light_name = light_type
         paramset.add(PBRTParam("rgb", "L", parms["light_color"].Value))

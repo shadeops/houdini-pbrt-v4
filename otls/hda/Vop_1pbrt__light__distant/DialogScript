@@ -8,11 +8,9 @@
     rendermask	PBRT
     externalshader 1
     shadertype	generic
-    input	struct_PBRTSpectrum	scale	scale
     input	struct_PBRTSpectrum	L	L
-    inputflags	scale	0
     inputflags	L	0
-    signature	"Default Inputs"	default	{ struct_PBRTSpectrum struct_PBRTSpectrum }
+    signature	"Default Inputs"	default	{ struct_PBRTSpectrum }
 
     outputoverrides	default
     {
@@ -22,16 +20,6 @@
     }
 
     parm {
-        name    "scale"
-        label   "Scale"
-        type    color
-        size    3
-        default { "1" "1" "1" }
-        help    "Scale factor that modulates the amount of light that the light source emits into the scene."
-        range   { 0 1 }
-        parmtag { "pbrt.spectrum" "input" }
-    }
-    parm {
         name    "L"
         label   "L"
         type    color
@@ -40,6 +28,15 @@
         help    "The radiance emitted from the light source. "
         range   { 0 1 }
         parmtag { "pbrt.spectrum" "input" }
+    }
+    parm {
+        name    "scale"
+        label   "Scale"
+        type    float
+        size    1
+        default { "1" }
+        help    "Scale factor that modulates the amount of light that the light source emits into the scene."
+        range   { 0 1 }
     }
     parm {
         name    "from"

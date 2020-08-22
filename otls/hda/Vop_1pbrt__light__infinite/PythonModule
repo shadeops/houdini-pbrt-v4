@@ -1,0 +1,14 @@
+def portal_points(node, parm):
+    sop = parm.evalAsNode()
+    if sop is None:
+        return None
+    if sop.type().category() != hou.sopNodeTypeCategory():
+        return None
+    geo = sop.geometry()
+    pts = geo.points()
+    if len(pts) < 4:
+        return None
+    return [ pt.position() for pt in pts[:4] ]
+
+        
+    
