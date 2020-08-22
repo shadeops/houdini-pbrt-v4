@@ -125,7 +125,7 @@ Empty:        false
 Modified:     Tue May 15 00:01:04 2018
 
 Operator:     pbrt_sampler_pmj02bn
-Label:        PBRT SobolSampler
+Label:        PBRT PMJ02BNSampler
 Path:         oplib:/Vop/pbrt_sampler_pmj02bn?Vop/pbrt_sampler_pmj02bn
 Icon:         opdef:/Vop/pbrt_sampler_pmj02bn?IconImage
 Table:        Vop
