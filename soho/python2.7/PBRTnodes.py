@@ -551,6 +551,7 @@ class BaseNode(object):
         # has an input of pbrt_spectrum type then extra options are available.
 
         parm_tmpl = parm.parmTemplate()
+        parm_tags = parm_tmpl.tags()
         parm_type = parm_tmpl.type()
         parm_scheme = parm_tmpl.namingScheme()
         # Assuming there will only be a single coshader "node"
@@ -604,9 +605,9 @@ class BaseNode(object):
             pbrt_value = coshader.full_name
         # PBRT: point*/vector*/normal
         elif (
-            parm_type == hou.parmTemplateType.Float and "pbrt.type" in parm_tmpl.tags()
+            parm_type == hou.parmTemplateType.Float and "pbrt.type" in parm_tags
         ):
-            pbrt_type = parm_tmpl.tags()["pbrt.type"]
+            pbrt_type = parm_tags()["pbrt.type"]
             pbrt_value = parm.eval()
         # PBRT: float (sometimes a float is just a float)
         elif parm_type == hou.parmTemplateType.Float:
@@ -619,6 +620,15 @@ class BaseNode(object):
         # If there is a coshader we can't override the value as there is a connection
         if value_override is not None and coshader is None:
             pbrt_value = value_override
+        elif "pbrt.callback" in parm_tags:
+            callback_name = parm_tags["pbrt.callback"]
+            node = parm.node()
+            try:
+                callback = getattr(node.hdaModule(), callback_name)
+            except AttributeError:
+                callback = None
+            if callback is not None:
+                pbrt_value = callback(node, parm)
 
         return PBRTParam(pbrt_type, parm_name, pbrt_value)
 
