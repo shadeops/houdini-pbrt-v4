@@ -78,6 +78,6 @@
         type    float
         default { "0.5" }
         help    "The amount to use when linearly interpolating between the two mix textures. "
-        range   { 0 10 }
+        range   { 0 1 }
     }
 }

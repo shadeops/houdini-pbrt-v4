@@ -10,14 +10,8 @@
     shadertype	generic
     output	float	output	Output
     signature	Float	default	{ float }
-    signature	Spectrum	s	{ struct_PBRTSpectrum }
 
     outputoverrides	default
-    {
-	___begin	auto
-			(0)
-    }
-    outputoverrides	s
     {
 	___begin	auto
 			(0)

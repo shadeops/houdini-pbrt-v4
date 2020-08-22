@@ -8,22 +8,17 @@
     rendermask	PBRT
     externalshader 1
     shadertype	generic
-    output	float	output	Output
-    signature	Float	default	{ float }
-    signature	Spectrum	s	{ struct_PBRTSpectrum }
+    output	struct_PBRTSpectrum	output	Output
+    signature	default	default	{ struct_PBRTSpectrum }
 
     outputoverrides	default
     {
 	___begin	auto
 			(0)
     }
-    outputoverrides	s
-    {
-	___begin	auto
-			(0)
-    }
 
     help {
+	""
     }
 
     parm {
@@ -41,20 +36,20 @@
         range   { 0 10 }
     }
     parm {
-        name    "roughness"
-        label   "Roughness"
-        type    float
-        default { "0.5" }
-        help    "The \"bumpiness\" of the resulting texture. "
-        range   { 0 10 }
-    }
-    parm {
         name    "scale"
         label   "Scale"
         type    float
         default { "1" }
         help    "A scaling factor to apply to the noise function inputs. "
         range   { 0 2 }
+    }
+    parm {
+        name    "roughness"
+        label   "Roughness"
+        type    float
+        default { "0.5" }
+        help    "The \"bumpiness\" of the resulting texture. "
+        range   { 0 10 }
     }
     parm {
         name    "variation"

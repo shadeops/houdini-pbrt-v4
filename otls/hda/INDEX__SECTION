@@ -810,20 +810,6 @@ Python:       false
 Empty:        false
 Modified:     Tue May 15 00:01:06 2018
 
-Operator:     pbrt_texture_uv
-Label:        PBRT UVTexture
-Path:         oplib:/Vop/pbrt_texture_uv?Vop/pbrt_texture_uv
-Icon:         opdef:/Vop/pbrt_texture_uv?IconImage
-Table:        Vop
-License:      
-Extra:        
-User:         {"dtype": "uv", "directive": "texture"}
-Inputs:       0 to 0
-Subnet:       false
-Python:       false
-Empty:        false
-Modified:     Tue May 15 00:01:06 2018
-
 Operator:     pbrt_texture_dots
 Label:        PBRT DotsTexture
 Path:         oplib:/Vop/pbrt_texture_dots?Vop/pbrt_texture_dots

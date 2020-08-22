@@ -41,6 +41,14 @@
         parmtag { "filechooser_mode" "read" }
     }
     parm {
+        name    "scale"
+        label   "Scale"
+        type    float
+        default { "1" }
+        help    "Scale factor to apply to value looked up in texture. "
+        range   { 0 10 }
+    }
+    parm {
         name    "wrap"
         label   "Wrap"
         type    ordinal
@@ -50,7 +58,21 @@
             "repeat"    "Repeat"
             "black"     "Black"
             "clamp"     "Clamp"
+			"octahedralsphere"	"Octahedralsphere"
         }
+    }
+    parm {
+        name    "filter"
+        label   "Filter"
+        type    ordinal
+        default { "bilinear" }
+		menu {
+			"point"	"Point"
+			"bilinear"	"Bilinear"
+			"trilinear"	"Trilinear"
+			"ewa"	"EWA"
+		}
+        help    "Mipmap filtering"
     }
     parm {
         name    "maxanisotropy"
@@ -59,21 +81,7 @@
         default { "8" }
         help    "The maximum elliptical eccentricity for the EWA algorithm. "
         range   { 0 16 }
-    }
-    parm {
-        name    "trilinear"
-        label   "Trilinear Filtering"
-        type    toggle
-        default { "0" }
-        help    "If true, perform trilinear interpolation when looking up pixel values. Otherwise, pbrt uses the EWA algorithm for texture filtering. EWA gives much better results, but is slower. "
-    }
-    parm {
-        name    "scale"
-        label   "Scale"
-        type    float
-        default { "1" }
-        help    "Scale factor to apply to value looked up in texture. "
-        range   { 0 10 }
+		disablewhen "{ filter != ewa }"
     }
     parm {
         name    "auto_gamma"
@@ -84,13 +92,28 @@
         parmtag { "pbrt.meta" "1" }
     }
     parm {
-        name    "gamma"
-        label   "Gamma"
-        type    toggle
-        default { "1" }
+        name    "encoding"
+        label   "Encoding"
+        type    ordinal
+        default { "linear" }
+		menu {
+			"linear"	"Linear"
+			"sRGB"	"sRGB"
+			"gamma" "Gamma"
+		}
         help    "Indicates whether texel values should be converted from sRGB gamma space to linear space. This parameter is \"true\" by default for textures stored in 8-bit formats like TGA and PNG, and \"false\" for floating-point formats like EXR and PFM."
         disablewhen "{ auto_gamma 1 }"
         parmtag { "pbrt.force" "1" }
+		parmtag { "pbrt.callback" "custom_gamma" }
+    }
+    parm {
+        name    "gamma"
+        label   "Gamma"
+        type    float
+        default { "2.2" }
+        help    "Custom gamma value"
+        disablewhen "{ auto_gamma 1 } { encoding != gamma }" 
+        parmtag { "pbrt.meta" "1" }
     }
     group {
         name    "folder0"

@@ -59,7 +59,6 @@ Vop_1pbrt__texture__scale	Vop/pbrt_texture_scale
 Vop_1pbrt__texture__mix	Vop/pbrt_texture_mix
 Vop_1pbrt__texture__bilerp	Vop/pbrt_texture_bilerp
 Vop_1pbrt__texture__imagemap	Vop/pbrt_texture_imagemap
-Vop_1pbrt__texture__uv	Vop/pbrt_texture_uv
 Vop_1pbrt__texture__dots	Vop/pbrt_texture_dots
 Vop_1pbrt__texture__checkerboard	Vop/pbrt_texture_checkerboard
 Vop_1pbrt__texture__fbm	Vop/pbrt_texture_fbm

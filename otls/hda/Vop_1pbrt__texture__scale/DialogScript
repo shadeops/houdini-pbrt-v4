@@ -8,13 +8,13 @@
     rendermask	PBRT
     externalshader 1
     shadertype	generic
-    input	float	tex1	"Texture 1"
-    input	float	tex2	"Texture 2"
+    input	float	tex	"Texture"
+    input	float	scale	"Scale"
     output	float	output	Output
-    inputflags	tex1	0
-    inputflags	tex2	0
+    inputflags	tex	0
+    inputflags	scale	0
     signature	Float	default	{ float float float }
-    signature	Spectrum	s	{ struct_PBRTSpectrum struct_PBRTSpectrum struct_PBRTSpectrum }
+    signature	Spectrum	s	{ struct_PBRTSpectrum float struct_PBRTSpectrum }
 
     outputoverrides	default
     {
@@ -37,16 +37,16 @@
         export  none
     }
     parm {
-        name    "tex1"
-        label   "Texture 1"
+        name    "tex"
+        label   "Texture"
         type    float
         default { "1" }
         help    "These two textures will be multiplied together by the ScaleTexture. "
         range   { 0 1 }
     }
     parm {
-        name    "tex1_s"
-        label   "Texture 1"
+        name    "tex_s"
+        label   "Texture"
         type    color
         size    3
         default { "1" "1" "1" }
@@ -54,20 +54,11 @@
         range   { 0 1 }
     }
     parm {
-        name    "tex2"
-        label   "Texture 2"
+        name    "scale"
+        label   "Scale"
         type    float
         default { "1" }
         help    "These two textures will be multiplied together by the ScaleTexture. "
-        range   { 0 1 }
-    }
-    parm {
-        name    "tex2_s"
-        label   "Texture 2"
-        type    color
-        size    3
-        default { "1" "1" "1" }
-        help    "The constant value of this texture. "
         range   { 0 1 }
     }
 }
