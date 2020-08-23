@@ -24,7 +24,7 @@ Inputs:       0 to 9999
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Mon Feb 24 20:58:46 2020
+Modified:     Mon Feb 24 19:58:46 2020
 
 Operator:     pbrt_spectrum
 Label:        PBRT Spectrum
@@ -544,48 +544,6 @@ Python:       false
 Empty:        false
 Modified:     Tue May 15 00:01:05 2018
 
-Operator:     pbrt_material_fourier
-Label:        PBRT FourierMaterial
-Path:         oplib:/Vop/pbrt_material_fourier?Vop/pbrt_material_fourier
-Icon:         opdef:/Vop/pbrt_material_fourier?IconImage
-Table:        Vop
-License:      
-Extra:        
-User:         {"dtype": "fourier", "directive": "material"}
-Inputs:       0 to 1
-Subnet:       false
-Python:       false
-Empty:        false
-Modified:     Tue May 15 00:01:05 2018
-
-Operator:     pbrt_material_disney
-Label:        PBRT DisneyMaterial
-Path:         oplib:/Vop/pbrt_material_disney?Vop/pbrt_material_disney
-Icon:         opdef:/Vop/pbrt_material_disney?IconImage
-Table:        Vop
-License:      
-Extra:        
-User:         {"dtype": "disney", "directive": "material"}
-Inputs:       0 to 15
-Subnet:       false
-Python:       false
-Empty:        false
-Modified:     Tue May 15 00:01:05 2018
-
-Operator:     pbrt_material_glass
-Label:        PBRT GlassMaterial
-Path:         oplib:/Vop/pbrt_material_glass?Vop/pbrt_material_glass
-Icon:         opdef:/Vop/pbrt_material_glass?IconImage
-Table:        Vop
-License:      
-Extra:        
-User:         {"dtype": "glass", "directive": "material"}
-Inputs:       0 to 6
-Subnet:       false
-Python:       false
-Empty:        false
-Modified:     Tue May 15 00:01:05 2018
-
 Operator:     pbrt_material_hair
 Label:        PBRT HairMaterial
 Path:         oplib:/Vop/pbrt_material_hair?Vop/pbrt_material_hair
@@ -600,112 +558,14 @@ Python:       false
 Empty:        false
 Modified:     Tue May 15 00:01:05 2018
 
-Operator:     pbrt_material_translucent
-Label:        PBRT TranslucentMaterial
-Path:         oplib:/Vop/pbrt_material_translucent?Vop/pbrt_material_translucent
-Icon:         opdef:/Vop/pbrt_material_translucent?IconImage
+Operator:     pbrt_material_diffuse
+Label:        PBRT DiffuseMaterial
+Path:         oplib:/Vop/pbrt_material_diffuse?Vop/pbrt_material_diffuse
+Icon:         opdef:/Vop/pbrt_material_diffuse?IconImage
 Table:        Vop
 License:      
 Extra:        
-User:         {"dtype": "translucent", "directive": "material"}
-Inputs:       0 to 6
-Subnet:       false
-Python:       false
-Empty:        false
-Modified:     Tue May 15 00:01:05 2018
-
-Operator:     pbrt_material_substrate
-Label:        PBRT SubstrateMaterial
-Path:         oplib:/Vop/pbrt_material_substrate?Vop/pbrt_material_substrate
-Icon:         opdef:/Vop/pbrt_material_substrate?IconImage
-Table:        Vop
-License:      
-Extra:        
-User:         {"dtype": "substrate", "directive": "material"}
-Inputs:       0 to 5
-Subnet:       false
-Python:       false
-Empty:        false
-Modified:     Tue May 15 00:01:06 2018
-
-Operator:     pbrt_material_plastic
-Label:        PBRT PlasticMaterial
-Path:         oplib:/Vop/pbrt_material_plastic?Vop/pbrt_material_plastic
-Icon:         opdef:/Vop/pbrt_material_plastic?IconImage
-Table:        Vop
-License:      
-Extra:        
-User:         {"dtype": "plastic", "directive": "material"}
-Inputs:       0 to 4
-Subnet:       false
-Python:       false
-Empty:        false
-Modified:     Tue May 15 00:01:06 2018
-
-Operator:     pbrt_material_metal
-Label:        PBRT MetalMaterial
-Path:         oplib:/Vop/pbrt_material_metal?Vop/pbrt_material_metal
-Icon:         opdef:/Vop/pbrt_material_metal?IconImage
-Table:        Vop
-License:      
-Extra:        
-User:         {"dtype": "metal", "directive": "material"}
-Inputs:       0 to 6
-Subnet:       false
-Python:       false
-Empty:        false
-Modified:     Tue May 15 00:01:06 2018
-
-Operator:     pbrt_material_uber
-Label:        PBRT UberMaterial
-Path:         oplib:/Vop/pbrt_material_uber?Vop/pbrt_material_uber
-Icon:         opdef:/Vop/pbrt_material_uber?IconImage
-Table:        Vop
-License:      
-Extra:        
-User:         {"dtype": "uber", "directive": "material"}
-Inputs:       0 to 10
-Subnet:       false
-Python:       false
-Empty:        false
-Modified:     Tue May 15 00:01:06 2018
-
-Operator:     pbrt_material_mix
-Label:        PBRT MixMaterial
-Path:         oplib:/Vop/pbrt_material_mix?Vop/pbrt_material_mix
-Icon:         opdef:/Vop/pbrt_material_mix?IconImage
-Table:        Vop
-License:      
-Extra:        
-User:         {"dtype": "mix", "directive": "material"}
-Inputs:       0 to 3
-Subnet:       false
-Python:       false
-Empty:        false
-Modified:     Tue May 15 00:01:06 2018
-
-Operator:     pbrt_material_mirror
-Label:        PBRT MirrorMaterial
-Path:         oplib:/Vop/pbrt_material_mirror?Vop/pbrt_material_mirror
-Icon:         opdef:/Vop/pbrt_material_mirror?IconImage
-Table:        Vop
-License:      
-Extra:        
-User:         {"dtype": "mirror", "directive": "material"}
-Inputs:       0 to 2
-Subnet:       false
-Python:       false
-Empty:        false
-Modified:     Tue May 15 00:01:06 2018
-
-Operator:     pbrt_material_matte
-Label:        PBRT MatteMaterial
-Path:         oplib:/Vop/pbrt_material_matte?Vop/pbrt_material_matte
-Icon:         opdef:/Vop/pbrt_material_matte?IconImage
-Table:        Vop
-License:      
-Extra:        
-User:         {"dtype": "matte", "directive": "material"}
+User:         {"dtype": "diffuse", "directive": "material"}
 Inputs:       0 to 3
 Subnet:       false
 Python:       false
@@ -720,25 +580,11 @@ Table:        Vop
 License:      
 Extra:        
 User:         {"dtype": "subsurface", "directive": "material"}
-Inputs:       0 to 8
+Inputs:       0 to 10
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Tue May 15 00:01:06 2018
-
-Operator:     pbrt_material_kdsubsurface
-Label:        PBRT KdSubsurfaceMaterial
-Path:         oplib:/Vop/pbrt_material_kdsubsurface?Vop/pbrt_material_kdsubsurface
-Icon:         opdef:/Vop/pbrt_material_kdsubsurface?IconImage
-Table:        Vop
-License:      
-Extra:        
-User:         {"dtype": "kdsubsurface", "directive": "material"}
-Inputs:       0 to 8
-Subnet:       false
-Python:       false
-Empty:        false
-Modified:     Tue May 15 00:01:06 2018
+Modified:     Sun Aug 23 00:53:11 2020
 
 Operator:     pbrt_texture_constant
 Label:        PBRT ConstantTexture
@@ -935,4 +781,102 @@ Subnet:       false
 Python:       false
 Empty:        false
 Modified:     Wed May 16 22:27:42 2018
+
+Operator:     pbrt_material_coateddiffuse
+Label:        PBRT CoatedDiffuseMaterial
+Path:         oplib:/Vop/pbrt_material_coateddiffuse?Vop/pbrt_material_coateddiffuse
+Icon:         opdef:/Vop/pbrt_material_coateddiffuse?IconImage
+Table:        Vop
+License:      
+Extra:        
+User:         {"dtype": "coateddiffuse", "directive": "material"}
+Inputs:       0 to 6
+Subnet:       false
+Python:       false
+Empty:        false
+Modified:     Sat Aug 22 18:53:45 2020
+
+Operator:     pbrt_material_coatedconductor
+Label:        PBRT CoatedConductorMaterial
+Path:         oplib:/Vop/pbrt_material_coatedconductor?Vop/pbrt_material_coatedconductor
+Icon:         opdef:/Vop/pbrt_material_coatedconductor?IconImage
+Table:        Vop
+License:      
+Extra:        
+User:         {"dtype": "coatedconductor", "directive": "material"}
+Inputs:       0 to 11
+Subnet:       false
+Python:       false
+Empty:        false
+Modified:     Sun Aug 23 00:15:24 2020
+
+Operator:     pbrt_material_diffusetransmission
+Label:        PBRT DiffuseTransmissionMaterial
+Path:         oplib:/Vop/pbrt_material_diffusetransmission?Vop/pbrt_material_diffusetransmission
+Icon:         opdef:/Vop/pbrt_material_diffusetransmission?IconImage
+Table:        Vop
+License:      
+Extra:        
+User:         {"dtype": "diffusetransmission", "directive": "material"}
+Inputs:       0 to 4
+Subnet:       false
+Python:       false
+Empty:        false
+Modified:     Sun Aug 23 00:14:48 2020
+
+Operator:     pbrt_material_dieletric
+Label:        PBRT DielectricMaterial
+Path:         oplib:/Vop/pbrt_material_dieletric?Vop/pbrt_material_dieletric
+Icon:         opdef:/Vop/pbrt_material_dieletric?IconImage
+Table:        Vop
+License:      
+Extra:        
+User:         {"dtype": "dielectric", "directive": "material"}
+Inputs:       0 to 5
+Subnet:       false
+Python:       false
+Empty:        false
+Modified:     Sun Aug 23 00:14:39 2020
+
+Operator:     pbrt_material_thindieletric
+Label:        PBRT ThinDielectricMaterial
+Path:         oplib:/Vop/pbrt_material_thindieletric?Vop/pbrt_material_thindieletric
+Icon:         opdef:/Vop/pbrt_material_thindieletric?IconImage
+Table:        Vop
+License:      
+Extra:        
+User:         {"dtype": "thindielectric", "directive": "material"}
+Inputs:       0 to 5
+Subnet:       false
+Python:       false
+Empty:        false
+Modified:     Sun Aug 23 00:14:30 2020
+
+Operator:     pbrt_material_conductor
+Label:        PBRT ConductorMaterial
+Path:         oplib:/Vop/pbrt_material_conductor?Vop/pbrt_material_conductor
+Icon:         opdef:/Vop/pbrt_material_conductor?IconImage
+Table:        Vop
+License:      
+Extra:        
+User:         {"dtype": "conductor", "directive": "material"}
+Inputs:       0 to 6
+Subnet:       false
+Python:       false
+Empty:        false
+Modified:     Sun Aug 23 00:23:05 2020
+
+Operator:     pbrt_material_measured
+Label:        PBRT MeasuredMaterial
+Path:         oplib:/Vop/pbrt_material_measured?Vop/pbrt_material_measured
+Icon:         opdef:/Vop/pbrt_material_measured?IconImage
+Table:        Vop
+License:      
+Extra:        
+User:         {"dtype": "measured", "directive": "material"}
+Inputs:       0 to 1
+Subnet:       false
+Python:       false
+Empty:        false
+Modified:     Sun Aug 23 00:24:37 2020
 

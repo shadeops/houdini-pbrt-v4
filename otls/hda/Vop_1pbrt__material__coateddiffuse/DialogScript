@@ -1,0 +1,129 @@
+# Dialog script for pbrt_material_coateddiffuse automatically generated
+
+{
+    name	pbrt_material_coateddiffuse
+    script	coateddiffuse
+    label	"PBRT CoatedDiffuseMaterial"
+
+    rendermask	PBRT
+    externalshader 1
+    shadertype	generic
+    input	float	displacement	displacement
+    input	struct_PBRTSpectrum	reflectance	Reflectance
+    input	float	eta	eta
+    input	float	thickness	Thickness
+    input	float	roughness	Roughness
+    input	float	uroughness	"Roughness U"
+    input	float	vroughness	"Roughness V"
+    output	struct_PBRTMaterial	material	material
+    inputflags	displacement	0
+    inputflags	reflectance	0
+    inputflags	eta	0
+    inputflags	thickness	0
+    inputflags	roughness	0
+    inputflags	uroughness	0
+    inputflags	vroughness	0
+    signature	"Default Inputs"	default	{ float struct_PBRTSpectrum float float float float float struct_PBRTMaterial }
+
+    outputoverrides	default
+    {
+	___begin	auto
+			(0)
+    }
+
+    help {
+	""
+    }
+
+    parm {
+        name    "reflectance"
+        label   "Reflectance"
+        type    color
+        size    3
+        default { "0.5" "0.5" "0.5" }
+        range   { 0 1 }
+    }
+    parm {
+        name    "eta"
+        label   "Eta"
+        type    float
+        default { "1.5" }
+        range   { 0 1 }
+    }
+    parm {
+        name    "thickness"
+        label   "Thickness"
+        type    float
+        default { "0.01" }
+        range   { 0 1 }
+    }
+    parm {
+        name    "anisotropic_roughness"
+        label   "Anisotropic Roughness"
+        type    toggle
+        default { "0" }
+        parmtag { "pbrt.meta" "1" }
+    }
+    parm {
+        name    "roughness"
+        label   "Roughness"
+        type    float
+        default { "0" }
+        disablewhen "{ anisotropic_roughness == 1 }"
+        range   { 0 1 }
+    }
+    parm {
+        name    "uroughness"
+        label   "Roughness U"
+        type    float
+        default { "0" }
+        help    "Microfacet roughness in the u direction. If zero, perfect specular reflection is modeled."
+        disablewhen "{ anisotropic_roughness == 0 }"
+        range   { 0 1 }
+    }
+    parm {
+        name    "vroughness"
+        label   "Roughness V"
+        type    float
+        default { "0" }
+        help    "Microfacet roughness in the v direction. If zero, perfect specular reflection is modeled."
+        disablewhen "{ anisotropic_roughness == 0 }"
+        range   { 0 1 }
+    }
+    parm {
+        name    "remaproughness"
+        label   "Remap Roughness"
+        type    toggle
+        default { "1" }
+        help    "If true, roughness values are expected to be in the range [0,1], and are remapped to microfacet distribution function parameter values that range from near-perfect-specular at 0 to very rough at 1. Otherwise the roughness parameters are used directly for the alpha parameters of the microfacet distribution function."
+    }
+    groupsimple {
+        name    "bxdf_config"
+        label   "Layered BxDF Config"
+
+        parm {
+            name    "maxdepth"
+            label   "Max Depth"
+            type    integer
+            default { "10" }
+            range   { 0 10 }
+            parmtag { "script_callback_language" "python" }
+        }
+        parm {
+            name    "nsamples"
+            label   "Number of Samples"
+            type    integer
+            default { "1" }
+            range   { 0 10 }
+            parmtag { "script_callback_language" "python" }
+        }
+        parm {
+            name    "twosided"
+            label   "Two Sided"
+            type    toggle
+            default { "1" }
+            parmtag { "script_callback_language" "python" }
+        }
+    }
+
+}

@@ -1,0 +1,192 @@
+# Dialog script for pbrt_material_coatedconductor automatically generated
+
+{
+    name	pbrt_material_coatedconductor
+    script	coatedconductor
+    label	"PBRT CoatedConductorMaterial"
+
+    rendermask	PBRT
+    externalshader 1
+    shadertype	generic
+    input	float	displacement	displacement
+    input	float	thickness	Thickness
+    input	float	interface_eta	Eta
+    input	float	interface_roughness	Roughness
+    input	float	interface_uroughness	"Roughness U"
+    input	float	interface_vroughness	"Roughness V"
+    input	struct_PBRTSpectrum	conductor_eta	Eta
+    input	struct_PBRTSpectrum	conductor_k	K
+    input	float	conductor_roughness	Roughness
+    input	float	conductor_uroughness	"Roughness U"
+    input	float	conductor_vroughness	"Roughness V"
+    output	struct_PBRTMaterial	material	material
+    inputflags	displacement	0
+    inputflags	thickness	0
+    inputflags	interface_eta	0
+    inputflags	interface_roughness	0
+    inputflags	interface_uroughness	0
+    inputflags	interface_vroughness	0
+    inputflags	conductor_eta	0
+    inputflags	conductor_k	0
+    inputflags	conductor_roughness	0
+    inputflags	conductor_uroughness	0
+    inputflags	conductor_vroughness	0
+    signature	"Default Inputs"	default	{ float float float float float float struct_PBRTSpectrum struct_PBRTSpectrum float float float struct_PBRTMaterial }
+
+    outputoverrides	default
+    {
+	___begin	auto
+			(0)
+    }
+
+    help {
+	""
+    }
+
+    groupsimple {
+        name    "interface"
+        label   "Interface"
+
+        parm {
+            name    "interface_eta"
+            label   "Eta"
+            type    float
+            default { "1.5" }
+            range   { 0 5 }
+            parmtag { "pbrt.alias" "interface.eta" }
+        }
+        parm {
+            name    "thickness"
+            label   "Thickness"
+            type    float
+            default { "0.01" }
+            range   { 0 1 }
+        }
+        parm {
+            name    "interface_anisotropic_roughness"
+            label   "Anisotropic Roughness"
+            type    toggle
+            default { "0" }
+            parmtag { "pbrt.meta" "1" }
+        }
+        parm {
+            name    "interface_roughness"
+            label   "Roughness"
+            type    float
+            default { "0" }
+            disablewhen "{ interface_anisotropic_roughness == 1 }"
+            range   { 0 1 }
+            parmtag { "pbrt.alias" "interface.roughness" }
+        }
+        parm {
+            name    "interface_uroughness"
+            label   "Roughness U"
+            type    float
+            default { "0" }
+            help    "Microfacet roughness in the u direction. If zero, perfect specular reflection is modeled."
+            disablewhen "{ interface_anisotropic_roughness == 0 }"
+            range   { 0 1 }
+            parmtag { "pbrt.alias" "interface.uroughness" }
+        }
+        parm {
+            name    "interface_vroughness"
+            label   "Roughness V"
+            type    float
+            default { "0" }
+            help    "Microfacet roughness in the v direction. If zero, perfect specular reflection is modeled."
+            disablewhen "{ interface_anisotropic_roughness == 0 }"
+            range   { 0 1 }
+            parmtag { "pbrt.alias" "interface.vroughness" }
+        }
+    }
+
+    groupsimple {
+        name    "conductor"
+        label   "Conductor"
+
+        parm {
+            name    "conductor_eta"
+            label   "Eta"
+            type    color
+            size    3
+            default { "1" "1" "1" }
+            range   { 0 1 }
+            parmtag { "pbrt.alias" "conductor.eta" }
+        }
+        parm {
+            name    "conductor_k"
+            label   "K"
+            type    color
+            size    3
+            default { "1" "1" "1" }
+            range   { 0 1 }
+            parmtag { "pbrt.alias" "conductor.k" }
+        }
+        parm {
+            name    "conductor_anisotropic_roughness"
+            label   "Anisotropic Roughness"
+            type    toggle
+            default { "0" }
+            parmtag { "pbrt.meta" "1" }
+        }
+        parm {
+            name    "conductor_roughness"
+            label   "Roughness"
+            type    float
+            default { "0" }
+            disablewhen "{ conductor_anisotropic_roughness == 1 }"
+            range   { 0 1 }
+            parmtag { "pbrt.alias" "conductor.roughness" }
+        }
+        parm {
+            name    "conductor_uroughness"
+            label   "Roughness U"
+            type    float
+            default { "0" }
+            help    "Microfacet roughness in the u direction. If zero, perfect specular reflection is modeled."
+            disablewhen "{ conductor_anisotropic_roughness == 0 }"
+            range   { 0 1 }
+            parmtag { "pbrt.alias" "conductor.uroughness" }
+        }
+        parm {
+            name    "conductor_vroughness"
+            label   "Roughness V"
+            type    float
+            default { "0" }
+            help    "Microfacet roughness in the v direction. If zero, perfect specular reflection is modeled."
+            disablewhen "{ conductor_anisotropic_roughness == 0 }"
+            range   { 0 1 }
+            parmtag { "pbrt.alias" "conductor.vroughness" }
+        }
+    }
+
+    parm {
+        name    "remaproughness"
+        label   "Remap Roughness"
+        type    toggle
+        default { "1" }
+        help    "If true, roughness values are expected to be in the range [0,1], and are remapped to microfacet distribution function parameter values that range from near-perfect-specular at 0 to very rough at 1. Otherwise the roughness parameters are used directly for the alpha parameters of the microfacet distribution function."
+    }
+    groupsimple {
+        name    "bxdf_config"
+        label   "Layered BxDF Config"
+
+        parm {
+            name    "maxdepth"
+            label   "Max Depth"
+            type    integer
+            default { "10" }
+            range   { 0 10 }
+            parmtag { "script_callback_language" "python" }
+        }
+        parm {
+            name    "nsamples"
+            label   "Number of Samples"
+            type    integer
+            default { "1" }
+            range   { 0 10 }
+            parmtag { "script_callback_language" "python" }
+        }
+    }
+
+}

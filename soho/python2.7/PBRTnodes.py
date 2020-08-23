@@ -673,6 +673,9 @@ class SpectrumNode(BaseNode):
 
 class MaterialNode(BaseNode):
 
+    # TODO PBRT-v4 We now have signatures on Materials
+    #   for eta (float/spectrum) see dielectric
+
     # Can be a Material or Texture or a Spectrum Helper
     # spectrum helpers will be ignored as they are just
     # improved interfaces for a parm
