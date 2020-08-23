@@ -105,9 +105,25 @@ def sphere_wrangler(gdp, paramset=None, properties=None, override_node=None):
         properties (dict): Dictionary of SohoParms (Optional)
     Returns: None
     """
+
+    # TODO: Optimization, we can move the prim_attribs checks
+    #       and api.Scale and api.ReverseOrientation() out of the for loop
+
+    zmin_attrib = gdp.findPrimAttrib("zmin")
+    zmax_attrib = gdp.findPrimAttrib("zmax")
+    phimax_attrib = gdp.findPrimAttrib("phimax")
+
     for prim in gdp.prims():
         shape_paramset = ParamSet(paramset)
         shape_paramset |= prim_override(prim, override_node)
+
+        if zmin_attrib is not None:
+            shape_paramset.add("zmin", "float", prim.attribValue(zmin_attrib))
+        if zmax_attrib is not None:
+            shape_paramset.add("zmax", "float", prim.attribValue(zmax_attrib))
+        if phimax_attrib is not None:
+            shape_paramset.add("phimax", "float", prim.attribValue(phimax_attrib))
+
         with api.TransformBlock():
             xform = prim_transform(prim)
             api.ConcatTransform(xform)
