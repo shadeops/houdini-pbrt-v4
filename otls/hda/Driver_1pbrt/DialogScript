@@ -814,7 +814,7 @@
                 name    "integrator"
                 label   "Integrator"
                 type    ordinal
-                default { "path" }
+                default { "volpath" }
                 menu {
                     "simplepath"        "Simple Pathtracer"
                     "path"              "Pathtracer"
