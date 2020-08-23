@@ -96,6 +96,13 @@ def prim_override(prim, override_node):
     return override_node.override_paramset(override)
 
 
+# TODO: Write a find_attrib_value(name, type, size)
+#   this way we can scope the exact attribute we want
+#   instead of getting a string when we want a float.
+#   Update zmin_attrib = gdp.findPrimAttrib("zmin")
+#   as an example
+
+
 def sphere_wrangler(gdp, paramset=None, properties=None, override_node=None):
     """Outputs a "sphere" Shapes for the input geometry
 
@@ -147,9 +154,24 @@ def disk_wrangler(gdp, paramset=None, properties=None, override_node=None):
     # NOTE: PBRT's and Houdini's parameteric UVs are different
     # so when using textures this will need to be fixed on the
     # texture/material side as its not resolvable within Soho.
+
+    # TODO: Since we don't set a radius due to using a transform
+    # we might want to consider clamping innerradius to be < 1
+
+    innerradius_attrib = gdp.findPrimAttrib("innerradius")
+    phimax_attrib = gdp.findPrimAttrib("phimax")
+
     for prim in gdp.prims():
         shape_paramset = ParamSet(paramset)
         shape_paramset |= prim_override(prim, override_node)
+
+        if innerradius_attrib is not None:
+            shape_paramset.add(
+                "innerradius", "float", prim.attribValue(innerradius_attrib)
+            )
+        if phimax_attrib is not None:
+            shape_paramset.add("phimax", "float", prim.attribValue(phimax_attrib))
+
         with api.TransformBlock():
             xform = prim_transform(prim)
             api.ConcatTransform(xform)
