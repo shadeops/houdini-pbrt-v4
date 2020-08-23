@@ -5,6 +5,7 @@ import collections
 
 import hou
 import soho
+import sohog
 
 import PBRTapi as api
 import PBRTgeo as Geo
@@ -19,6 +20,7 @@ __all__ = [
     "wrangle_sampler",
     "wrangle_accelerator",
     "wrangle_integrator",
+    "wrangle_options",
     "wrangle_filter",
     "wrangle_camera",
     "wrangle_light",
@@ -366,7 +368,7 @@ def wrangle_film(obj, wrangler, now):
         "filename": SohoPBRT("filename", "string", ["pbrt.exr"], False),
         "maxcomponentvalue": SohoPBRT("maxcomponentvalue", "float", [1e38], True),
         "diagonal": SohoPBRT("diagonal", "float", [35], True),
-        "savefp16": SohoPBRT("savefp16", "toggle", [True], False),
+        "savefp16": SohoPBRT("savefp16", "bool", [True], False),
     }
     parms = obj.evaluate(parm_selection, now)
     for parm_name, parm in parms.iteritems():
@@ -450,6 +452,24 @@ def wrangle_sampler(obj, wrangler, now):
     return (sampler_name, paramset)
 
 
+def wrangle_options(obj, wrangler, now):
+    parm_selection = {
+        "disablepixeljitter": SohoPBRT("disablepixeljitter", "bool", [0], True),
+        "disablewavelengthjitter": SohoPBRT(
+            "disablewavelengthjitter", "bool", [0], True
+        ),
+        "msereferenceimage": SohoPBRT("msereferenceimage", "string", [""], True),
+        "msereferenceout": SohoPBRT("msereferenceout", "string", [""], True),
+        "seed": SohoPBRT("seed", "integer", [0], True),
+        "forcediffuse": SohoPBRT("forcediffuse", "bool", [0], True),
+        "pixelstats": SohoPBRT("pixelstats", "bool", [0], True),
+    }
+    parms = obj.evaluate(parm_selection, now)
+
+    for parm in parms:
+        yield (parm, parms[parm].Value[0])
+
+
 def wrangle_integrator(obj, wrangler, now):
 
     node = wrangle_node_parm(obj, "integrator_node", now)
@@ -459,14 +479,14 @@ def wrangle_integrator(obj, wrangler, now):
     parm_selection = {
         "integrator": SohoPBRT("integrator", "string", ["path"], False),
         "maxdepth": SohoPBRT("maxdepth", "integer", [5], False),
-        "regularize": SohoPBRT("regularize", "toggle", [False], True),
+        "regularize": SohoPBRT("regularize", "bool", [False], True),
         "rrthreshold": SohoPBRT("rrthreshold", "float", [1], True),
         "lightsampler": SohoPBRT("lightsampler", "string", ["bvh"], True),
-        "visualizestrategies": SohoPBRT("visualizestrategies", "toggle", [False], True),
-        "visualizeweights": SohoPBRT("visualizeweights", "toggle", [False], True),
+        "visualizestrategies": SohoPBRT("visualizestrategies", "bool", [False], True),
+        "visualizeweights": SohoPBRT("visualizeweights", "bool", [False], True),
         "iterations": SohoPBRT("iterations", "integer", [64], True),
         "photonsperiterations": SohoPBRT("photonsperiterations", "integer", [-1], True),
-        "seed": SohoPBRT("seed", "integer", [0], True),
+        "sppm_seed": SohoPBRT("sppm_seed", "integer", [0], True, key="seed"),
         "radius": SohoPBRT("radius", "float", [1], True),
         "bootstrapsamples": SohoPBRT("bootstrapsamples", "integer", [100000], True),
         "chains": SohoPBRT("chains", "integer", [1000], True),
@@ -474,18 +494,14 @@ def wrangle_integrator(obj, wrangler, now):
         "largestepprobability": SohoPBRT("largestepprobability", "float", [0.3], True),
         "sigma": SohoPBRT("sigma", "float", [0.01], True),
         "maxdistance": SohoPBRT("maxdistance", "float", ["1e38"], True),
-        "cossample": SohoPBRT("cossample", "toggle", [True], True),
-        "samplelights": SohoPBRT("samplelights", "toggle", [True], True),
-        "samplebsdf": SohoPBRT("samplebsdf", "toggle", [True], True),
+        "cossample": SohoPBRT("cossample", "bool", [True], True),
+        "samplelights": SohoPBRT("samplelights", "bool", [True], True),
+        "samplebsdf": SohoPBRT("samplebsdf", "bool", [True], True),
     }
 
     integrator_parms = {
         "ambientocclusion": ["maxdistance", "cossample"],
-        "path": ["maxdepth",
-                 "rrthreshold",
-                 "regularize",
-                 "lightsampler",
-        ],
+        "path": ["maxdepth", "rrthreshold", "regularize", "lightsampler"],
         "bdpt": [
             "maxdepth",
             "rrthreshold",
@@ -507,7 +523,7 @@ def wrangle_integrator(obj, wrangler, now):
             "maxdepth",
             "iterations",
             "photonsperiteration",
-            "seed",
+            "sppm_seed",
             "radius",
             "regularize",
         ],
@@ -673,7 +689,7 @@ def _to_light_scale(parms):
     intensity = parms["light_intensity"].Value[0]
     exposure = parms["light_exposure"].Value[0]
     scale = intensity * (2.0 ** exposure)
-    return PBRTParam("float", "scale", [scale] )
+    return PBRTParam("float", "scale", [scale])
 
 
 def _light_api_wrapper(wrangler_light_type, wrangler_paramset, node):
@@ -691,16 +707,18 @@ def _light_api_wrapper(wrangler_light_type, wrangler_paramset, node):
     else:
         api.LightSource(ltype, paramset)
 
+
 def _portal_helper(portal):
-    gdp = SohoGeometry(portal)
+    gdp = sohog.SohoGeometry(portal)
     pt_count = gdp.globalAttrib("geo:pointcount")
-    if pointcount < 4:
+    if pt_count < 4:
         return None
     P = gdp.attribute("geo:point", "P")
     portal_pts = []
     for i in range(4):
-        portal_pts.append(gdp.Value(P,i))
+        portal_pts.append(gdp.Value(P, i))
     return portal_pts
+
 
 def wrangle_light(light, wrangler, now):
 
@@ -850,9 +868,10 @@ def wrangle_light(light, wrangler, now):
             light_name = "point"
             paramset.add(PBRTParam("rgb", "I", parms["light_color"].Value))
         elif projmap:
-                light_name = "projection"
-                paramset.add(PBRTParam("float", "fov", [coneangle]))
-                paramset.add(PBRTParam("string", "filename", [projmap]))
+            light_name = "projection"
+            coneangle = light.wrangleFloat(wrangler, "coneangle", now, [45])[0]
+            paramset.add(PBRTParam("float", "fov", [coneangle]))
+            paramset.add(PBRTParam("string", "filename", [projmap]))
         else:
             light_name = "spot"
             paramset.add(PBRTParam("rgb", "I", parms["light_color"].Value))

@@ -62,10 +62,6 @@ def _api_named_dtype_call(directive, name, output, dtype, paramset=None):
 def _api_geo_handler(dtype, paramset=None):
     _api_dtype_call("Shape", dtype, paramset)
 
-def _api_call_with_name_value(directive, name, value):
-    soho.indent()
-    print(directive, '"{name}" {value}'.format(name=name, value=value))
-
 
 def Include(path):
     _api_call_with_args("Include", path)
@@ -229,9 +225,10 @@ def Shape(dtype, paramset=()):
 def ColorSpace(name):
     _api_call_with_args("ColorSpace", name)
 
-# TODO pbrt-v4 Add hooks
+
 def Option(name, value):
-    _api_call_with_name_value("Option", name, value)
+    _api_call_with_args("Option", name, value)
+
 
 @contextmanager
 def WorldBlock():

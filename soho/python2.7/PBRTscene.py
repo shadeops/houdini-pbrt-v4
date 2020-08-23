@@ -176,6 +176,11 @@ def render(cam, now):
 
     header()
 
+    for name, value in wrangle_options(cam, wrangler, now):
+        api.Option(name, value)
+
+    print()
+
     api.Film(*wrangle_film(cam, wrangler, now))
     api.Filter(*wrangle_filter(cam, wrangler, now))
     api.Sampler(*wrangle_sampler(cam, wrangler, now))
