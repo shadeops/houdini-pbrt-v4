@@ -762,7 +762,7 @@ Table:        Vop
 License:      
 Extra:        
 User:         {"dtype": "pbrt_medium", "directive": "soho_helper"}
-Inputs:       0 to 2
+Inputs:       0 to 3
 Subnet:       false
 Python:       false
 Empty:        false

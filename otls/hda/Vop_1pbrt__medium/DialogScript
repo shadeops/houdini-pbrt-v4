@@ -10,9 +10,11 @@
     shadertype	generic
     input	struct_PBRTSpectrum	sigma_a	"Sigma a"
     input	struct_PBRTSpectrum	sigma_s	"Sigma s"
+    input	struct_PBRTSpectrum	Le	"Le"
     inputflags	sigma_a	0
     inputflags	sigma_s	0
-    signature	"Default Inputs"	default	{ struct_PBRTSpectrum struct_PBRTSpectrum }
+    inputflags	Le 0
+    signature	"Default Inputs"	default	{ struct_PBRTSpectrum struct_PBRTSpectrum struct_PBRTSpectrum }
 
     outputoverrides	default
     {
@@ -95,6 +97,15 @@
         default { "2.55" "3.12" "3.77" }
         help    "The scattering cross section."
         disablewhen "{ preset != none }"
+        range   { 0 1 }
+    }
+    parm {
+        name    "Le"
+        label   "Le"
+        type    color
+        size    3
+        default { "0" "0" "0" }
+        help    ""
         range   { 0 1 }
     }
     parm {
