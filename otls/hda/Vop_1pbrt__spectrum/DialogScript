@@ -8,7 +8,7 @@
     rendermask	PBRT
     externalshader 1
     shadertype	generic
-    output	struct_PBRTSpectrum	output	"Output"
+    output	struct_PBRTSpectrum	output	Output
     signature	"Default Inputs"	default	{ struct_PBRTSpectrum }
 
     outputoverrides	default
@@ -18,6 +18,7 @@
     }
 
     help {
+	""
     }
 
     parm {
@@ -67,6 +68,51 @@
         type    file
         default { "" }
         hidewhen "{ type != file }"
+        menureplace {
+            [ "# From pbrt/util/spectrum.cpp" ]
+            [ "named_spectrum = (" ]
+            [ "        \"glass-BK7\"," ]
+            [ "        \"glass-BAF10\"," ]
+            [ "        \"glass-FK51A\"," ]
+            [ "        \"glass-LASF9\"," ]
+            [ "        \"glass-F5\"," ]
+            [ "        \"glass-F10\"," ]
+            [ "        \"glass-F11\"," ]
+            [ "        \"metal-Ag-eta\"," ]
+            [ "        \"metal-Ag-k\"," ]
+            [ "        \"metal-Al-eta\"," ]
+            [ "        \"metal-Al-k\"," ]
+            [ "        \"metal-Au-eta\"," ]
+            [ "        \"metal-Au-k\"," ]
+            [ "        \"metal-Cu-eta\"," ]
+            [ "        \"metal-Cu-k\"," ]
+            [ "        \"metal-MgO-eta\"," ]
+            [ "        \"metal-MgO-k\"," ]
+            [ "        \"metal-TiO2-eta\"," ]
+            [ "        \"metal-TiO2-k\"," ]
+            [ "        \"stdillum-A\"," ]
+            [ "        \"stdillum-D50\"," ]
+            [ "        \"stdillum-D65\"," ]
+            [ "        \"stdillum-F1\"," ]
+            [ "        \"stdillum-F2\"," ]
+            [ "        \"stdillum-F3\"," ]
+            [ "        \"stdillum-F4\"," ]
+            [ "        \"stdillum-F5\"," ]
+            [ "        \"stdillum-F6\"," ]
+            [ "        \"stdillum-F7\"," ]
+            [ "        \"stdillum-F8\"," ]
+            [ "        \"stdillum-F9\"," ]
+            [ "        \"stdillum-F10\"," ]
+            [ "        \"stdillum-F11\"," ]
+            [ "        \"stdillum-F12\"," ]
+            [ "        \"illum-acesD60\"," ]
+            [ "        \"Canon5dMarkII_R\"," ]
+            [ "        \"Canon5dMarkII_G\"," ]
+            [ "        \"Canon5dMarkII_B\"," ]
+            [ "    )" ]
+            [ "return [x for x in named_spectrum for _ in [0,1]]" ]
+            language python
+        }
         parmtag { "filechooser_mode" "read" }
     }
     parm {
