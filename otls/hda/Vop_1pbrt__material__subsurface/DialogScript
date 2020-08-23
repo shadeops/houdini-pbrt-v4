@@ -11,8 +11,6 @@
     input	float	displacement	displacement
     input	struct_PBRTSpectrum	sigma_a	"Sigma a"
     input	struct_PBRTSpectrum	sigma_s	"Sigma s"
-    input	struct_PBRTSpectrum	Kr	Reflectivity
-    input	struct_PBRTSpectrum	Kt	Transmissivity
     input	struct_PBRTSpectrum	reflectance	Reflectance
     input	struct_PBRTSpectrum	mfp	"Mean Free Path"
     input	float	roughness	Roughness
@@ -22,14 +20,12 @@
     inputflags	displacement	0
     inputflags	sigma_a	0
     inputflags	sigma_s	0
-    inputflags	Kr	0
-    inputflags	Kt	0
     inputflags	reflectance	0
     inputflags	mfp	0
     inputflags	roughness	0
     inputflags	uroughness	0
     inputflags	vroughness	0
-    signature	"Default Inputs"	default	{ float struct_PBRTSpectrum struct_PBRTSpectrum struct_PBRTSpectrum struct_PBRTSpectrum struct_PBRTSpectrum struct_PBRTSpectrum float float float struct_PBRTMaterial }
+    signature	"Default Inputs"	default	{ float struct_PBRTSpectrum struct_PBRTSpectrum struct_PBRTSpectrum struct_PBRTSpectrum float float float struct_PBRTMaterial }
 
     outputoverrides	default
     {
@@ -141,7 +137,7 @@
         type    color
         size    3
         default { "1" "1" "1" }
-        help    "The transmissivity of the surface."
+        help    ""
         disablewhen "{ do_reflectance == 0 }"
         range   { 0 1 }
     }
