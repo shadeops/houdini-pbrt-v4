@@ -11,20 +11,6 @@ from PBRTnodes import BaseNode, MaterialNode, PBRTParam, ParamSet
 from PBRTstate import scene_state, HVER_17_5, HVER_18
 
 
-def mesh_alpha_texs(properties):
-    if not properties:
-        return
-    paramset = ParamSet()
-    for prop in ("alpha", "shadowalpha"):
-        if prop not in properties:
-            continue
-        tex = properties[prop].Value[0]
-        if not tex:
-            continue
-        paramset.add(PBRTParam("texture", prop, tex))
-    return paramset
-
-
 def vtx_attrib_gen(gdp, attrib):
     """Per prim, per vertex fetching vertex/point values
 
@@ -149,7 +135,6 @@ def packeddisk_wrangler(gdp, paramset=None, properties=None, override_node=None)
         properties (dict): Dictionary of SohoParms (Optional)
     Returns: None
     """
-    alpha_paramset = mesh_alpha_texs(properties)
     for prim in gdp.prims():
         shape_paramset = ParamSet(paramset)
         shape_paramset |= prim_override(prim, override_node)
@@ -159,7 +144,6 @@ def packeddisk_wrangler(gdp, paramset=None, properties=None, override_node=None)
         if os.path.splitext(filename)[1].lower() != ".ply":
             continue
         shape_paramset.replace(PBRTParam("string", "filename", filename))
-        shape_paramset.update(alpha_paramset)
         with api.TransformBlock():
             xform = prim_transform(prim)
             api.ConcatTransform(xform)
@@ -192,8 +176,8 @@ def tube_wrangler(gdp, paramset=None, properties=None, override_node=None):
             # workaround, see TODO below in the else: pass
             if taper != 1:
                 api.Comment(
-                    "Skipping tube, prim #{}, taper values other than 1 not supported".format(
-                    prim.number())
+                    "Skipping cylinder, prim #{}"
+                    "taper values other than 1 not supported".format(prim.number())
                 )
                 continue
 
@@ -270,8 +254,6 @@ def mesh_wrangler(gdp, paramset=None, properties=None, override_node=None):
         if "pbrt_computeN" in properties:
             computeN = properties["pbrt_computeN"].Value[0]
         wrangler_paramset = trianglemesh_params(gdp, computeN)
-        alpha_paramset = mesh_alpha_texs(properties)
-        wrangler_paramset.update(alpha_paramset)
 
     mesh_paramset.update(wrangler_paramset)
 
