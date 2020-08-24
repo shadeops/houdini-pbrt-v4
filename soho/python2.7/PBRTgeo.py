@@ -2,7 +2,6 @@ from __future__ import print_function, division, absolute_import
 
 import os
 import array
-import itertools
 import collections
 
 import hou
@@ -799,86 +798,6 @@ def heightfield_prim_wrangler(
     return
 
 
-# TODO: While over all this works, there is an issue where pbrt will crash
-#       with prims 12,29-32 of a NURBS teapot. (Plantoic solids)
-def nurbs_wrangler(gdp, paramset=None, properties=None, override_node=None):
-    """Outputs a "nurbs" Shape for input geometry
-
-    The following attributes are checked for -
-    P (point), built-in attribute
-
-    Args:
-        gdp (hou.Geometry): Input geo
-        paramset (ParamSet): Any base params to add to the shape. (Optional)
-        properties (dict): Dictionary of SohoParms (Optional)
-    Returns: None
-    """
-
-    # TODO: - Figure out how the Pw attribute works in Houdini
-    # has_Pw = False if gdp.findPointAttrib('Pw') is None else True
-    has_Pw = False
-
-    # TODO   - Figure out how to query [uv]_extent in hou
-    # u_extent_h = gdp.attribute('geo:prim', 'geo:ubasisextent')
-    # v_extent_h = gdp.attribute('geo:prim', 'geo:vbasisextent')
-
-    for prim in gdp.prims():
-
-        nurbs_paramset = ParamSet()
-
-        row = prim.intrinsicValue("nu")
-        col = prim.intrinsicValue("nv")
-        u_order = prim.intrinsicValue("uorder")
-        v_order = prim.intrinsicValue("vorder")
-        u_wrap = prim.intrinsicValue("uwrap")
-        v_wrap = prim.intrinsicValue("vwrap")
-        u_knots = prim.intrinsicValue("uknots")
-        v_knots = prim.intrinsicValue("vknots")
-
-        if u_wrap:
-            row += u_order - 1
-        if v_wrap:
-            col += v_order - 1
-        nurbs_paramset.add(PBRTParam("integer", "nu", row))
-        nurbs_paramset.add(PBRTParam("integer", "nv", col))
-        nurbs_paramset.add(PBRTParam("integer", "uorder", u_order))
-        nurbs_paramset.add(PBRTParam("integer", "vorder", v_order))
-        nurbs_paramset.add(PBRTParam("float", "uknots", u_knots))
-        nurbs_paramset.add(PBRTParam("float", "vknots", v_knots))
-        # NOTE: Currently not sure how these are set within Houdini
-        #       but they are queryable
-        #       The Platonic SOP, Teapot -> Convert to NURBS can make these.
-        # nurbs_paramset.add(PBRTParam('float', 'u0', u_extent[0]))
-        # nurbs_paramset.add(PBRTParam('float', 'v0', v_extent[0]))
-        # nurbs_paramset.add(PBRTParam('float', 'u1', u_extent[1]))
-        # nurbs_paramset.add(PBRTParam('float', 'v1', v_extent[1]))
-
-        # if row + u_order != len(u_knots):
-        #    api.Comment('Invalid U')
-        # if col + v_order != len(v_knots):
-        #    api.Comment('Invalid V')
-
-        P = []
-        for v in xrange(col):
-            for u in xrange(row):
-                vtx = prim.vertex(u % prim.numCols(), v % prim.numRows())
-                pt = vtx.point()
-                P.append(pt.attribValue("P"))
-        if not has_Pw:
-            nurbs_paramset.add(PBRTParam("point", "P", P))
-        else:
-            # TODO: While the pbrt scene file looks right, the render
-            #       is a bit odd. Scaled up geo? Not what I was expecting.
-            #       Perhaps compare to RMan.
-            w = [prim_pt.attribValue("Pw") for prim_pt in prim.points()]
-            Pw = itertools.izip(P, w)
-            nurbs_paramset.add(PBRTParam("float", "Pw", Pw))
-
-        nurbs_paramset |= paramset
-        nurbs_paramset |= prim_override(prim, override_node)
-        api.Shape("nurbs", nurbs_paramset)
-
-
 def _convert_nurbs_to_bezier(gdp):
     """Convert any NURBS Curves to Beziers
 
@@ -1057,7 +976,7 @@ shape_wranglers = {
     "Poly": mesh_wrangler,
     "Mesh": mesh_wrangler,
     "PolySoup": mesh_wrangler,
-    "NURBMesh": nurbs_wrangler,
+    "NURBMesh": tesselated_wrangler,
     "BezierCurve": curve_wrangler,
     "NURBCurve": curve_wrangler,
     "Volume": volume_wrangler,
