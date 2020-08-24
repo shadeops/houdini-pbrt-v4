@@ -168,7 +168,7 @@ def packeddisk_wrangler(gdp, paramset=None, properties=None, override_node=None)
 
 
 def tube_wrangler(gdp, paramset=None, properties=None, override_node=None):
-    """Outputs "cone" or "cylinder" Shapes for the input geometry
+    """Handles "cylinder" Shapes for the input geometry
 
     Args:
         gdp (hou.Geometry): Input geo
@@ -190,28 +190,21 @@ def tube_wrangler(gdp, paramset=None, properties=None, override_node=None):
             taper = prim.intrinsicValue("tubetaper")
 
             # workaround, see TODO below in the else: pass
-            if not (taper == 0 or taper == 1):
+            if taper != 1:
                 api.Comment(
-                    "Skipping tube, prim # %i, with non-conforming taper of %f"
-                    % (prim.number(), taper)
+                    "Skipping tube, prim #{}, taper values other than 1 not supported".format(
+                    prim.number())
                 )
                 continue
 
             closed = prim.intrinsicValue("closed")
+
             api.ConcatTransform(xform)
             api.Rotate(-90, 1, 0, 0)
-            if taper == 0:
-                shape = "cone"
-                api.Translate(0, 0, -0.5)
-            elif taper == 1:
-                shape = "cylinder"
-                side_paramset.add(PBRTParam("float", "zmin", -0.5))
-                side_paramset.add(PBRTParam("float", "zmax", 0.5))
-            else:
-                # TODO support hyperboloid, however pbrt currently
-                # has no ends of trouble with this shape type
-                # crashes or hangs
-                api.Comment("Hyperboloid skipped due to PBRT instability")
+            shape = "cylinder"
+            side_paramset.add(PBRTParam("float", "zmin", -0.5))
+            side_paramset.add(PBRTParam("float", "zmax", 0.5))
+
             with api.AttributeBlock():
                 api.ReverseOrientation()
                 # Flip in Y so parameteric UV's match Houdini's
@@ -220,17 +213,12 @@ def tube_wrangler(gdp, paramset=None, properties=None, override_node=None):
 
             if closed:
                 disk_paramset = ParamSet(shape_paramset)
-                if shape == "cylinder":
-                    disk_paramset.add(PBRTParam("float", "height", 0.5))
+                disk_paramset.add(PBRTParam("float", "height", 0.5))
+                api.Shape("disk", disk_paramset)
+                disk_paramset.replace(PBRTParam("float", "height", -0.5))
+                with api.AttributeBlock():
+                    api.ReverseOrientation()
                     api.Shape("disk", disk_paramset)
-                    disk_paramset.replace(PBRTParam("float", "height", -0.5))
-                    with api.AttributeBlock():
-                        api.ReverseOrientation()
-                        api.Shape("disk", disk_paramset)
-                else:
-                    with api.AttributeBlock():
-                        api.ReverseOrientation()
-                        api.Shape("disk", disk_paramset)
     return
 
 
