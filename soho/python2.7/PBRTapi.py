@@ -180,10 +180,6 @@ def WorldBegin():
     soho.indent(1, "WorldBegin", PBRT_COMMENT)
 
 
-def WorldEnd():
-    soho.indent(-1, "WorldEnd", PBRT_COMMENT)
-
-
 def Material(dtype, paramset=()):
     _api_dtype_call("Material", dtype, paramset)
 
@@ -228,13 +224,6 @@ def ColorSpace(name):
 
 def Option(name, value):
     _api_call_with_args("Option", name, value)
-
-
-@contextmanager
-def WorldBlock():
-    WorldBegin()
-    yield
-    WorldEnd()
 
 
 @contextmanager

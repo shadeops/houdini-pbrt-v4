@@ -257,7 +257,8 @@ def render(cam, now):
 
     print()
 
-    api.WorldEnd()
+    # This was previously an api.WorldEnd() which would have provided the deindent
+    soho.indent(-1)
 
     footer(start_time)
 
