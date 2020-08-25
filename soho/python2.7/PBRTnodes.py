@@ -136,11 +136,17 @@ class PBRTParam(object):
 
     def as_str(self):
         """Returns param as a string suitable for a pbrt scene file"""
-        return soho.arrayToString('"%s" [ ' % self.type_name, self.value, " ]")
+        # self.type != "bool" is because we don't want our true/false values
+        # wrapped in quotes. (This wasn't the case in pbrt-v3)
+        return soho.arrayToString(
+            '"%s" [ ' % self.type_name, self.value, " ]", self.type != "bool"
+        )
 
     def print_str(self):
         """Prints param as a string suitable for a pbrt scene file"""
-        return soho.printArray('"%s" [ ' % self.type_name, self.value, " ]")
+        return soho.printArray(
+            '"%s" [ ' % self.type_name, self.value, " ]", self.type != "bool"
+        )
 
 
 class ParamSet(collections.MutableSet):
