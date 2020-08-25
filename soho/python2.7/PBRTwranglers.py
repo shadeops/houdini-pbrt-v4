@@ -364,18 +364,21 @@ def wrangle_film(obj, wrangler, now):
     paramset = ParamSet()
 
     parm_selection = {
-        "film": SohoPBRT("film", "string", ["rgb"], False),
         "filename": SohoPBRT("filename", "string", ["pbrt.exr"], False),
         "maxcomponentvalue": SohoPBRT("maxcomponentvalue", "float", [1e38], True),
         "diagonal": SohoPBRT("diagonal", "float", [35], True),
-        "savefp16": SohoPBRT("savefp16", "bool", [True], False),
+        "savefp16": SohoPBRT("savefp16", "bool", [1], True),
     }
     parms = obj.evaluate(parm_selection, now)
     for parm_name, parm in parms.iteritems():
         paramset.add(parm.to_pbrt())
 
-    parm_selection = {"res": SohoPBRT("res", "integer", [1280, 720], False)}
+    parm_selection = {
+        "film": SohoPBRT("film", "string", ["rgb"], False),
+        "res": SohoPBRT("res", "integer", [1280, 720], False),
+    }
     parms = obj.evaluate(parm_selection, now)
+    film_name = parms["film"].Value[0]
     paramset.add(PBRTParam("integer", "xresolution", parms["res"].Value[0]))
     paramset.add(PBRTParam("integer", "yresolution", parms["res"].Value[1]))
 
@@ -383,7 +386,7 @@ def wrangle_film(obj, wrangler, now):
     if crop_region != [0.0, 1.0, 0.0, 1.0]:
         paramset.add(PBRTParam("float", "cropwindow", crop_region))
 
-    return ("image", paramset)
+    return (film_name, paramset)
 
 
 def wrangle_filter(obj, wrangler, now):
