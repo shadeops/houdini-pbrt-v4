@@ -544,6 +544,21 @@ Python:       false
 Empty:        false
 Modified:     Tue May 15 00:01:05 2018
 
+
+Operator:     pbrt_material_mix
+Label:        PBRT MixMaterial
+Path:         oplib:/Vop/pbrt_material_mix?Vop/pbrt_material_mix
+Icon:         opdef:/Vop/pbrt_material_mix?IconImage
+Table:        Vop
+License:      
+Extra:        
+User:         {"dtype": "mix", "directive": "material"}
+Inputs:       0 to 3
+Subnet:       false
+Python:       false
+Empty:        false
+Modified:     Tue May 15 00:01:06 2018
+
 Operator:     pbrt_material_hair
 Label:        PBRT HairMaterial
 Path:         oplib:/Vop/pbrt_material_hair?Vop/pbrt_material_hair

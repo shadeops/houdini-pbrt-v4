@@ -1,0 +1,38 @@
+# Dialog script for pbrt_material_mix automatically generated
+
+{
+    name	pbrt_material_mix
+    script	mix
+    label	"PBRT MixMaterial"
+
+    rendermask	PBRT
+    externalshader 1
+    shadertype	generic
+    input	float amount	amount
+    input	struct_PBRTMaterial	namedmaterial1	namedmaterial1
+    input	struct_PBRTMaterial	namedmaterial2	namedmaterial2
+    output	struct_PBRTMaterial	material	material
+    inputflags	amount	0
+    inputflags	material1	0
+    inputflags	material2	0
+    signature	"Default Inputs"	default	{ float struct_PBRTMaterial struct_PBRTMaterial struct_PBRTMaterial }
+
+    outputoverrides	default
+    {
+	___begin	auto
+			(0)
+    }
+
+    help {
+    }
+
+    parm {
+        name    "amount"
+        label   "Amount"
+        type    float
+        size    1
+        default { "0.5" }
+        help    " Weighting factor for the blend between materials. A value of one corresponds to just \"namedmaterial1\", a value of zero corresponds to just \"namedmaterial2\", and values in between interpolate linearly."
+        range   { 0 1 }
+    }
+}
