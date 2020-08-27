@@ -11,6 +11,39 @@ from PBRTnodes import BaseNode, MaterialNode, PBRTParam, ParamSet
 from PBRTstate import scene_state, HVER_17_5, HVER_18
 
 
+def _mesh_vtx_gen(prim):
+    for row in range(prim.numRows()-1):
+        for col in range(prim.numCols()-1):
+            yield prim.vertex(col, row)
+            yield prim.vertex(col, row + 1)
+            yield prim.vertex(col + 1, row)
+            yield prim.vertex(col + 1, row + 1)
+
+def mesh_vtx_attrib_gen(prim, attrib):
+    """Per prim, per vertex fetching vertex/point values
+
+    Args:
+        gdp (hou.Geometry): Input geometry
+        attrib (hou.Attrib): Attribute to evaluate
+
+    Yields:
+        Values of attrib for each vertex
+    """
+    # NOTE: Having one loop with a conditional inside is a significant cost.
+    #       We'll pull the conditional out of the loop so its computed once
+    #       at the expense of some code dupilcation.
+
+    if attrib is None:
+        for vtx in _mesh_vtx_gen(prim):
+            yield vtx.point().number()
+    elif attrib.type() == hou.attribType.Vertex:
+        for vtx in _mesh_vtx_gen(prim):
+            yield vtx.attribValue(attrib)
+    elif attrib.type() == hou.attribType.Point:
+        for vtx in _mesh_vtx_gen(prim):
+            yield vtx.point().attribValue(attrib)
+
+
 def vtx_attrib_gen(gdp, attrib):
     """Per prim, per vertex fetching vertex/point values
 
@@ -36,13 +69,13 @@ def vtx_attrib_gen(gdp, attrib):
             yield vtx.point().attribValue(attrib)
 
 
-def linear_vtx_gen(gdp):
+def linear_vtx_gen(gdp, vtx_per_face_hint=None):
     """Generate the linearvertex for input geometry
 
     A linear vertex is a unique value for every vertex in the mesh
     where as a vertex number is the vertex offset on a prim
 
-    We need a linear vertex for generating inidices when we have uniqe points
+    We need a linear vertex for generating indices when we have uniqe points
     http://www.sidefx.com/docs/houdini/vex/functions/vertexindex.html
 
     Args:
@@ -51,14 +84,12 @@ def linear_vtx_gen(gdp):
     Yields:
         Linear vertex number for every vertex
     """
-    # NOTE: The follow can be skipped reduced down to a simple range since we
-    #       know that the trianglemeshes will always have 3 verts
-    # i = 0
-    # for prim in gdp.prims():
-    #    for vtx in prim.vertices():
-    #        yield i
-    #        i += 1
-    return range(len(gdp.iterPrims()) * 3)
+    # NOTE: The following can be skipped reduced down to a simple range since we
+    #       know that the meshes will always have {vtx_per_face_hint} verts
+    if vtx_per_face_hint is None:
+        return vtx_attrib_gen(gdp, None)
+
+    return range(len(gdp.iterPrims()) * vtx_per_face_hint)
 
 
 def prim_transform(prim):
@@ -253,7 +284,7 @@ def mesh_wrangler(gdp, paramset=None, properties=None, override_node=None):
         computeN = True
         if "pbrt_computeN" in properties:
             computeN = properties["pbrt_computeN"].Value[0]
-        wrangler_paramset = trianglemesh_params(gdp, computeN)
+        wrangler_paramset = polymesh_params(gdp, computeN)
 
     mesh_paramset.update(wrangler_paramset)
 
@@ -262,15 +293,15 @@ def mesh_wrangler(gdp, paramset=None, properties=None, override_node=None):
     return None
 
 
-def trianglemesh_params(mesh_gdp, computeN=True):
+def polymesh_params(mesh_gdp, computeN=True):
     """Generates a ParamSet for a trianglemesh
 
     The following attributes are checked for -
-    P (point), built-in attribute
-    N (vertex/point), float[3]
-    uv (vertex/point), float[3]
-    S (vertex/point), float[3]
-    faceIndices (prim), integer, used for ptex
+     P (point), built-in attribute
+     N (vertex/point), float[3]
+     uv (vertex/point), float[3]
+     S (vertex/point), float[3]
+     faceIndices (prim), integer, used for ptex
 
     Args:
         mesh_gdp (hou.Geometry): Input geo
@@ -280,9 +311,9 @@ def trianglemesh_params(mesh_gdp, computeN=True):
     """
 
     mesh_paramset = ParamSet()
-    unique_points = False
 
     # Optional Attributes
+
     N_attrib = mesh_gdp.findVertexAttrib("N")
     if N_attrib is None:
         N_attrib = mesh_gdp.findPointAttrib("N")
@@ -314,6 +345,8 @@ def trianglemesh_params(mesh_gdp, computeN=True):
             continue
         if attrib.type() == hou.attribType.Vertex:
             to_promote.append(attrib.name())
+
+    unique_points = False
     if to_promote:
         unique_points = True
 
@@ -349,7 +382,7 @@ def trianglemesh_params(mesh_gdp, computeN=True):
             sort_verb.setParms({"ptsort": 1})
             sort_verb.execute(mesh_gdp, [mesh_gdp])
 
-            indices = linear_vtx_gen(mesh_gdp)
+            indices = linear_vtx_gen(mesh_gdp, 3)
         else:
             indices = vtx_attrib_gen(mesh_gdp, None)
 
@@ -417,6 +450,93 @@ def loopsubdiv_params(mesh_gdp):
 
     mesh_paramset.add(PBRTParam("integer", "indices", indices))
     mesh_paramset.add(PBRTParam("point", "P", P))
+
+    return mesh_paramset
+
+
+def bilinearmesh_wrangler(gdp, paramset=None, properties=None, override_node=None):
+    if properties is None:
+        properties = {}
+
+    computeN = True
+    if "pbrt_computeN" in properties:
+        computeN = properties["pbrt_computeN"].Value[0]
+
+    N_attrib = gdp.findVertexAttrib("N")
+    if N_attrib is None:
+        N_attrib = gdp.findPointAttrib("N")
+
+    # If there are no vertex or point normals and we need to compute
+    # them with a SopVerb
+    if N_attrib is None and computeN:
+        normal_verb = hou.sopNodeTypeCategory().nodeVerb("normal")
+        # type 0 is point normals
+        normal_verb.setParms({"type": 0})
+        normal_verb.execute(gdp, [gdp])
+        N_attrib = gdp.findPointAttrib("N")
+
+    uv_attrib = gdp.findVertexAttrib("uv")
+    if uv_attrib is None:
+        uv_attrib = gdp.findPointAttrib("uv")
+
+    for prim in gdp.iterPrims():
+        prim_paramset = ParamSet(paramset)
+        wrangler_paramset = bilinear_params(prim, N_attrib, uv_attrib)
+        prim_paramset.update(wrangler_paramset)
+
+        api.Shape("bilinearmesh", prim_paramset)
+
+    return None
+
+
+def bilinear_params(prim, N_attrib, uv_attrib):
+    """
+    """
+
+    mesh_paramset = ParamSet()
+
+    # Optional Attributes
+
+    uv = None
+    N = None
+
+    # TODO, we could derive these similar to how we do the verts
+    # by going through rows/columns
+    # faceIndices (for ptex) are not applicable because Houdini
+    # threats the entire mesh as a prim.
+
+    # faceIndices_attrib = mesh_gdp.findPrimAttrib("faceIndices")
+    # faceIndices = None
+    # if faceIndices_attrib is not None:
+    #    faceIndices = array.array("i")
+    #    faceIndices.fromstring(mesh_gdp.primIntAttribValuesAsString("faceIndices"))
+    #    mesh_paramset.add(PBRTParam("integer", "faceIndices", faceIndices))
+
+    #indices = patchmesh_vtx_attrib_gen(prim, None)
+    indices = range((prim.numRows()-1) * (prim.numCols()-1) *4)
+    mesh_paramset.add(PBRTParam("integer", "indices", indices))
+
+    P_attrib = prim.geometry().findPointAttrib("P")
+    P = patchmesh_vtx_attrib_gen(prim, P_attrib)
+    mesh_paramset.add(PBRTParam("point", "P", P))
+
+    if N_attrib is not None:
+        N = patchmesh_vtx_attrib_gen(prim, N_attrib)
+        mesh_paramset.add(PBRTParam("normal", "N", N))
+    if uv_attrib is not None:
+        uv = patchmesh_vtx_attrib_gen(prim, uv_attrib)
+        # Houdini's uvs are stored as 3 floats, but pbrt only needs two
+        # We'll use a generator comprehension to strip off the extra
+        # float.
+        # The follow is the equivalent of
+        # uv_xy = (x for i, x in enumerate(uv) if i % 3 != 2)
+        # but avoids having to do a mod for N times.
+        uv_x = uv[::3]
+        uv_y = uv[1::3]
+        uv_xy = array.array("f", uv_x + uv_y)
+        uv_xy[::2] = uv_x
+        uv_xy[1::2] = uv_y
+        mesh_paramset.add(PBRTParam("float", "uv", uv_xy))
 
     return mesh_paramset
 
@@ -944,7 +1064,7 @@ shape_wranglers = {
     "Circle": disk_wrangler,
     "Tube": tube_wrangler,
     "Poly": mesh_wrangler,
-    "Mesh": mesh_wrangler,
+    "Mesh": bilinearmesh_wrangler,
     "PolySoup": mesh_wrangler,
     "NURBMesh": tesselated_wrangler,
     "BezierCurve": curve_wrangler,
