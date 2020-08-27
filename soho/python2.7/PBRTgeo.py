@@ -11,15 +11,21 @@ from PBRTnodes import BaseNode, MaterialNode, PBRTParam, ParamSet
 from PBRTstate import scene_state, HVER_17_5, HVER_18
 
 
-def _mesh_vtx_gen(prim):
-    for row in range(prim.numRows()-1):
-        for col in range(prim.numCols()-1):
-            yield prim.vertex(col, row)
-            yield prim.vertex(col, row + 1)
-            yield prim.vertex(col + 1, row)
-            yield prim.vertex(col + 1, row + 1)
+def patch_vtx_gen(gdp):
+    for prim in gdp.iterPrims():
+        for row in range(prim.numRows() - 1):
+            for col in range(prim.numCols() - 1):
+                yield prim.vertex(col, row)
+                yield prim.vertex(col, row + 1)
+                yield prim.vertex(col + 1, row)
+                yield prim.vertex(col + 1, row + 1)
 
-def mesh_vtx_attrib_gen(prim, attrib):
+
+def mesh_vtx_gen(gdp):
+    return (vtx for prim in gdp.iterPrims() for vtx in prim.vertices())
+
+
+def vtx_attrib_gen(vertices, attrib):
     """Per prim, per vertex fetching vertex/point values
 
     Args:
@@ -32,40 +38,14 @@ def mesh_vtx_attrib_gen(prim, attrib):
     # NOTE: Having one loop with a conditional inside is a significant cost.
     #       We'll pull the conditional out of the loop so its computed once
     #       at the expense of some code dupilcation.
-
     if attrib is None:
-        for vtx in _mesh_vtx_gen(prim):
+        for vtx in vertices:
             yield vtx.point().number()
     elif attrib.type() == hou.attribType.Vertex:
-        for vtx in _mesh_vtx_gen(prim):
+        for vtx in vertices:
             yield vtx.attribValue(attrib)
     elif attrib.type() == hou.attribType.Point:
-        for vtx in _mesh_vtx_gen(prim):
-            yield vtx.point().attribValue(attrib)
-
-
-def vtx_attrib_gen(gdp, attrib):
-    """Per prim, per vertex fetching vertex/point values
-
-    Args:
-        gdp (hou.Geometry): Input geometry
-        attrib (hou.Attrib): Attribute to evaluate
-
-    Yields:
-        Values of attrib for each vertex
-    """
-    # NOTE: Having one loop with a conditional inside is a significant cost.
-    #       We'll pull the conditional out of the loop so its computed once
-    #       at the expense of some code dupilcation.
-    vtx_per_prim = (vtx for prim in gdp.iterPrims() for vtx in prim.vertices())
-    if attrib is None:
-        for vtx in vtx_per_prim:
-            yield vtx.point().number()
-    elif attrib.type() == hou.attribType.Vertex:
-        for vtx in vtx_per_prim:
-            yield vtx.attribValue(attrib)
-    elif attrib.type() == hou.attribType.Point:
-        for vtx in vtx_per_prim:
+        for vtx in vertices:
             yield vtx.point().attribValue(attrib)
 
 
@@ -87,7 +67,8 @@ def linear_vtx_gen(gdp, vtx_per_face_hint=None):
     # NOTE: The following can be skipped reduced down to a simple range since we
     #       know that the meshes will always have {vtx_per_face_hint} verts
     if vtx_per_face_hint is None:
-        return vtx_attrib_gen(gdp, None)
+        vertices = mesh_vtx_gen(gdp)
+        return vtx_attrib_gen(vertices, None)
 
     return range(len(gdp.iterPrims()) * vtx_per_face_hint)
 
@@ -284,7 +265,7 @@ def mesh_wrangler(gdp, paramset=None, properties=None, override_node=None):
         computeN = True
         if "pbrt_computeN" in properties:
             computeN = properties["pbrt_computeN"].Value[0]
-        wrangler_paramset = polymesh_params(gdp, computeN)
+        wrangler_paramset = mesh_params(gdp, computeN)
 
     mesh_paramset.update(wrangler_paramset)
 
@@ -293,7 +274,7 @@ def mesh_wrangler(gdp, paramset=None, properties=None, override_node=None):
     return None
 
 
-def polymesh_params(mesh_gdp, computeN=True):
+def mesh_params(mesh_gdp, computeN=True, is_patchmesh=False):
     """Generates a ParamSet for a trianglemesh
 
     The following attributes are checked for -
@@ -331,11 +312,15 @@ def polymesh_params(mesh_gdp, computeN=True):
     if uv_attrib is None:
         uv_attrib = mesh_gdp.findPointAttrib("uv")
 
-    S_attrib = mesh_gdp.findVertexAttrib("S")
-    if S_attrib is None:
-        S_attrib = mesh_gdp.findPointAttrib("S")
+    if is_patchmesh:
+        S_attrib = None
+        faceIndices_attrib = None
+    else:
+        S_attrib = mesh_gdp.findVertexAttrib("S")
+        if S_attrib is None:
+            S_attrib = mesh_gdp.findPointAttrib("S")
 
-    faceIndices_attrib = mesh_gdp.findPrimAttrib("faceIndices")
+        faceIndices_attrib = mesh_gdp.findPrimAttrib("faceIndices")
 
     # We need to unique the points if any of the handles
     # to vtx attributes exists.
@@ -350,14 +335,10 @@ def polymesh_params(mesh_gdp, computeN=True):
     if to_promote:
         unique_points = True
 
-    S = None
-    uv = None
-    N = None
-    faceIndices = None
-
-    if faceIndices_attrib is not None:
-        faceIndices = array.array("i")
-        faceIndices.fromstring(mesh_gdp.primIntAttribValuesAsString("faceIndices"))
+    if is_patchmesh:
+        vertices = patch_vtx_gen(mesh_gdp)
+    else:
+        vertices = mesh_vtx_gen(mesh_gdp)
 
     if unique_points:
         if hou.applicationVersion() >= HVER_18:
@@ -377,43 +358,47 @@ def polymesh_params(mesh_gdp, computeN=True):
         # range, the C++ Sort is much faster than looking up the actual point
         # numbers from the verts. The previous implementation of this was doing
         # the sort indirectly by iterator per vert per prim.
-        if True:
+        if not is_patchmesh:
             sort_verb = hou.sopNodeTypeCategory().nodeVerb("sort")
             sort_verb.setParms({"ptsort": 1})
             sort_verb.execute(mesh_gdp, [mesh_gdp])
 
             indices = linear_vtx_gen(mesh_gdp, 3)
         else:
-            indices = vtx_attrib_gen(mesh_gdp, None)
+            indices = vtx_attrib_gen(vertices, None)
 
     else:
-        indices = vtx_attrib_gen(mesh_gdp, None)
+        indices = vtx_attrib_gen(vertices, None)
+
+    mesh_paramset.add(PBRTParam("integer", "indices", indices))
 
     # NOTE: We are using arrays here for very fast access since we can
     #       fetch all the values at once compactly, while faster, this
     #       will take more RAM than a generator approach. If this becomes
     #       and issue we can change it.
+
     P = array.array("f")
     P.fromstring(mesh_gdp.pointFloatAttribValuesAsString("P"))
+    mesh_paramset.add(PBRTParam("point", "P", P))
+
     if N_attrib is not None:
         N = array.array("f")
         N.fromstring(mesh_gdp.pointFloatAttribValuesAsString("N"))
+        mesh_paramset.add(PBRTParam("normal", "N", N))
+
     if S_attrib is not None:
         S = array.array("f")
         S.fromstring(mesh_gdp.pointFloatAttribValuesAsString("S"))
+        mesh_paramset.add(PBRTParam("vector", "S", S))
+
+    if faceIndices_attrib is not None:
+        faceIndices = array.array("i")
+        faceIndices.fromstring(mesh_gdp.primIntAttribValuesAsString("faceIndices"))
+        mesh_paramset.add(PBRTParam("integer", "faceIndices", faceIndices))
+
     if uv_attrib is not None:
         uv = array.array("f")
         uv.fromstring(mesh_gdp.pointFloatAttribValuesAsString("uv"))
-
-    mesh_paramset.add(PBRTParam("integer", "indices", indices))
-    mesh_paramset.add(PBRTParam("point", "P", P))
-    if N is not None:
-        mesh_paramset.add(PBRTParam("normal", "N", N))
-    if S is not None:
-        mesh_paramset.add(PBRTParam("vector", "S", S))
-    if faceIndices is not None:
-        mesh_paramset.add(PBRTParam("integer", "faceIndices", faceIndices))
-    if uv is not None:
         # Houdini's uvs are stored as 3 floats, but pbrt only needs two
         # We'll use a generator comprehension to strip off the extra
         # float.
@@ -446,7 +431,8 @@ def loopsubdiv_params(mesh_gdp):
     P = array.array("f")
     P.fromstring(mesh_gdp.pointFloatAttribValuesAsString("P"))
 
-    indices = vtx_attrib_gen(mesh_gdp, None)
+    vertices = mesh_vtx_gen(mesh_gdp)
+    indices = vtx_attrib_gen(vertices, None)
 
     mesh_paramset.add(PBRTParam("integer", "indices", indices))
     mesh_paramset.add(PBRTParam("point", "P", P))
@@ -454,7 +440,7 @@ def loopsubdiv_params(mesh_gdp):
     return mesh_paramset
 
 
-def bilinearmesh_wrangler(gdp, paramset=None, properties=None, override_node=None):
+def patch_wrangler(gdp, paramset=None, properties=None, override_node=None):
     if properties is None:
         properties = {}
 
@@ -462,83 +448,13 @@ def bilinearmesh_wrangler(gdp, paramset=None, properties=None, override_node=Non
     if "pbrt_computeN" in properties:
         computeN = properties["pbrt_computeN"].Value[0]
 
-    N_attrib = gdp.findVertexAttrib("N")
-    if N_attrib is None:
-        N_attrib = gdp.findPointAttrib("N")
+    prim_paramset = ParamSet(paramset)
+    wrangler_paramset = mesh_params(gdp, computeN, is_patchmesh=True)
+    prim_paramset.update(wrangler_paramset)
 
-    # If there are no vertex or point normals and we need to compute
-    # them with a SopVerb
-    if N_attrib is None and computeN:
-        normal_verb = hou.sopNodeTypeCategory().nodeVerb("normal")
-        # type 0 is point normals
-        normal_verb.setParms({"type": 0})
-        normal_verb.execute(gdp, [gdp])
-        N_attrib = gdp.findPointAttrib("N")
-
-    uv_attrib = gdp.findVertexAttrib("uv")
-    if uv_attrib is None:
-        uv_attrib = gdp.findPointAttrib("uv")
-
-    for prim in gdp.iterPrims():
-        prim_paramset = ParamSet(paramset)
-        wrangler_paramset = bilinear_params(prim, N_attrib, uv_attrib)
-        prim_paramset.update(wrangler_paramset)
-
-        api.Shape("bilinearmesh", prim_paramset)
+    api.Shape("bilinearmesh", prim_paramset)
 
     return None
-
-
-def bilinear_params(prim, N_attrib, uv_attrib):
-    """
-    """
-
-    mesh_paramset = ParamSet()
-
-    # Optional Attributes
-
-    uv = None
-    N = None
-
-    # TODO, we could derive these similar to how we do the verts
-    # by going through rows/columns
-    # faceIndices (for ptex) are not applicable because Houdini
-    # threats the entire mesh as a prim.
-
-    # faceIndices_attrib = mesh_gdp.findPrimAttrib("faceIndices")
-    # faceIndices = None
-    # if faceIndices_attrib is not None:
-    #    faceIndices = array.array("i")
-    #    faceIndices.fromstring(mesh_gdp.primIntAttribValuesAsString("faceIndices"))
-    #    mesh_paramset.add(PBRTParam("integer", "faceIndices", faceIndices))
-
-    #indices = patchmesh_vtx_attrib_gen(prim, None)
-    indices = range((prim.numRows()-1) * (prim.numCols()-1) *4)
-    mesh_paramset.add(PBRTParam("integer", "indices", indices))
-
-    P_attrib = prim.geometry().findPointAttrib("P")
-    P = patchmesh_vtx_attrib_gen(prim, P_attrib)
-    mesh_paramset.add(PBRTParam("point", "P", P))
-
-    if N_attrib is not None:
-        N = patchmesh_vtx_attrib_gen(prim, N_attrib)
-        mesh_paramset.add(PBRTParam("normal", "N", N))
-    if uv_attrib is not None:
-        uv = patchmesh_vtx_attrib_gen(prim, uv_attrib)
-        # Houdini's uvs are stored as 3 floats, but pbrt only needs two
-        # We'll use a generator comprehension to strip off the extra
-        # float.
-        # The follow is the equivalent of
-        # uv_xy = (x for i, x in enumerate(uv) if i % 3 != 2)
-        # but avoids having to do a mod for N times.
-        uv_x = uv[::3]
-        uv_y = uv[1::3]
-        uv_xy = array.array("f", uv_x + uv_y)
-        uv_xy[::2] = uv_x
-        uv_xy[1::2] = uv_y
-        mesh_paramset.add(PBRTParam("float", "uv", uv_xy))
-
-    return mesh_paramset
 
 
 def volume_wrangler(gdp, paramset=None, properties=None, override_node=None):
@@ -1064,7 +980,7 @@ shape_wranglers = {
     "Circle": disk_wrangler,
     "Tube": tube_wrangler,
     "Poly": mesh_wrangler,
-    "Mesh": bilinearmesh_wrangler,
+    "Mesh": patch_wrangler,
     "PolySoup": mesh_wrangler,
     "NURBMesh": tesselated_wrangler,
     "BezierCurve": curve_wrangler,
