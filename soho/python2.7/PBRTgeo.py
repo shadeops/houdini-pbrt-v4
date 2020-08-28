@@ -11,6 +11,20 @@ from PBRTnodes import BaseNode, MaterialNode, PBRTParam, ParamSet
 from PBRTstate import scene_state, HVER_17_5, HVER_18
 
 
+def primitive_alpha_texs(properties):
+    if not properties:
+        return
+    paramset = ParamSet()
+    for prop in ("alpha",):
+        if prop not in properties:
+            continue
+        tex = properties[prop].Value[0]
+        if not tex:
+            continue
+        paramset.add(PBRTParam("texture", prop, tex))
+    return paramset
+
+
 def patch_vtx_gen(gdp):
     for prim in gdp.iterPrims():
         for row in range(prim.numRows() - 1):
@@ -410,7 +424,7 @@ def mesh_params(mesh_gdp, computeN=True, is_patchmesh=False):
         uv_xy = array.array("f", uv_x + uv_y)
         uv_xy[::2] = uv_x
         uv_xy[1::2] = uv_y
-        mesh_paramset.add(PBRTParam("float", "uv", uv_xy))
+        mesh_paramset.add(PBRTParam("point2", "uv", uv_xy))
 
     return mesh_paramset
 
@@ -1165,10 +1179,12 @@ def output_geo(soppath, now, properties=None):
 
             for override, override_gdp in override_gdps.iteritems():
 
-                override_paramset = ParamSet()
+                base_paramset = ParamSet()
                 if override and material_node is not None:
                     # material parm overrides are only valid for MaterialNodes
-                    override_paramset |= material_node.override_paramset(override)
+                    base_paramset |= material_node.override_paramset(override)
+
+                base_paramset |= primitive_alpha_texs(properties)
 
                 if has_prim_overrides:
                     override_node = material_node
@@ -1202,7 +1218,7 @@ def output_geo(soppath, now, properties=None):
                 shape_wrangler = shape_wranglers.get(shape, not_supported)
                 if shape_wrangler:
                     shape_wrangler(
-                        override_gdp, override_paramset, properties, override_node
+                        override_gdp, base_paramset, properties, override_node
                     )
                 override_gdp.clear()
 

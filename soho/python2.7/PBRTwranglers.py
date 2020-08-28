@@ -951,6 +951,9 @@ def wrangle_geo(obj, wrangler, now):
         # We don't use the key=type since its a bit too generic of a name
         "pbrt_curvetype": SohoPBRT("pbrt_curvetype", "string", ["flat"], True),
         "pbrt_include": SohoPBRT("pbrt_include", "string", [""], False),
+        "pbrt_alpha_texture": SohoPBRT(
+            "pbrt_alpha_texture", "string", [""], skipdefault=False, key="alpha"
+        ),
         # TODO, Tesselation options?
     }
     properties = obj.evaluate(parm_selection, now)
@@ -1002,6 +1005,23 @@ def wrangle_geo(obj, wrangler, now):
         interior = "" if interior is None else interior
         exterior = "" if exterior is None else exterior
         api.MediumInterface(interior, exterior)
+
+    for prop in ("alpha", ):
+        alpha_tex = properties[prop].Value[0]
+        alpha_node = BaseNode.from_node(alpha_tex)
+        if (
+            alpha_node
+            and alpha_node.directive == "texture"
+            and alpha_node.output_type == "float"
+        ):
+            if alpha_node.path not in scene_state.shading_nodes:
+                wrangle_shading_network(alpha_node.path, saved_nodes=set())
+        else:
+            # If the passed in alpha_texture wasn't valid, clear it so we don't add
+            # it to the geometry
+            if alpha_tex:
+                api.Comment("%s is an invalid float texture" % alpha_tex)
+            properties[prop].Value[0] = ""
 
     if properties["pbrt_include"].Value[0]:
         # If we have included a file, skip output any geo.
