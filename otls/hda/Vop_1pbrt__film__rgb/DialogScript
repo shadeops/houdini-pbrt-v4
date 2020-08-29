@@ -137,7 +137,7 @@
         name    "whitebalance"
         label   "White Balance"
         type    float
-        default { "6500" }
+        default { "0" }
         help    ""
         range   { 5400 7200 }
     }
