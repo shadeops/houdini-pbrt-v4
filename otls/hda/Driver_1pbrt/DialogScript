@@ -948,14 +948,6 @@
             label "Sensor"
             disablewhentab "{ film_node != \"\" }"
             parm {
-                name    "exposuretime"
-                label   "Exposure Time"
-                type    float
-                default { "1" }
-                help    ""
-                range   { 0 1 }
-            }
-            parm {
                 name    "fnumber"
                 label   "F Number"
                 type    float
