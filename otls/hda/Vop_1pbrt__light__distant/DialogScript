@@ -39,6 +39,15 @@
         range   { 0 1 }
     }
     parm {
+        name    "illuminance"
+        label   "Illuminance"
+        type    float
+        size    1
+        default { "-1" }
+        help    ""
+        range   { 0 1 }
+    }
+    parm {
         name    "from"
         label   "From"
         type    vector

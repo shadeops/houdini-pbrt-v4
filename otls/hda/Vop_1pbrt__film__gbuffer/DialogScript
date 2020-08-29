@@ -18,6 +18,13 @@
     }
 
     parm {
+        name    "filename"
+        label   "Filename"
+        type    file
+        default { "pbrt.exr" }
+        parmtag { "filechooser_mode" "write" }
+    }
+    parm {
         name    "xresolution"
         label   "Resolution X"
         type    integer
@@ -103,10 +110,70 @@
         default { "1" }
     }
     parm {
-        name    "filename"
-        label   "Filename"
-        type    file
-        default { "pbrt.exr" }
-        parmtag { "filechooser_mode" "write" }
+        name    "exposuretime"
+        label   "Exposure Time"
+        type    float
+        default { "1" }
+        help    ""
+        range   { 0 1 }
+    }
+    parm {
+        name    "fnumber"
+        label   "F Number"
+        type    float
+        default { "1" }
+        help    ""
+        range   { 0 10 }
+    }
+    parm {
+        name    "iso"
+        label   "Iso"
+        type    float
+        default { "100" }
+        help    ""
+        range   { 50 1600 }
+    }
+    parm {
+        name    "c"
+        label   "C"
+        type    float
+        default { "100*$PI" }
+        help    ""
+        range   { 50 1600 }
+    }
+    parm {
+        name    "whitebalance"
+        label   "White Balance"
+        type    float
+        default { "6500" }
+        help    ""
+        range   { 5400 7200 }
+    }
+    parm {
+        name    "sensor"
+        label   "Sensor"
+        type    string
+        default { "cie1931" }
+        help    ""
+		menu { 
+			"cie1931"	"CIE 1931"
+			"canon_eos_100d"	"Canon EOS 100D"
+			"canon_eos_1dx_mkii"	"Canon EOS 1D X Mark II"
+			"canon_eos_200d"	"Canon EOS-200D"
+			"canon_eos_200d_mkii"	"Canon EOS 200D Mark II"
+			"canon_eos_5d"	"Canon EOS 5D"
+			"canon_eos_5d_mkii"	"Canon EOS 5D Mark II"
+			"canon_eos_5d_mkiii"	"Canon EOS 5D Mark III"
+			"canon_eos_5d_mkiv"	"Canon EOS 5D Mark IV"
+			"canon_eos_5ds"	"Canon EOS 5DS"
+			"canon_eos_m"	"Canon EOS M"
+			"hasselblad_l1d_20c"	"Hasselblad L1D-20C"
+			"nikon_d810"	"Nikon D810"
+			"nikon_d850"	"Nikon D850"
+			"sony_ilce_6400"	"Sony A6400"
+			"sony_ilce_7m3"	"Sony A7 Mark III"
+			"sony_ilce_7rm3"	"Sony A7R Mark III"
+			"sony_ilce_9"	"Sony A9"
+		}
     }
 }

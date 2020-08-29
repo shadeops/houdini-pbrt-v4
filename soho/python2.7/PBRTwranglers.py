@@ -386,6 +386,18 @@ def wrangle_film(obj, wrangler, now):
     if crop_region != [0.0, 1.0, 0.0, 1.0]:
         paramset.add(PBRTParam("float", "cropwindow", crop_region))
 
+    parm_selection = {
+        "exposuretime": SohoPBRT("exposuretime", "float", [1], True),
+        "fnumber": SohoPBRT("fnumber", "float", [1], True),
+        "iso": SohoPBRT("iso", "float", [100], True),
+        "c": SohoPBRT("c", "float", [314.159], True),
+        "whitebalance": SohoPBRT("whitebalance", "float", [6500], True),
+        "sensor": SohoPBRT("sensor", "string", ["cie1931"], True),
+    }
+    parms = obj.evaluate(parm_selection, now)
+    for parm_name, parm in parms.iteritems():
+        paramset.add(parm.to_pbrt())
+
     return (film_name, paramset)
 
 
@@ -749,8 +761,9 @@ def wrangle_light(light, wrangler, now):
         else:
             paramset.add(PBRTParam("rgb", "L", parms["light_color"].Value))
 
+        # Portal lights are only supported when supplying an env_map
         portal = []
-        if light.evalString("portal", now, portal):
+        if env_map and light.evalString("portal", now, portal):
             portal_pts = _portal_helper(portal)
             if portal_pts is not None:
                 # TODO PBRT-v4 we may need to invert the Houdini -> PBRT xform
@@ -1006,7 +1019,7 @@ def wrangle_geo(obj, wrangler, now):
         exterior = "" if exterior is None else exterior
         api.MediumInterface(interior, exterior)
 
-    for prop in ("alpha", ):
+    for prop in ("alpha",):
         alpha_tex = properties[prop].Value[0]
         alpha_node = BaseNode.from_node(alpha_tex)
         if (

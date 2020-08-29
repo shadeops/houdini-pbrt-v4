@@ -39,6 +39,15 @@
         help    "Scale factor that modulates the amount of light that the light source emits into the scene."
         range   { 0 1 }
     }
+    parm {
+        name    "illuminance"
+        label   "Illuminance"
+        type    float
+        size    1
+        default { "-1" }
+        help    ""
+        range   { 0 1 }
+    }
 	parm {
 		name	"portal"
 		label	"Portal"
@@ -47,6 +56,7 @@
         parmtag { "opfilter" "!!SOP!!" }
 		parmtag { "pbrt.type" "point" }
 		parmtag { "pbrt.callback" "portal_points" }
+		disablewhen "{ filename == \"\" } { hasinput(0) == 1 }"
 	}
     parm {
         name    "filename"

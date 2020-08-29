@@ -40,6 +40,15 @@
         range   { 0 1 }
     }
     parm {
+        name    "power"
+        label   "Power"
+        type    float
+        size    1
+        default { "-1" }
+        help    ""
+        range   { 0 1 }
+    }
+    parm {
         name    "twosided"
         label   "Two Sided"
         type    toggle
