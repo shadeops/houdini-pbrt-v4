@@ -323,7 +323,8 @@ class BaseNode(object):
         # I'm not sure why that is the case but I suspect its due to the
         # shopclerk althought further experiments are needed.
         # For now we'll brute force it
-        return self.node.type().definition().sections()["FunctionName"].contents()
+        function_definition = self.node.type().definition().sections()["FunctionName"]
+        return function_definition.contents().strip()
 
     @property
     def path(self):
