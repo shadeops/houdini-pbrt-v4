@@ -92,6 +92,16 @@
         parmtag     { filechooser_mode  "read" }
     }
     parm {
+        SOHO_STRING(pbrt_colorspace, "Color Space", "Color Space", "srgb")
+        menu {
+            "srgb"      "sRGB"
+            "rec2020"    "Rec. 2020"
+            "dci-p3"  "DCI P3"
+			"aces2065-1" "ACES 2065-1"
+        }
+        parmtag     { "pbrt.meta" "1" }
+    }
+    parm {
         name        pbrt_alpha_texture
         label       "Alpha Texture"
         parmtag     { spare_category "Geometry" }

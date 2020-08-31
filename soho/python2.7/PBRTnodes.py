@@ -339,6 +339,15 @@ class BaseNode(object):
         return "%s%s%s" % (self.path_prefix, self.path, self.path_suffix)
 
     @property
+    def colorspace(self):
+        colorspace_parm = self.node.parm("pbrt_colorspace")
+        if colorspace_parm is None:
+            return None
+        if colorspace_parm.isDisabled() or colorspace_parm.isHidden():
+            return None
+        return colorspace_parm.evalAsString()
+
+    @property
     def coord_sys(self):
         return None
 

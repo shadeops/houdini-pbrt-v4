@@ -245,9 +245,3 @@ def ObjectBlock(name):
     ObjectBegin(name)
     yield
     ObjectEnd()
-
-
-# Helper context
-@contextmanager
-def NullBlock():
-    yield

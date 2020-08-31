@@ -7,9 +7,10 @@ import hou
 import soho
 import sohog
 
+import PBRTgeo
+import PBRTinstancing
+
 import PBRTapi as api
-import PBRTgeo as Geo
-import PBRTinstancing as Instancing
 
 from PBRTstate import scene_state
 from PBRTsoho import SohoPBRT
@@ -24,6 +25,7 @@ __all__ = [
     "wrangle_filter",
     "wrangle_camera",
     "wrangle_light",
+    "wrangle_medium",
     "wrangle_geo",
     "wrangle_obj",
     "wrangle_shading_network",
@@ -310,6 +312,11 @@ def wrangle_shading_network(
             root=False,
         )
 
+    colorspace = node.colorspace
+    if colorspace is not None:
+        api.AttributeBegin()
+        api.ColorSpace(colorspace)
+
     coord_sys = node.coord_sys
     if coord_sys:
         api.TransformBegin()
@@ -319,10 +326,16 @@ def wrangle_shading_network(
         api_call(node.directive_type, paramset)
     else:
         api_call(node.full_name, node.output_type, node.directive_type, paramset)
+
     if coord_sys:
         api.TransformEnd()
+
+    if colorspace is not None:
+        api.AttributeEnd()
+
     if api_call == api.MakeNamedMaterial:
         print()
+
     return
 
 
@@ -910,6 +923,30 @@ def wrangle_light(light, wrangler, now):
     return
 
 
+def wrangle_medium(medium):
+    """Output a NamedMedium from the input oppath"""
+    if not medium:
+        return None
+    if medium in scene_state.medium_nodes:
+        return None
+    scene_state.medium_nodes.add(medium)
+
+    medium_vop = BaseNode.from_node(medium)
+    if medium_vop is None:
+        return None
+    if medium_vop.directive_type != "pbrt_medium":
+        return None
+
+    colorspace = medium_vop.colorspace
+    if colorspace:
+        api.AttributeBegin()
+        api.ColorSpace(colorspace)
+    api.MakeNamedMedium(medium_vop.path, "homogeneous", medium_vop.paramset)
+    if colorspace:
+        api.AttributeEnd()
+    return medium_vop.path
+
+
 def wrangle_obj(obj, wrangler, now, ignore_xform=False, concat_xform=False):
 
     ptinstance = []
@@ -921,7 +958,7 @@ def wrangle_obj(obj, wrangler, now, ignore_xform=False, concat_xform=False):
     if has_ptinstance and ptinstance[0] == 2:
         # This is "fast instancing", "full instancing" results in Soho outputing
         # actual objects which independently need to be wrangled.
-        Instancing.wrangle_fast_instances(obj, now)
+        PBRTinstancing.wrangle_fast_instances(obj, now)
         return
 
     wrangle_geo(obj, wrangler, now)
@@ -995,7 +1032,7 @@ def wrangle_geo(obj, wrangler, now):
 
     pt_shop_found = False
     if properties["ptinstance"].Value[0] == 1:
-        instance_info = Instancing.get_full_instance_info(obj, now)
+        instance_info = PBRTinstancing.get_full_instance_info(obj, now)
         properties[".instance_info"] = instance_info
         if instance_info is not None:
             pt_shop_found = process_full_pt_instance_material(instance_info)
@@ -1045,5 +1082,5 @@ def wrangle_geo(obj, wrangler, now):
         api.Comment("Can not find soppath for object")
         return
 
-    Geo.output_geo(soppath, now, properties)
+    PBRTgeo.output_geo(soppath, now, properties)
     return

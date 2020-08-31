@@ -8,7 +8,6 @@ from sohog import SohoGeometry
 
 import PBRTapi as api
 from PBRTwranglers import *  # noqa: F403
-from PBRTnodes import BaseNode
 from PBRTinstancing import find_referenced_instances, get_full_instance_info
 from PBRTstate import scene_state
 
@@ -64,31 +63,13 @@ def output_materials(obj, wrangler, now):
     return
 
 
-def output_medium(medium):
-    """Output a NamedMedium from the input oppath"""
-    if not medium:
-        return None
-    if medium in scene_state.medium_nodes:
-        return None
-    scene_state.medium_nodes.add(medium)
-
-    medium_vop = BaseNode.from_node(medium)
-    if medium_vop is None:
-        return None
-    if medium_vop.directive_type != "pbrt_medium":
-        return None
-
-    api.MakeNamedMedium(medium_vop.path, "homogeneous", medium_vop.paramset)
-    return medium_vop.path
-
-
 def output_mediums(obj, wrangler, now):
     """Output the any mediums associated with the Soho Object"""
     exterior = obj.wrangleString(wrangler, "pbrt_exterior", now, [None])[0]
     interior = obj.wrangleString(wrangler, "pbrt_interior", now, [None])[0]
 
-    exterior = output_medium(exterior)
-    interior = output_medium(interior)
+    exterior = wrangle_medium(exterior)
+    interior = wrangle_medium(interior)
 
     return interior, exterior
 
@@ -166,6 +147,51 @@ def output_transform_times(cam, now):
     return
 
 
+def scene_renderables(now):
+
+    # For now we will not be using wranglers
+    wrangler = None
+
+    # Output Materials
+    api.Comment("=" * 50)
+    api.Comment("NamedMaterial Definitions")
+    for obj in soho.objectList("objlist:instance"):
+        output_materials(obj, wrangler, now)
+
+    print()
+
+    # Output NamedMediums
+    api.Comment("=" * 50)
+    api.Comment("NamedMedium Definitions")
+    for obj in soho.objectList("objlist:instance"):
+        output_mediums(obj, wrangler, now)
+
+    print()
+
+    # Output Object Instances for Fast Instancing
+    api.Comment("=" * 50)
+    api.Comment("Object Instance Definitions")
+    for obj in soho.objectList("objlist:instance"):
+        # TODO do we need to set colorspace here?
+        #      probably not, but need to create some test cases
+        output_instances(obj, wrangler, now)
+
+    print()
+
+    # Output Objects
+    api.Comment("=" * 50)
+    api.Comment("Object Definitions")
+    for obj in soho.objectList("objlist:instance"):
+        api.Comment("-" * 50)
+        api.Comment(obj.getName())
+        with api.AttributeBlock():
+            val = []
+            if obj.evalString("pbrt_colorspace", now, val):
+                api.ColorSpace(val[0])
+            wrangle_obj(obj, wrangler, now, concat_xform=True)
+        print()
+
+
 def render(cam, now):
     """Main render entry point"""
 
@@ -178,6 +204,10 @@ def render(cam, now):
 
     for name, value in wrangle_options(cam, wrangler, now):
         api.Option(name, value)
+
+    val = []
+    if cam.evalString("pbrt_colorspace", now, val):
+        api.ColorSpace(val[0])
 
     print()
 
@@ -216,50 +246,18 @@ def render(cam, now):
     for light in soho.objectList("objlist:light"):
         api.Comment(light.getName())
         with api.AttributeBlock():
+            val = []
+            if light.evalString("pbrt_colorspace", now, val):
+                api.ColorSpace(val[0])
             wrangle_light(light, wrangler, now)
         print()
 
     print()
-
-    # Output Materials
-    api.Comment("=" * 50)
-    api.Comment("NamedMaterial Definitions")
-    for obj in soho.objectList("objlist:instance"):
-        output_materials(obj, wrangler, now)
-
-    print()
-
-    # Output NamedMediums
-    api.Comment("=" * 50)
-    api.Comment("NamedMedium Definitions")
-    for obj in soho.objectList("objlist:instance"):
-        output_mediums(obj, wrangler, now)
-
-    print()
-
-    # Output Object Instances for Fast Instancing
-    api.Comment("=" * 50)
-    api.Comment("Object Instance Definitions")
-    for obj in soho.objectList("objlist:instance"):
-        output_instances(obj, wrangler, now)
-
-    print()
-
-    # Output Objects
-    api.Comment("=" * 50)
-    api.Comment("Object Definitions")
-    for obj in soho.objectList("objlist:instance"):
-        api.Comment("-" * 50)
-        api.Comment(obj.getName())
-        with api.AttributeBlock():
-            wrangle_obj(obj, wrangler, now)
-        print()
-
+    scene_renderables(now)
     print()
 
     # This was previously an api.WorldEnd() which would have provided the deindent
     soho.indent(-1)
-
     footer(start_time)
 
     return
@@ -270,51 +268,12 @@ def archive(now):
 
     start_time = time.time()
 
-    # For now we will not be using wranglers
-    wrangler = None
-
     header()
 
     api.AttributeBegin()
-
     print()
-
-    # Output Materials
-    api.Comment("=" * 50)
-    api.Comment("NamedMaterial Definitions")
-    for obj in soho.objectList("objlist:instance"):
-        output_materials(obj, wrangler, now)
-
+    scene_renerables(now)
     print()
-
-    # Output NamedMediums
-    api.Comment("=" * 50)
-    api.Comment("NamedMedium Definitions")
-    for obj in soho.objectList("objlist:instance"):
-        output_mediums(obj, wrangler, now)
-
-    print()
-
-    # Output Object Instances for Fast Instancing
-    api.Comment("=" * 50)
-    api.Comment("Object Instance Definitions")
-    for obj in soho.objectList("objlist:instance"):
-        output_instances(obj, wrangler, now)
-
-    print()
-
-    # Output Objects
-    api.Comment("=" * 50)
-    api.Comment("Object Definitions")
-    for obj in soho.objectList("objlist:instance"):
-        api.Comment("-" * 50)
-        api.Comment(obj.getName())
-        with api.AttributeBlock():
-            wrangle_obj(obj, wrangler, now, concat_xform=True)
-        print()
-
-    print()
-
     api.AttributeEnd()
 
     footer(start_time)
