@@ -10,6 +10,8 @@
     shadertype	generic
     input	float	displacement	displacement
     input	struct_PBRTSpectrum	reflectance	Reflectance
+	input	struct_PBRTSpectrum	albedo	"Albedo"
+	input	float	g	"g"
     input	float	eta	eta
     input	float	thickness	Thickness
     input	float	roughness	Roughness
@@ -18,12 +20,14 @@
     output	struct_PBRTMaterial	material	material
     inputflags	displacement	0
     inputflags	reflectance	0
+	inputflags	albedo 0
+	inputflags	g	0
     inputflags	eta	0
     inputflags	thickness	0
     inputflags	roughness	0
     inputflags	uroughness	0
     inputflags	vroughness	0
-    signature	"Default Inputs"	default	{ float struct_PBRTSpectrum float float float float float struct_PBRTMaterial }
+    signature	"Default Inputs"	default	{ float struct_PBRTSpectrum struct_PBRTSpectrum float float float float float float struct_PBRTMaterial }
 
     outputoverrides	default
     {
@@ -42,6 +46,21 @@
         size    3
         default { "0.5" "0.5" "0.5" }
         range   { 0 1 }
+    }
+    parm {
+        name    "albedo"
+        label   "Albedo"
+        type    color
+        size    3
+        default { "0.0" "0.0" "0.0" }
+        range   { 0 1 }
+    }
+    parm {
+        name    "g"
+        label   "g"
+        type    float
+        default { "0" }
+        range   { -1 1 }
     }
     parm {
         name    "eta"
