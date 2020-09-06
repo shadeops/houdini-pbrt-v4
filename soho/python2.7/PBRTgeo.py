@@ -99,7 +99,10 @@ def prim_transform(prim):
 
 
 def prim_override(prim, override_node):
+    # TODO pbrt-v4 does not support this
     paramset = ParamSet()
+    return paramset
+
     if override_node is None:
         return paramset
     override = prim.attribValue("material_override")
@@ -1297,8 +1300,8 @@ def output_geo(soppath, now, properties=None):
                 shape_gdp.clear()
                 del override_attrib_h
 
-                # We don't the wranglers to handle the overrides since we are doing it
-                # here. So we'll set this to false, which will mean the override_node
+                # We don't want the wranglers to handle the overrides since we are doing
+                # it here. So we'll set this to false, which will mean the override_node
                 # is None and not trigger per prim overrides
                 has_prim_overrides = False
             else:
@@ -1307,7 +1310,11 @@ def output_geo(soppath, now, properties=None):
             for override, override_gdp in override_gdps.iteritems():
 
                 base_paramset = ParamSet()
-                if override and material_node is not None:
+                # TODO pbrt-v4 material overrides are no longer suppored
+                #      redo the aggreate vs prim sections with this in mind
+                #      Adding the False to the conditional below until this
+                #      is done.
+                if override and material_node is not None and False:
                     # material parm overrides are only valid for MaterialNodes
                     base_paramset |= material_node.override_paramset(override)
 
