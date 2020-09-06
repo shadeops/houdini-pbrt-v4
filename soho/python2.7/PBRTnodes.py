@@ -439,7 +439,7 @@ class BaseNode(object):
                 if cached_override == -1:
                     continue
                 if isinstance(cached_override, PBRTParam):
-                    # textures which can't be overriden
+                    # textures which can't be overridden
                     paramset.add(cached_override)
                     continue
                 pbrt_name, pbrt_type, tuple_names = cached_override
@@ -687,7 +687,7 @@ class SpectrumNode(BaseNode):
 
 class MaterialNode(BaseNode):
 
-    # TODO PBRT-v4 We now have signatures on Materials
+    # TODO pbrt-v4 We now have signatures on Materials
     #   for eta (float/spectrum) see dielectric
 
     # Can be a Material or Texture or a Spectrum Helper

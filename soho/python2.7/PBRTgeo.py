@@ -203,7 +203,6 @@ def tube_wrangler(gdp, paramset=None, properties=None, override_node=None):
             xform = prim_transform(prim)
             taper = prim.intrinsicValue("tubetaper")
 
-            # workaround, see TODO below in the else: pass
             if taper != 1:
                 api.Comment(
                     "Skipping cylinder, prim #{}"

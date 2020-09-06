@@ -172,13 +172,14 @@ def process_full_pt_instance_medium(instance_info, medium_type):
     medium_paramset = ParamSet(medium_node.paramset)
 
     # TODO: Currently both this and the geometry overrides
-    #       for mediums only support "rgb" and not spectrums.
+    #       for mediums only, support "rgb" and not spectrums.
     parms = {
         "sigma_a": "rgb",
         "sigma_s": "rgb",
         "preset": "string",
         "g": "float",
         "scale": "float",
+        "Le" : "rgb",
     }
 
     for parm, ptype in parms.iteritems():
@@ -778,7 +779,7 @@ def wrangle_light(light, wrangler, now):
         if env_map and light.evalString("portal", now, portal):
             portal_pts = _portal_helper(portal)
             if portal_pts is not None:
-                # TODO PBRT-v4 we may need to invert the Houdini -> PBRT xform
+                # TODO pbrt-v4 we may need to invert the Houdini -> PBRT xform
                 paramset.add(PBRTParam("point", "portal", portal_pts))
 
         output_xform(light, now, no_motionblur=True)

@@ -217,7 +217,6 @@ def Shape(dtype, paramset=()):
     _api_geo_handler(dtype, paramset)
 
 
-# TODO pbrt-v4 Add hooks
 def ColorSpace(name):
     _api_call_with_args("ColorSpace", name)
 
