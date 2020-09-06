@@ -56,7 +56,7 @@ class PBRTParam(object):
         "bool",
     )
     type_synonyms = {"point": "point3", "vector": "vector3", "color": "rgb"}
-    spectrum_types = set(["color", "rgb", "blackbody", "xyz", "spectrum"])
+    spectrum_types = set(["rgb", "blackbody", "xyz", "spectrum"])
 
     def __init__(self, param_type, param_name, param_value=None):
         """
