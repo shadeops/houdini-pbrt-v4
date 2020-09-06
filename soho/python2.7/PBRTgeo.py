@@ -1,6 +1,7 @@
 from __future__ import print_function, division, absolute_import
 
 import os
+import re
 import array
 import collections
 
@@ -414,8 +415,8 @@ def mesh_params(mesh_gdp, computeN=True, is_patchmesh=False):
         uv = array.array("f")
         uv.fromstring(mesh_gdp.pointFloatAttribValuesAsString("uv"))
         # Houdini's uvs are stored as 3 floats, but pbrt only needs two
-        # We'll use a generator comprehension to strip off the extra
-        # float.
+        # We'll use some array slicing of continous memory to avoid
+        # costly iteration
         # The follow is the equivalent of
         # uv_xy = (x for i, x in enumerate(uv) if i % 3 != 2)
         # but avoids having to do a mod for N times.
@@ -471,48 +472,198 @@ def patch_wrangler(gdp, paramset=None, properties=None, override_node=None):
     return None
 
 
-def volume_wrangler(gdp, paramset=None, properties=None, override_node=None):
-    """Call either the smoke_prim_wrangler or heightfield_wrangler"""
+class FloatGrid(object):
+    def __init__(self, prim):
+        self.density = prim
+        self.lescale = None
 
-    # TODO: There is a bit of an inefficiency here, we don't really
-    #       need to split the gdps, we can just pass the heightfield/smoke
-    #       wranglers a list of prims instead of creating new gdps.
+    def is_index_free(self, channel):
+        return False
 
-    # Heightfield masks are not supported currently
+    def is_float(self):
+        return True
 
-    heightfield_prims = []
-    density_prims = []
-    density_name = None
-    name_attrib = gdp.findPrimAttrib("name")
-    if name_attrib:
-        if "density" in name_attrib.strings():
-            density_name = "density"
+
+class RGBGrid(object):
+    def __init__(self, style):
+        self.density = [None, None, None]
+        self.lescale = None
+        self.style = style
+
+    def is_index_free(self, channel):
+        if channel not in self.style:
+            return False
+        index = self.style.index(channel)
+        return self.density[index] is None
+
+    def is_float(self):
+        return False
+
+    def add_prim(self, channel, prim):
+        index = self.style.index(channel)
+        if self.density[index] is not None:
+            raise ValueError(
+                "Trying to assign prim to %i that already has data" % index
+            )
+        self.density[index] = prim
+
+    @property
+    def r(self):
+        return self.density[0]
+
+    @property
+    def g(self):
+        return self.density[1]
+
+    @property
+    def b(self):
+        return self.density[2]
+
+
+class NamedGridList(object):
+    def __init__(self):
+        self.grids = []
+
+    def add_grid(self, prim):
+        """Assume we are getting a 'density' or 'density.[rgbxyz]'"""
+        name = prim.attribValue("name")
+        if name == "density":
+            self.grids.append(FloatGrid(prim))
+            return
+        channel = name[-1]
+        for grid in self.grids:
+            if grid.is_index_free(channel):
+                grid.add_prim(channel, prim)
+                return
+
+        # If we have reached this point there are no grids left so we need
+        # a new one
+        if channel in "rgb":
+            style = "rgb"
         else:
-            density_name = ""
-    for prim in gdp.prims():
-        if prim.isSDF():
-            continue
-        if prim.isHeightField():
-            heightfield_prims.append(prim)
-            continue
-        if name_attrib is not None and prim.attribValue("name") != density_name:
-            continue
-        density_prims.append(prim)
+            style = "xyz"
+        new_grid = RGBGrid(style)
+        new_grid.add_prim(channel, prim)
+        self.grids.append(new_grid)
 
-    if heightfield_prims:
-        heightfield_prim_wrangler(
-            heightfield_prims, paramset, properties, override_node
-        )
+    def cull_incomplete(self):
+        new_grids = []
+        for grid in self.grids:
+            if grid.is_float():
+                if grid.density is not None:
+                    new_grids.append(grid)
+            else:
+                if all(grid.density):
+                    new_grids.append(grid)
+                else:
+                    api.Comment("Culled incomplete RGB Density grids")
+        self.grids[:] = new_grids
 
-        # Houdini geometry objects don't allow more than one "volume" set
-        # meaning, an object will only ever render one combined volume. That
-        # volume could be multiple cloud prims, or multiple heightfields
-        # but it can't be a mix of heightfields and clouds. So while not a
-        # limitation of pbrt, we'll duplication that logic here.
+    def __iter__(self):
+        return iter(self.grids)
+
+    def add_lescale(self, prim):
+        for grid in self.grids:
+            if grid.lescale is not None:
+                continue
+            grid.lescale = prim
+        # If we reached here, all the prims have a lescale
+        # which means we have more lescale grids than density.
+        raise ValueError("Cannot bind Lescale as there are no density grids available")
+
+
+def volume_wrangler(gdp, paramset=None, properties=None, override_node=None):
+    """Call either the smoke_prim_wrangler"""
+
+    # Houdini only supports one type of Volume primitive to be in a geometry network.
+    # So if both a heightfield and a fog volume exists, the heightfield takes priority
+    # and the fog volumes are ignored. We'll follow that logic here, but instead of
+    # rendering the heightfield or volume we'll exit out since pbrt-v4 does not support
+    # heightfields.
+
+    if properties is None:
+        properties = {}
+
+    if "pbrt_ignorevolumes" in properties and properties["pbrt_ignorevolumes"].Value[0]:
+        api.Comment("Ignoring volumes because pbrt_ignorevolumes is enabled")
         return None
 
-    if density_prims:
-        smoke_prim_wrangler(density_prims, paramset, properties)
+    prims = gdp.prims()
+    if any(prim.isHeightField() for prim in prims):
+        api.Comment("Heightfields are not supported")
+        return None
+
+    # Filter out any SDFs as those are not supported either
+    prims = [prim for prim in prims if not prim.isSDF()]
+
+    # Houdini's Mantra's workflow for rendering volumes is a little difficult to match
+    # to pbrt. Any fog volume primitives are rendered, with the density field by
+    # default being used as the acceleration structure. (This can be overridden.)
+    # This means you can have multiple density volumes and all are rendered. As those
+    # are being rendered any other primitives with names that match parameters are
+    # bound. Which means you can have multiple volume primitives with names like
+    # temperature or Cd.[xyz]. Because of this it makes hard to match sets with volume
+    # fields are associated with each other which we need to do when declaring mediums.
+    # Potential Options include:
+    #   * Volume Merge all same named fields into one.
+    #   * Only render the first discovered density and cooresponding fields pbrt
+    #       understands
+    #   * Render all density volumes, the first found Cd gets mapped to the first
+    #       found density
+    #   * Match any volume prims that have the same x,y,z sample grid dimensions
+    #       as density.
+    # Further complicating things is pbrt can render either density or density.[rgb]
+    #
+    # The approach we will take is to iterate through all the grids of the same
+    # resolution, this will ensure we don't match a Lescale to a different res density.
+    # To handle the density.rgb fields, we'll doa first come first serve to fill out
+    # the fields. If we have two density.r fields, then we'll create two separate
+    # containers for them. Once we get a density.g or density.b field then we'll
+    # search through or existing containers in order they were added and fill those
+    # slots.
+    # TODO a better heuristic would be to match bounding boxes
+    # TODO reevaluate all of this, we are adding a lot of complicated logic when we
+    #       could simply make hard demands of the user. "Only have a single density
+    #       and single Lescale" for example.
+
+    # If we don't have names, this is easy
+    name_attrib = gdp.findPrimAttrib("name")
+    if not name_attrib:
+        density_grids = [FloatGrid(prim) for prim in gdp.iterPrims()]
+        smoke_prim_wrangler(density_grids, paramset, properties)
+        return None
+
+    # If we do have names, we need to start grouping.
+    res_group = collections.defaultdict(list)
+    for prim in prims:
+        res_group[tuple(prim.resolution())].append(prim)
+
+    # We'll first iterate over all the volumes of the same resolution
+    for res, prims in res_group.iteritems():
+        # Find Density Prims
+        lescale_prims = []
+        density_grids = NamedGridList()
+        for prim in prims:
+            name = prim.attribValue(name_attrib)
+            if re.match(r"density(\.[xyzrgb])?", name):
+                density_grids.add_grid(prim)
+            elif name == "Lescale":
+                lescale_prims.append(prim)
+        # Now that we have populated our density grids we can back
+        # and add the Lescales in prim order.
+        # TODO a better approach would be to match the bounding box
+        #   sizes of lescales to density grids.
+        if len(lescale_prims) > len(density_grids.grids):
+            # TODO ROP warning?
+            api.Comment(
+                "Skipping Lescale grids that don't have matching density fields"
+            )
+        density_grids.cull_incomplete()
+        for density_grid, lescale in zip(density_grids, lescale_prims):
+            density_grid.lescale = lescale
+
+        if density_grids.grids:
+            smoke_prim_wrangler(density_grids, paramset, properties)
 
     return None
 
@@ -648,6 +799,13 @@ def medium_prim_paramset(prim, paramset=None):
         pass
 
     try:
+        Le_value = prim.floatListAttribValue("Le")
+        if len(Le_value) == 3:
+            medium_paramset.replace(PBRTParam("rgb", "Le", Le_value))
+    except hou.OperationFailed:
+        pass
+
+    try:
         sigma_a_value = prim.floatListAttribValue("sigma_a")
         if len(sigma_a_value) == 3:
             medium_paramset.replace(PBRTParam("rgb", "sigma_a", sigma_a_value))
@@ -664,15 +822,16 @@ def medium_prim_paramset(prim, paramset=None):
     return medium_paramset
 
 
-def smoke_prim_wrangler(prims, paramset=None, properties=None, override_node=None):
-    """Outputs a "heterogeneous" Medium and bounding Shape for the input geometry
+def smoke_prim_wrangler(grids, paramset=None, properties=None, override_node=None):
+    """Outputs a "uniformgrid" Medium and bounding Shape for the input geometry
 
     The following attributes are checked for via medium_prim_paramset() -
     (See pbrt_medium node for what each parm does)
     pbrt_interior (prim), string
     preset (prim), string
     g (prim), float
-    scale (prim), float[3]
+    scale (prim), float
+    Le (prim), float[3]
     sigma_a (prim), float[3]
     sigma_s (prim), float[3]
 
@@ -682,20 +841,13 @@ def smoke_prim_wrangler(prims, paramset=None, properties=None, override_node=Non
         properties (dict): Dictionary of SohoParms (Optional)
     Returns: None
     """
-    # NOTE: Overlapping heterogeneous volumes don't currently
-    #       appear to be supported, although this may be an issue
-    #       with the Medium interface order? Visually it appears one
-    #       object is blocking the other.
 
-    # NOTE: Not all samplers support heterogeneous volumes. Determine which
-    #       ones do, (and verify this is accurate).
     if properties is None:
         properties = {}
 
-    if "pbrt_ignorevolumes" in properties and properties["pbrt_ignorevolumes"].Value[0]:
-        api.Comment("Ignoring volumes because pbrt_ignorevolumes is enabled")
-        return
-
+    # TODO START {
+    #   We could move this out of the wrangler since it will be the same
+    #   for every prim
     medium_paramset = ParamSet()
     if "pbrt_interior" in properties:
         interior = BaseNode.from_node(properties["pbrt_interior"].Value[0])
@@ -717,26 +869,54 @@ def smoke_prim_wrangler(prims, paramset=None, properties=None, override_node=Non
         exterior = properties["pbrt_exterior"].Value[0]
     exterior = "" if exterior is None else exterior
 
-    for prim in prims:
+    # TODO END }
+
+    for grid in grids:
         smoke_paramset = ParamSet()
 
-        medium_name = "%s[%i]%s" % (
+        if grid.is_float():
+            prim_num_str = str(grid.density.number())
+            ref_prim = grid.density
+            voxeldata = array.array("f")
+            voxeldata.fromstring(grid.density.allVoxelsAsString())
+            smoke_paramset.add(PBRTParam("float", "density", voxeldata))
+        else:
+            prim_num_str = "%i,%i,%i" % tuple((i.number() for i in grid.density))
+            # We'll use the r|x channel as the reference
+            ref_prim = grid.r
+
+            r_voxeldata = array.array("f")
+            g_voxeldata = array.array("f")
+            b_voxeldata = array.array("f")
+            r_voxeldata.fromstring(grid.r.allVoxelsAsString())
+            g_voxeldata.fromstring(grid.g.allVoxelsAsString())
+            b_voxeldata.fromstring(grid.b.allVoxelsAsString())
+            voxeldata = array.array("f", r_voxeldata + g_voxeldata + b_voxeldata)
+            voxeldata[0::3] = r_voxeldata
+            voxeldata[1::3] = g_voxeldata
+            voxeldata[2::3] = b_voxeldata
+            smoke_paramset.add(PBRTParam("rgb", "density", voxeldata))
+
+        medium_name = "%s[%s]%s" % (
             properties["object:soppath"].Value[0],
-            prim.number(),
+            prim_num_str,
             medium_suffix,
         )
-        resolution = prim.resolution()
+        resolution = ref_prim.resolution()
         # TODO: Benchmark this vs other methods like fetching volumeSlices
-        voxeldata = array.array("f")
-        voxeldata.fromstring(prim.allVoxelsAsString())
+
         smoke_paramset.add(PBRTParam("integer", "nx", resolution[0]))
         smoke_paramset.add(PBRTParam("integer", "ny", resolution[1]))
         smoke_paramset.add(PBRTParam("integer", "nz", resolution[2]))
         smoke_paramset.add(PBRTParam("point", "p0", [-1, -1, -1]))
         smoke_paramset.add(PBRTParam("point", "p1", [1, 1, 1]))
-        smoke_paramset.add(PBRTParam("float", "density", voxeldata))
 
-        medium_prim_overrides = medium_prim_paramset(prim, medium_paramset)
+        if grid.lescale is not None:
+            lescale_voxeldata = array.array("f")
+            lescale_voxeldata.fromstring(grid.lescale.allVoxelsAsString())
+            smoke_paramset.add(PBRTParam("float", "Lescale", lescale_voxeldata))
+
+        medium_prim_overrides = medium_prim_paramset(ref_prim, medium_paramset)
         smoke_paramset.update(medium_prim_overrides)
         smoke_paramset |= paramset
 
@@ -744,77 +924,24 @@ def smoke_prim_wrangler(prims, paramset=None, properties=None, override_node=Non
         # however the object's pbrt_interior, or prim's pbrt_interior
         # or prim attribs will override these.
         if (
-            PBRTParam("color", "sigma_a") not in smoke_paramset
-            and PBRTParam("color", "sigma_s") not in smoke_paramset
+            PBRTParam("rgb", "sigma_a") not in smoke_paramset
+            and PBRTParam("rgb", "sigma_s") not in smoke_paramset
         ) and PBRTParam("string", "preset") not in smoke_paramset:
-            smoke_paramset.add(PBRTParam("color", "sigma_a", [1, 1, 1]))
-            smoke_paramset.add(PBRTParam("color", "sigma_s", [1, 1, 1]))
+            smoke_paramset.add(
+                PBRTParam("spectrum", "sigma_a", [400.0, 0.0, 800.0, 0.0])
+            )
+            smoke_paramset.add(
+                PBRTParam("spectrum", "sigma_s", [400.0, 1.0, 800.0, 1.0])
+            )
 
         with api.AttributeBlock():
-            xform = prim_transform(prim)
+            xform = prim_transform(ref_prim)
             api.ConcatTransform(xform)
-            api.MakeNamedMedium(medium_name, "heterogeneous", smoke_paramset)
+            api.MakeNamedMedium(medium_name, "uniformgrid", smoke_paramset)
             api.Material("none")
             api.MediumInterface(medium_name, exterior)
             # Pad this slightly?
             bounds_to_api_box([-1, 1, -1, 1, -1, 1])
-    return
-
-
-def heightfield_prim_wrangler(
-    prims, paramset=None, properties=None, override_node=None
-):
-    """Outputs a "heightfield" Shapes for the input geometry
-
-    Args:
-        prims (list of hou.Prims): Input prims
-        paramset (ParamSet): Any base params to add to the shape. (Optional)
-        properties (dict): Dictionary of SohoParms (Optional)
-    Returns: None
-    """
-
-    for prim in prims:
-        resolution = prim.resolution()
-        # If the z resolution is not 1 then this really isn't a heightfield
-        if resolution[2] != 1:
-            continue
-
-        hf_paramset = ParamSet()
-
-        # Similar to trianglemesh, this is more compact fast, however it might
-        # be a memory issue and a generator per voxel or per slice might be a
-        # better approach.
-        voxeldata = array.array("f")
-        voxeldata.fromstring(prim.allVoxelsAsString())
-
-        with api.TransformBlock():
-
-            xform = prim_transform(prim)
-            xform = hou.Matrix4(xform)
-            srt = xform.explode()
-            # Here we need to split up the xform mainly so we can manipulate
-            # the scale. In particular Houdini's prim xforms maintain a
-            # rotation matrix but the z scale is ignored. So here we are
-            # setting it directly to 1 as the "Pz" (or voxeldata) will always
-            # be the exact height, no scales are applied to the prim xform.
-            # We also need to scale up heightfield since in Houdini by default
-            # the size is -1,-1,-1 to 1,1,1 where in pbrt its 0,0,0 to 1,1,1
-            api.Translate(*srt["translate"])
-            rot = srt["rotate"]
-            if rot.z():
-                api.Rotate(rot[2], 0, 0, 1)
-            if rot.y():
-                api.Rotate(rot[1], 0, 1, 0)
-            if rot.x():
-                api.Rotate(rot[0], 1, 0, 0)
-            api.Scale(srt["scale"][0] * 2.0, srt["scale"][1] * 2.0, 1.0)
-            api.Translate(-0.5, -0.5, 0)
-            hf_paramset.add(PBRTParam("integer", "nu", resolution[0]))
-            hf_paramset.add(PBRTParam("integer", "nv", resolution[1]))
-            hf_paramset.add(PBRTParam("float", "Pz", voxeldata))
-            hf_paramset |= paramset
-            hf_paramset |= prim_override(prim, override_node)
-            api.Shape("heightfield", hf_paramset)
     return
 
 
