@@ -1,5 +1,8 @@
 from __future__ import print_function, division, absolute_import
 
+import os
+import collections
+
 import hou
 import soho
 
@@ -37,14 +40,18 @@ if gdp is not None:
         self.invalid_shading_nodes = set()
         self.medium_nodes = set()
         self.instanced_geo = set()
+        self.geometry_parts = collections.defaultdict(int)
         # We do not interior/exterior these directly but are handy as
         # a quick way of seeing if they are set at the camera/rop
         # level
         self.interior = None
         self.exterior = None
         self.tesselator = None
+        self.have_nanovdb_convert = True
 
         self.rop = None
+        self.output_mode = None
+        self.disk_file = None
         self.hip = None
         self.hipfile = None
         self.fps = None
@@ -58,6 +65,8 @@ if gdp is not None:
         """Queries Soho to initialize the attributes of the class"""
         state_parms = {
             "rop": soho.SohoParm("object:name", "string", key="rop"),
+            "soho_outputmode" : soho.SohoParm("soho_outputmode", "string", skipdefault=False, key="output_mode")
+            "soho_diskfile" : soho.SohoParm("soho_diskfile", "string", skipdefault=False, key="disk_file")
             "hip": soho.SohoParm("$HIP", "string", key="hip"),
             "hipname": soho.SohoParm("$HIPNAME", "string", key="hipname"),
             "hipfile": soho.SohoParm("$HIPFILE", "string", key="hipfile"),
@@ -86,9 +95,21 @@ if gdp is not None:
         self.reset()
         return
 
+    @property
+    def output_location(self):
+        if self.output_mode == 1:
+            return os.path.dirname(self.disk_file)
+        # if we are piping to a location we don't have a disk_file path, so we'll use
+        # the hip file
+        if self.hipfile is not None:
+            return os.path.dirname(self.hipfile)
+        return ""
+
     def reset(self):
         """Resets the class attributes back to their default state"""
         self.rop = None
+        self.output_mode = None
+        self.disk_file = None
         self.hip = None
         self.hipfile = None
         self.fps = None
@@ -99,8 +120,10 @@ if gdp is not None:
         self.invalid_shading_nodes.clear()
         self.medium_nodes.clear()
         self.instanced_geo.clear()
+        self.geometry_parts.clear()
         self.interior = None
         self.exterior = None
+        self.have_nanovdb_convert = True
         self.remove_tesselator()
         return
 
