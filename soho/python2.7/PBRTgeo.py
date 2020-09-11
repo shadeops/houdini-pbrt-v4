@@ -3,13 +3,21 @@ from __future__ import print_function, division, absolute_import
 import os
 import re
 import array
+import shlex
+import subprocess
 import collections
 
 import hou
+import soho
 
 import PBRTapi as api
 from PBRTnodes import BaseNode, MaterialNode, PBRTParam, ParamSet
 from PBRTstate import scene_state, HVER_17_5, HVER_18
+
+
+def convert_vdb_to_nano(gdb, path):
+    if not scene_state.have_nanovdb_convert:
+        return False
 
 
 def primitive_alpha_texs(properties):
@@ -520,9 +528,19 @@ class FloatGrid(object):
     def is_index_free(self, channel):
         return False
 
-    def is_float(self):
+    def is_single(self):
         return True
 
+class VDBGrid(object):
+    def __init__(self, prim):
+        self.density = prim
+        self.temperature = None
+
+    def is_index_free(self, channel):
+        return False
+
+    def is_single(self):
+        return True
 
 class RGBGrid(object):
     def __init__(self, style):
@@ -536,7 +554,7 @@ class RGBGrid(object):
         index = self.style.index(channel)
         return self.density[index] is None
 
-    def is_float(self):
+    def is_single(self):
         return False
 
     def add_prim(self, channel, prim):
@@ -589,7 +607,7 @@ class NamedGridList(object):
     def cull_incomplete(self):
         new_grids = []
         for grid in self.grids:
-            if grid.is_float():
+            if grid.is_single():
                 if grid.density is not None:
                     new_grids.append(grid)
             else:
@@ -610,6 +628,121 @@ class NamedGridList(object):
         # If we reached here, all the prims have a lescale
         # which means we have more lescale grids than density.
         raise ValueError("Cannot bind Lescale as there are no density grids available")
+
+
+def vdb_wrangler(gdp, paramset=None, properties=None, override_node=None):
+
+    if properties is None:
+        properties = {}
+
+    if not scene_state.allow_geofiles:
+        return None
+
+    if not scene_state.nanovdb_converter:
+        return None
+
+    if "pbrt_ignorevolumes" in properties and properties["pbrt_ignorevolumes"].Value[0]:
+        api.Comment("Ignoring volumes because pbrt_ignorevolumes is enabled")
+        return None
+
+    sop_path = properties["object:soppath"].Value[0]
+
+    name_attrib = gdp.findPrimAttrib("name")
+    if name_attrib is None:
+        soho.warning("Skipping {}, VDB prims do not have name attrib".format(sop_path))
+        return None
+
+    vdb_prims = gdp.globPrims("@name!=density,temperature")
+    gdp.deletePrims(vdb_prims)
+
+    if not gdp.prims():
+        soho.warning(
+            "Skipping {}, No VDBs prims named 'density' or 'temperature' found.".format(
+                sop_path
+            )
+        )
+        return None
+
+    # TODO replace vdb_path with tempdir/?
+    soho.warning(str(scene_state.now))
+    soho.warning(str(hou.timeToFrame(scene_state.now)))
+    vdb_path = scene_state.get_geo_path(sop_path, "vdb")
+    basename = os.path.splitext(vdb_path)[0]
+    nvdb_path = "{}.nvdb".format(basename)
+    soho.makeFilePathDirsIfEnabled(vdb_path)
+    gdp.saveToFile(vdb_path)
+    convert_args = shlex.split(scene_state.nanovdb_converter)
+    convert_args.append(vdb_path)
+    convert_args.append(nvdb_path)
+    try:
+        proc = subprocess.Popen(convert_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    except OSError:
+        os.remove(vdb_path)
+        soho.error("Failed to run {}\nYou can disable VDB conversion by setting the"
+                   "'OpenVDB->NanoVDB Tool' to be empty on the PBRT ROP".format(convert_args[0]))
+        return None
+
+    stdout,stderr = proc.communicate()
+
+    if proc.returncode:
+        os.remove(vdb_path)
+        soho.warning("Unable to convert VDB file: {}".format(vdb_path))
+        return None
+
+    vdb_paramset = ParamSet()
+    if "pbrt_interior" in properties:
+        interior = BaseNode.from_node(properties["pbrt_interior"].Value[0])
+        if interior is not None and interior.directive_type == "pbrt_medium":
+            vdb_paramset |= interior.paramset
+        # These are special overrides that come from full point instancing.
+        # It allows "per point" medium values to be "stamped" out to volume prims.
+        interior_paramset = properties.get(".interior_overrides")
+        if interior_paramset is not None:
+            vdb_paramset.update(interior_paramset)
+
+    vdb_paramset |= paramset
+
+    medium_suffix = ""
+    instance_info = properties.get(".instance_info")
+    if instance_info is not None:
+        medium_suffix = ":%s[%i]" % (instance_info.source, instance_info.number)
+
+    exterior = None
+    if "pbrt_exterior" in properties:
+        exterior = properties["pbrt_exterior"].Value[0]
+    exterior = "" if exterior is None else exterior
+
+    # By default we'll set a sigma_a and sigma_s to be more Houdini-like
+    # however the object's pbrt_interior, or prim's pbrt_interior
+    # or prim attribs will override these.
+    if (
+        PBRTParam("rgb", "sigma_a") not in vdb_paramset
+        and PBRTParam("rgb", "sigma_s") not in vdb_paramset
+    ) and PBRTParam("string", "preset") not in vdb_paramset:
+        vdb_paramset.add(
+            PBRTParam("spectrum", "sigma_a", [400.0, 0.0, 800.0, 0.0])
+        )
+        vdb_paramset.add(
+            PBRTParam("spectrum", "sigma_s", [400.0, 1.0, 800.0, 1.0])
+        )
+
+    medium_name = "%s%s" % (
+        sop_path,
+        medium_suffix,
+    )
+    vdb_paramset.add(PBRTParam("string", "filename", nvdb_path))
+    with api.AttributeBlock():
+        #xform = prim_transform(ref_prim)
+        #api.ConcatTransform(xform)
+        api.MakeNamedMedium(medium_name, "nanovdb", vdb_paramset)
+        api.Material("none")
+        api.MediumInterface(medium_name, exterior)
+        # Pad this slightly?
+        bbox = gdp.boundingBox()
+        vals = [x for pair in zip(bbox.minvec(), bbox.maxvec()) for x in pair]
+        bounds_to_api_box(vals)
+
+    return None
 
 
 def volume_wrangler(gdp, paramset=None, properties=None, override_node=None):
@@ -695,9 +828,11 @@ def volume_wrangler(gdp, paramset=None, properties=None, override_node=None):
         #   sizes of lescales to density grids.
         if len(lescale_prims) > len(density_grids.grids):
             # TODO ROP warning?
-            api.Comment(
-                "Skipping Lescale grids that don't have matching density fields"
-            )
+            try:
+                sop_path = properties["object:soppath"].Value[0]
+            except KeyError:
+                sop_path = "unknown"
+            soho.warning("{} has mismatching Lescale prims".format(sop_path))
         density_grids.cull_incomplete()
         for density_grid, lescale in zip(density_grids, lescale_prims):
             density_grid.lescale = lescale
@@ -914,7 +1049,7 @@ def smoke_prim_wrangler(grids, paramset=None, properties=None, override_node=Non
     for grid in grids:
         smoke_paramset = ParamSet()
 
-        if grid.is_float():
+        if grid.is_single():
             prim_num_str = str(grid.density.number())
             ref_prim = grid.density
             voxeldata = array.array("f")
@@ -1167,6 +1302,7 @@ shape_wranglers = {
     "BezierCurve": curve_wrangler,
     "NURBCurve": curve_wrangler,
     "Volume": volume_wrangler,
+    "VDB": vdb_wrangler,
     "PackedDisk": packeddisk_wrangler,
     "TriFan": tesselated_wrangler,
     "TriStrip": tesselated_wrangler,

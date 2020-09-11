@@ -179,7 +179,7 @@ def process_full_pt_instance_medium(instance_info, medium_type):
         "preset": "string",
         "g": "float",
         "scale": "float",
-        "Le" : "rgb",
+        "Le": "rgb",
     }
 
     for parm, ptype in parms.iteritems():
