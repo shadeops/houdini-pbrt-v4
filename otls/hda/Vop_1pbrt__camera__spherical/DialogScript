@@ -51,11 +51,11 @@
         name    "mapping"
         label   "Mapping"
         type    ordinal
-        default { "equiarea" }
+        default { "equalarea" }
         help    ""
         menu {
-            "equiarea"   "EquiArea"
-            "equirect"     "EquiRect"
+            "equalarea"   "Equal Area"
+            "equirectangle"	"Equi-Rectangle"
         }
     }
     parm {

@@ -75,22 +75,6 @@
         range   { 0 10 }
     }
     parm {
-        name    "dispersionfactor"
-        label   "Dispersion Factor"
-        type    float
-        default { "0" }
-        help    ""
-        range   { 0 1 }
-    }
-    parm {
-        name    "scale"
-        label   "Scale"
-        type    float
-        default { "1" }
-        help    ""
-        range   { 0.1 10 }
-    }
-    parm {
         name    "simpleweighting"
         label   "Simple Weighting"
         type    toggle
