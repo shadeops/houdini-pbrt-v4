@@ -272,7 +272,7 @@ def archive(now):
 
     api.AttributeBegin()
     print()
-    scene_renerables(now)
+    scene_renderables(now)
     print()
     api.AttributeEnd()
 
