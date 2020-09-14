@@ -1,0 +1,183 @@
+# Dialog script for pbrt_medium_uniformgrid automatically generated
+
+{
+    name	pbrt_medium_uniformgrid
+    script	pbrt_medium_uniformgrid
+    label	"PBRT UniformGridMedium"
+
+    rendermask	PBRT
+    externalshader 1
+    shadertype	generic
+    input	struct_PBRTSpectrum	sigma_a	"Sigma a"
+    input	struct_PBRTSpectrum	sigma_s	"Sigma s"
+    input	struct_PBRTSpectrum	Le	Le
+    inputflags	sigma_a	0
+    inputflags	sigma_s	0
+    inputflags	Le	0
+    signature	"Default Inputs"	default	{ struct_PBRTSpectrum struct_PBRTSpectrum struct_PBRTSpectrum }
+
+    outputoverrides	default
+    {
+    }
+
+    help {
+	""
+    }
+
+    parm {
+        name    "preset"
+        label   "Preset"
+        type    ordinal
+        default { "none" }
+        help    "Name of measured subsurface scattering coefficients. See the file src/core/media.cpp in the pbrt distribution for all of the measurements that are available."
+        menu {
+            "none"                          "----"
+            "Apple"                         "Apple"
+            "Chicken1"                      "Chicken1"
+            "Chicken2"                      "Chicken2"
+            "Cream"                         "Cream"
+            "Ketchup"                       "Ketchup"
+            "Marble"                        "Marble"
+            "Potato"                        "Potato"
+            "Skimmilk"                      "Skimmilk"
+            "Skin1"                         "Skin1"
+            "Skin2"                         "Skin2"
+            "Spectralon"                    "Spectralon"
+            "Wholemilk"                     "Wholemilk"
+            "Lowfat Milk"                   "Lowfat Milk"
+            "Reduced Milk"                  "Reduced Milk"
+            "Regular Milk"                  "Regular Milk"
+            "Espresso"                      "Espresso"
+            "Mint Mocha Coffee"             "Mint Mocha Coffee"
+            "Lowfat Soy Milk"               "Lowfat Soy Milk"
+            "Regular Soy Milk"              "Regular Soy Milk"
+            "Lowfat Chocolate Milk"         "Lowfat Chocolate Milk"
+            "Regular Chocolate Milk"        "Regular Chocolate Milk"
+            "Coke"                          "Coke"
+            "Pepsi"                         "Pepsi"
+            "Sprite"                        "Sprite"
+            "Gatorade"                      "Gatorade"
+            "Chardonnay"                    "Chardonnay"
+            "White Zinfandel"               "White Zinfandel"
+            "Merlot"                        "Merlot"
+            "Budweiser Beer"                "Budweiser Beer"
+            "Coors Light Beer"              "Coors Light Beer"
+            "Clorox"                        "Clorox"
+            "Apple Juice"                   "Apple Juice"
+            "Cranberry Juice"               "Cranberry Juice"
+            "Grape Juice"                   "Grape Juice"
+            "Ruby Grapefruit Juice"         "Ruby Grapefruit Juice"
+            "White Grapefruit Juice"        "White Grapefruit Juice"
+            "Shampoo"                       "Shampoo"
+            "Head & Shoulders Shampoo"      "Head & Shoulders Shampoo"
+            "Lemon Tea Powder"              "Lemon Tea Powder"
+            "Orange Powder"                 "Orange Powder"
+            "Pink Lemonade Powder"          "Pink Lemonade Powder"
+            "Cappuccino Powder"             "Cappuccino Powder"
+            "Salt Powder"                   "Salt Powder"
+            "Sugar Powder"                  "Sugar Powder"
+            "Suisse Mocha Powder"           "Suisse Mocha Powder"
+            "Pacific Ocean Surface Water"   "Pacific Ocean Surface Water"
+        }
+    }
+    parm {
+        name    "sigma_a"
+        label   "Sigma a"
+        type    color
+        size    3
+        default { "0.0011" "0.0024" "0.014" }
+        help    "The absorption cross section."
+        disablewhen "{ preset != none }"
+        range   { 0 1 }
+    }
+    parm {
+        name    "sigma_s"
+        label   "Sigma s"
+        type    color
+        size    3
+        default { "2.55" "3.12" "3.77" }
+        help    "The scattering cross section."
+        disablewhen "{ preset != none }"
+        range   { 0 1 }
+    }
+    parm {
+        name    "scale"
+        label   "Scale"
+        type    float
+        default { "1" }
+        help    "Scale factor applied to the absorption and scattering cross sections."
+        range   { 0 10 }
+    }
+    parm {
+        name    "g"
+        label   "g"
+        type    float
+        default { "0" }
+        help    "The phase function asymmetry parameter."
+        range   { -1 1 }
+    }
+    parm {
+        name    "Le"
+        label   "Le"
+        type    color
+        size    3
+        default { "0" "0" "0" }
+        range   { 0 1 }
+    }
+    groupsimple {
+        name    "derived"
+        label   "Parameters Derived From Volume Prims"
+        parmtag { "pbrt.meta" "1" }
+
+        parm {
+            name    "density"
+            label   "float[]/rgb[] density"
+            type    label
+            default { "" }
+            parmtag { "pbrt.meta" "1" }
+        }
+        parm {
+            name    "Lescale"
+            label   "float[] Lescale"
+            type    label
+            default { "" }
+            parmtag { "pbrt.meta" "1" }
+        }
+        parm {
+            name    "p0"
+            label   "point3 p0"
+            type    label
+            default { "" }
+            parmtag { "pbrt.meta" "1" }
+        }
+        parm {
+            name    "p1"
+            label   "point3 p1"
+            type    label
+            default { "" }
+            parmtag { "pbrt.meta" "1" }
+        }
+        parm {
+            name    "nx"
+            label   "integer nx"
+            type    label
+            default { "" }
+            parmtag { "pbrt.meta" "1" }
+        }
+        parm {
+            name    "ny"
+            label   "integer ny"
+            type    label
+            default { "" }
+            parmtag { "pbrt.meta" "1" }
+        }
+        parm {
+            name    "nz"
+            label   "integer nz"
+            type    label
+            default { "" }
+            parmtag { "pbrt.meta" "1" }
+        }
+    }
+
+}

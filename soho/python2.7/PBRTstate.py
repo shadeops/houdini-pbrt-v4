@@ -133,7 +133,7 @@ if gdp is not None:
             return self.geo_location
         return rel_geo_path
 
-    def get_geo_path(self, sop_path, ext):
+    def get_geo_path_and_part(self, sop_path, ext):
         part_num = self.geometry_parts[sop_path]
         self.geometry_parts[sop_path] += 1
 
@@ -152,7 +152,7 @@ if gdp is not None:
             frame=frame,
             ext=ext,
         )
-        return geo_path
+        return geo_path, part_num
 
     def reset(self):
         """Resets the class attributes back to their default state"""

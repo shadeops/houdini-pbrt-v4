@@ -15,11 +15,6 @@ from PBRTnodes import BaseNode, MaterialNode, PBRTParam, ParamSet
 from PBRTstate import scene_state, HVER_17_5, HVER_18
 
 
-def convert_vdb_to_nano(gdb, path):
-    if not scene_state.have_nanovdb_convert:
-        return False
-
-
 def primitive_alpha_texs(properties):
     if not properties:
         return
@@ -98,7 +93,10 @@ def linear_vtx_gen(gdp, vtx_per_face_hint=None):
 
 def prim_transform(prim):
     """Return a tuple representing the Matrix4 of the transform intrinsic"""
-    rot_mat = hou.Matrix3(prim.intrinsicValue("transform"))
+    # VDBs have a transform intrinsic that is a hou.Matrix4
+    # rot_mat = hou.Matrix3(prim.intrinsicValue("transform"))
+    # so we'll rely on the prim's transform() method
+    rot_mat = prim.transform()
     vtx = prim.vertex(0)
     pt = vtx.point()
     pos = pt.position()
@@ -531,6 +529,7 @@ class FloatGrid(object):
     def is_single(self):
         return True
 
+
 class VDBGrid(object):
     def __init__(self, prim):
         self.density = prim
@@ -541,6 +540,7 @@ class VDBGrid(object):
 
     def is_single(self):
         return True
+
 
 class RGBGrid(object):
     def __init__(self, style):
@@ -630,8 +630,105 @@ class NamedGridList(object):
         raise ValueError("Cannot bind Lescale as there are no density grids available")
 
 
+def build_vdb_grid_list(sop_path, gdp):
+    prims = gdp.prims()
+
+    name_attrib = gdp.findPrimAttrib("name")
+    medium_grids_attrib = gdp.findPrimAttrib("medium_grids")
+
+    name_map = collections.defaultdict(set)
+    mediums_map = collections.defaultdict(set)
+    for prim in prims:
+        name_map[prim.attribValue(name_attrib)].add(prim)
+        medium_name = ""
+        if medium_grids_attrib is not None:
+            medium_name = prim.attribValue(medium_grids_attrib)
+        mediums_map[medium_name].add(prim)
+
+    # The only senarios which are valid are-
+
+    # Scenario 1
+    # We do not have any secondary fields so we don't have to worry about linking
+    # density fields to temperature
+    name_counts = collections.Counter(prim.attribValue(name_attrib) for prim in prims)
+    if not name_counts["temperature"]:
+        return [VDBGrid(prim) for prim in prims]
+
+    # Scenario 2
+    # If a single temperature field and a density field exist but not a medium_grids
+    # attribute we will infer that they are meant to be linked.
+    if (
+        name_counts["density"] == 1
+        and name_counts["temperature"] == 1
+        and medium_grids_attrib is None
+    ):
+        density_prim = gdp.globPrims("@name=density")[0]
+        temperature_prim = gdp.globPrims("@name=temperature")[0]
+        vdb = VDBGrid(density_prim)
+        vdb.temperature = temperature_prim
+        return [vdb]
+
+    # Scenario 3
+    # We have a medium_grids attribute and for each unqiue value we have only
+    # one density, and 0 or 1 of our secondary field
+    # But first we'll exit out if some of these conditions are not met.
+    if (
+        name_counts["density"] > 1
+        and name_counts["temperature"] > 1
+        and medium_grids_attrib is None
+    ):
+        soho.warning(
+            "{}: has multiple density and temperature VDBs and no way to link"
+            " them, please delete the temperature fields or use a "
+            '"medium_grids" attribute'.format(sop_path)
+        )
+        return []
+
+    grids = []
+    for medium, medium_prims in mediums_map.iteritems():
+        medium_counts = collections.Counter(
+            prim.attribValue(name_attrib) for prim in medium_prims
+        )
+        # Issue warnings for poorly defined medium_grids.
+        # The only cases that are valid are, 1 density to 0 or 1 temperature grids.
+        # Or multiple density grids and 0 temperature grids
+        if medium_counts["temperature"] > 1:
+            soho.warning(
+                "{}: has multiple temperature VDBs in a {}".format(sop_path, medium)
+            )
+            continue
+        if medium_counts["density"] > 1 and medium_counts["temperature"]:
+            soho.warning(
+                "{}: the medium_grid {} has a mismatch of density and "
+                "temperature VDBs".format(sop_path, medium)
+            )
+            continue
+        if not medium_counts["density"]:
+            soho.warning(
+                "{}: the medium_grid {} has no density VDB".format(sop_path, medium)
+            )
+            continue
+
+        if medium_counts["density"] == 1 and medium_counts["temperature"] in (0, 1):
+            density_prim = name_map["density"] & medium_prims
+            if len(density_prim) != 1:
+                soho.warning("{}: Invalid density and medium_grid".format(sop_path))
+            density_grid = VDBGrid(density_prim.pop())
+            temperature_prim = name_map["temperature"] & medium_prims
+            if temperature_prim:
+                density_grid.temperature = temperature_prim.pop()
+            grids.append(density_grid)
+        else:
+            soho.warning("{}: density grid failure".format(sop_path))
+
+    return grids
+
+
 def vdb_wrangler(gdp, paramset=None, properties=None, override_node=None):
 
+    medium_paramset = ParamSet(paramset)
+
+    # Perform a series of checks to see if we have a valid VDB
     if properties is None:
         properties = {}
 
@@ -652,8 +749,8 @@ def vdb_wrangler(gdp, paramset=None, properties=None, override_node=None):
         soho.warning("Skipping {}, VDB prims do not have name attrib".format(sop_path))
         return None
 
-    vdb_prims = gdp.globPrims("@name!=density,temperature")
-    gdp.deletePrims(vdb_prims)
+    non_vdb_prims = gdp.globPrims("@name!=density,temperature")
+    gdp.deletePrims(non_vdb_prims)
 
     if not gdp.prims():
         soho.warning(
@@ -663,84 +760,130 @@ def vdb_wrangler(gdp, paramset=None, properties=None, override_node=None):
         )
         return None
 
-    # TODO replace vdb_path with tempdir/?
-    soho.warning(str(scene_state.now))
-    soho.warning(str(hou.timeToFrame(scene_state.now)))
-    vdb_path = scene_state.get_geo_path(sop_path, "vdb")
-    basename = os.path.splitext(vdb_path)[0]
-    nvdb_path = "{}.nvdb".format(basename)
-    soho.makeFilePathDirsIfEnabled(vdb_path)
-    gdp.saveToFile(vdb_path)
-    convert_args = shlex.split(scene_state.nanovdb_converter)
-    convert_args.append(vdb_path)
-    convert_args.append(nvdb_path)
-    try:
-        proc = subprocess.Popen(convert_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    except OSError:
-        os.remove(vdb_path)
-        soho.error("Failed to run {}\nYou can disable VDB conversion by setting the"
-                   "'OpenVDB->NanoVDB Tool' to be empty on the PBRT ROP".format(convert_args[0]))
+    medium_grids = build_vdb_grid_list(sop_path, gdp)
+    if not medium_grids:
         return None
 
-    stdout,stderr = proc.communicate()
+    for medium_grid in medium_grids:
 
-    if proc.returncode:
-        os.remove(vdb_path)
-        soho.warning("Unable to convert VDB file: {}".format(vdb_path))
-        return None
+        # Cull prims we are not interested in
+        grid_prim_numbers = set([medium_grid.density.number()])
+        if medium_grid.temperature is not None:
+            grid_prim_numbers.add(medium_grid.temperature.number())
 
-    vdb_paramset = ParamSet()
-    if "pbrt_interior" in properties:
-        interior = BaseNode.from_node(properties["pbrt_interior"].Value[0])
-        if interior is not None and interior.directive_type == "pbrt_medium":
-            vdb_paramset |= interior.paramset
-        # These are special overrides that come from full point instancing.
-        # It allows "per point" medium values to be "stamped" out to volume prims.
-        interior_paramset = properties.get(".interior_overrides")
-        if interior_paramset is not None:
-            vdb_paramset.update(interior_paramset)
+        medium_gdp = hou.Geometry(gdp)
+        cull_prims = [
+            prim
+            for prim in medium_gdp.iterPrims()
+            if prim.number() not in grid_prim_numbers
+        ]
+        medium_gdp.deletePrims(cull_prims)
 
-    vdb_paramset |= paramset
+        bbox = medium_gdp.boundingBox()
 
-    medium_suffix = ""
-    instance_info = properties.get(".instance_info")
-    if instance_info is not None:
-        medium_suffix = ":%s[%i]" % (instance_info.source, instance_info.number)
+        # TODO replace vdb_path with tempdir/?
+        vdb_path, part = scene_state.get_geo_path_and_part(sop_path, "vdb")
+        basename = os.path.splitext(vdb_path)[0]
+        nvdb_path = "{}.nvdb".format(basename)
+        soho.makeFilePathDirsIfEnabled(vdb_path)
+        gdp.saveToFile(vdb_path)
+        convert_args = shlex.split(scene_state.nanovdb_converter)
+        convert_args.append(vdb_path)
+        convert_args.append(nvdb_path)
+        try:
+            proc = subprocess.Popen(
+                convert_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            )
+        except OSError:
+            os.remove(vdb_path)
+            soho.error(
+                "Failed to run {}\nYou can disable VDB conversion by setting the"
+                "'OpenVDB->NanoVDB Tool' to be empty on the PBRT ROP".format(
+                    convert_args[0]
+                )
+            )
+            medium_gdp.clear()
+            return None
 
-    exterior = None
-    if "pbrt_exterior" in properties:
-        exterior = properties["pbrt_exterior"].Value[0]
-    exterior = "" if exterior is None else exterior
+        stdout, stderr = proc.communicate()
 
-    # By default we'll set a sigma_a and sigma_s to be more Houdini-like
-    # however the object's pbrt_interior, or prim's pbrt_interior
-    # or prim attribs will override these.
-    if (
-        PBRTParam("rgb", "sigma_a") not in vdb_paramset
-        and PBRTParam("rgb", "sigma_s") not in vdb_paramset
-    ) and PBRTParam("string", "preset") not in vdb_paramset:
-        vdb_paramset.add(
-            PBRTParam("spectrum", "sigma_a", [400.0, 0.0, 800.0, 0.0])
+        if proc.returncode:
+            os.remove(vdb_path)
+            soho.warning("Unable to convert VDB file: {}".format(vdb_path))
+            medium_gdp.clear()
+            return None
+
+        vdb_paramset = ParamSet()
+
+        # TODO Full Point instancing might be an issue when using VDBs.
+        #       conversion might take forever, might need to cache based on
+        #       parameters and reuse?
+        vdb_paramset |= medium_paramset
+        if "pbrt_interior" in properties:
+            interior = BaseNode.from_node(properties["pbrt_interior"].Value[0])
+            if interior is not None:
+                if (
+                    interior.directive_type != "nanovdb"
+                    and interior.directive != "medium"
+                ):
+                    soho.warning(
+                        "{} is not a valid medium for {}".format(
+                            interior.node.path(), sop_path
+                        )
+                    )
+                else:
+                    vdb_paramset.update(interior.paramset)
+            # These are special overrides that come from full point instancing.
+            # It allows "per point" medium values to be "stamped" out to volume prims.
+            interior_paramset = properties.get(".interior_overrides")
+            if interior_paramset is not None:
+                vdb_paramset.update(interior_paramset)
+
+        exterior = None
+        if "pbrt_exterior" in properties:
+            exterior = properties["pbrt_exterior"].Value[0]
+        exterior = "" if exterior is None else exterior
+
+        extra_attribs = [
+            ("float", "LeScale"),
+            ("float", "temperaturecutoff"),
+            ("float", "temperaturescale"),
+        ]
+        medium_prim_overrides = medium_prim_paramset(
+            medium_grid.density, extra_attribs=extra_attribs
         )
-        vdb_paramset.add(
-            PBRTParam("spectrum", "sigma_s", [400.0, 1.0, 800.0, 1.0])
-        )
+        vdb_paramset.update(medium_prim_overrides)
 
-    medium_name = "%s%s" % (
-        sop_path,
-        medium_suffix,
-    )
-    vdb_paramset.add(PBRTParam("string", "filename", nvdb_path))
-    with api.AttributeBlock():
-        #xform = prim_transform(ref_prim)
-        #api.ConcatTransform(xform)
-        api.MakeNamedMedium(medium_name, "nanovdb", vdb_paramset)
-        api.Material("none")
-        api.MediumInterface(medium_name, exterior)
-        # Pad this slightly?
-        bbox = gdp.boundingBox()
-        vals = [x for pair in zip(bbox.minvec(), bbox.maxvec()) for x in pair]
-        bounds_to_api_box(vals)
+        # By default we'll set a sigma_a and sigma_s to be more Houdini-like
+        # however the object's pbrt_interior, or prim's pbrt_interior
+        # or prim attribs will override these.
+
+        if (
+            PBRTParam("rgb", "sigma_a") not in vdb_paramset
+            and PBRTParam("rgb", "sigma_s") not in vdb_paramset
+        ) and PBRTParam("string", "preset") not in vdb_paramset:
+            vdb_paramset.add(PBRTParam("spectrum", "sigma_a", [400.0, 0.0, 800.0, 0.0]))
+            vdb_paramset.add(PBRTParam("spectrum", "sigma_s", [400.0, 1.0, 800.0, 1.0]))
+
+        medium_suffix = ""
+        instance_info = properties.get(".instance_info")
+        if instance_info is not None:
+            medium_suffix = ":%s[%i]" % (instance_info.source, instance_info.number)
+
+        medium_name = "{}-{}{}".format(sop_path, part, medium_suffix)
+
+        vdb_paramset.add(PBRTParam("string", "filename", nvdb_path))
+        with api.AttributeBlock():
+            with api.TransformBlock():
+                # xform = prim_transform(medium_grid.density)
+                # api.ConcatTransform(xform)
+                api.MakeNamedMedium(medium_name, "nanovdb", vdb_paramset)
+                api.Material("none")
+                api.MediumInterface(medium_name, exterior)
+            vals = [x for pair in zip(bbox.minvec(), bbox.maxvec()) for x in pair]
+            bounds_to_api_box(vals)
+
+        medium_gdp.clear()
 
     return None
 
@@ -827,7 +970,6 @@ def volume_wrangler(gdp, paramset=None, properties=None, override_node=None):
         # TODO a better approach would be to match the bounding box
         #   sizes of lescales to density grids.
         if len(lescale_prims) > len(density_grids.grids):
-            # TODO ROP warning?
             try:
                 sop_path = properties["object:soppath"].Value[0]
             except KeyError:
@@ -933,7 +1075,7 @@ def bounds_to_api_box(b):
 #
 
 
-def medium_prim_paramset(prim, paramset=None):
+def medium_prim_paramset(prim, paramset=None, extra_attribs=()):
     """Build a ParamSet of medium values based off of hou.Prim attribs"""
     medium_paramset = ParamSet(paramset)
 
@@ -959,7 +1101,7 @@ def medium_prim_paramset(prim, paramset=None):
         if preset_value:
             medium_paramset.replace(PBRTParam("string", "preset", preset_value))
     except hou.OperationFailed:
-        pass
+        preset_value = None
 
     try:
         g_value = prim.floatAttribValue("g")
@@ -973,26 +1115,43 @@ def medium_prim_paramset(prim, paramset=None):
     except hou.OperationFailed:
         pass
 
-    try:
-        Le_value = prim.floatListAttribValue("Le")
-        if len(Le_value) == 3:
-            medium_paramset.replace(PBRTParam("rgb", "Le", Le_value))
-    except hou.OperationFailed:
-        pass
+    if preset_value is not None:
+        try:
+            sigma_a_value = prim.floatListAttribValue("sigma_a")
+            if len(sigma_a_value) == 3:
+                medium_paramset.replace(PBRTParam("rgb", "sigma_a", sigma_a_value))
+        except hou.OperationFailed:
+            pass
 
-    try:
-        sigma_a_value = prim.floatListAttribValue("sigma_a")
-        if len(sigma_a_value) == 3:
-            medium_paramset.replace(PBRTParam("rgb", "sigma_a", sigma_a_value))
-    except hou.OperationFailed:
-        pass
+        try:
+            sigma_s_value = prim.floatListAttribValue("sigma_s")
+            if len(sigma_s_value) == 3:
+                medium_paramset.replace(PBRTParam("rgb", "sigma_s", sigma_s_value))
+        except hou.OperationFailed:
+            pass
 
-    try:
-        sigma_s_value = prim.floatListAttribValue("sigma_s")
-        if len(sigma_s_value) == 3:
-            medium_paramset.replace(PBRTParam("rgb", "sigma_s", sigma_s_value))
-    except hou.OperationFailed:
-        pass
+    if not extra_attribs:
+        return medium_paramset
+
+    # This won't support every possible param types, just the
+    # ones that are common (known)
+    for attrib_type, name in extra_attribs:
+        try:
+            if attrib_type == "float":
+                val = prim.floatAttribValue(name)
+            elif attrib_type == "integer":
+                val = prim.intAttribValue(name)
+            elif attrib_type == "rgb":
+                val = prim.floatListAttribValue(name)
+                if len(val) != 3:
+                    continue
+            elif attrib_type == "string":
+                val = prim.stringAttribValue(name)
+            else:
+                continue
+        except hou.OperationFailed:
+            continue
+        medium_paramset.replace(PBRTParam(attrib_type, name, val))
 
     return medium_paramset
 
@@ -1006,7 +1165,6 @@ def smoke_prim_wrangler(grids, paramset=None, properties=None, override_node=Non
     preset (prim), string
     g (prim), float
     scale (prim), float
-    Le (prim), float[3]
     sigma_a (prim), float[3]
     sigma_s (prim), float[3]
 
@@ -1091,7 +1249,10 @@ def smoke_prim_wrangler(grids, paramset=None, properties=None, override_node=Non
             lescale_voxeldata.fromstring(grid.lescale.allVoxelsAsString())
             smoke_paramset.add(PBRTParam("float", "Lescale", lescale_voxeldata))
 
-        medium_prim_overrides = medium_prim_paramset(ref_prim, medium_paramset)
+        extra_attribs = [("rgb", "Le")]
+        medium_prim_overrides = medium_prim_paramset(
+            ref_prim, medium_paramset, extra_attribs=extra_attribs
+        )
         smoke_paramset.update(medium_prim_overrides)
         smoke_paramset |= paramset
 

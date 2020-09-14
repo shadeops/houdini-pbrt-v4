@@ -1,19 +1,19 @@
-# Dialog script for pbrt_medium automatically generated
+# Dialog script for pbrt_medium_nanovdb automatically generated
 
 {
-    name	pbrt_medium
-    script	pbrt_medium
-    label	"PBRT Medium"
+    name	pbrt_medium_nanovdb
+    script	pbrt_medium_nanovdb
+    label	"PBRT NanoVDBMedium"
 
     rendermask	PBRT
     externalshader 1
     shadertype	generic
     input	struct_PBRTSpectrum	sigma_a	"Sigma a"
     input	struct_PBRTSpectrum	sigma_s	"Sigma s"
-    input	struct_PBRTSpectrum	Le	"Le"
+    input	struct_PBRTSpectrum	Le	Le
     inputflags	sigma_a	0
     inputflags	sigma_s	0
-    inputflags	Le 0
+    inputflags	Le	0
     signature	"Default Inputs"	default	{ struct_PBRTSpectrum struct_PBRTSpectrum struct_PBRTSpectrum }
 
     outputoverrides	default
@@ -21,6 +21,7 @@
     }
 
     help {
+	""
     }
 
     parm {
@@ -100,15 +101,6 @@
         range   { 0 1 }
     }
     parm {
-        name    "Le"
-        label   "Le"
-        type    color
-        size    3
-        default { "0" "0" "0" }
-        help    ""
-        range   { 0 1 }
-    }
-    parm {
         name    "scale"
         label   "Scale"
         type    float
@@ -123,5 +115,38 @@
         default { "0" }
         help    "The phase function asymmetry parameter."
         range   { -1 1 }
+    }
+    parm {
+        name    "filename"
+        label   "File Name"
+        type    geometry
+        default { "" }
+        parmtag { "filechooser_mode" "read" }
+        parmtag { "filechooser_pattern" "*.nvdb" }
+        parmtag { "script_callback_language" "python" }
+    }
+    parm {
+        name    "LeScale"
+        label   "Le Scale"
+        type    float
+        default { "1" }
+        range   { 0 10 }
+        parmtag { "script_callback_language" "python" }
+    }
+    parm {
+        name    "temperaturecutoff"
+        label   "Temperature Cutoff"
+        type    float
+        default { "0" }
+        range   { 0 10 }
+        parmtag { "script_callback_language" "python" }
+    }
+    parm {
+        name    "temperaturescale"
+        label   "Temperature Scale"
+        type    float
+        default { "1" }
+        range   { 0 10 }
+        parmtag { "script_callback_language" "python" }
     }
 }

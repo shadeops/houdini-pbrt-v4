@@ -769,20 +769,6 @@ Python:       false
 Empty:        false
 Modified:     Tue May 15 00:01:07 2018
 
-Operator:     pbrt_medium
-Label:        PBRT Medium
-Path:         oplib:/Vop/pbrt_medium?Vop/pbrt_medium
-Icon:         opdef:/Vop/pbrt_medium?IconImage
-Table:        Vop
-License:      
-Extra:        
-User:         {"dtype": "pbrt_medium", "directive": "soho_helper"}
-Inputs:       0 to 3
-Subnet:       false
-Python:       false
-Empty:        false
-Modified:     Wed May 16 22:28:00 2018
-
 Operator:     pbrt_material_none
 Label:        PBRT NoneMaterial
 Path:         oplib:/Vop/pbrt_material_none?Vop/pbrt_material_none
@@ -894,4 +880,64 @@ Subnet:       false
 Python:       false
 Empty:        false
 Modified:     Sun Aug 23 00:24:37 2020
+
+Operator:     pbrt_medium_homogeneous
+Label:        PBRT HomogeneousMedium
+Path:         oplib:/Vop/pbrt_medium_homogeneous?Vop/pbrt_medium_homogeneous
+Icon:         opdef:/Vop/pbrt_medium_homogeneous?IconImage
+Table:        Vop
+License:      
+Extra:        
+User:         {"dtype": "homogeneous", "directive": "medium"}
+Inputs:       0 to 3
+Outputs:      0
+Subnet:       false
+Python:       false
+Empty:        false
+Modified:     Sun Sep 13 10:10:06 2020
+
+Operator:     pbrt_medium_uniformgrid
+Label:        PBRT UniformGridMedium
+Path:         oplib:/Vop/pbrt_medium_uniformgrid?Vop/pbrt_medium_uniformgrid
+Icon:         opdef:/Vop/pbrt_medium_uniformgrid?IconImage
+Table:        Vop
+License:      
+Extra:        
+User:         {"dtype": "uniformgrid", "directive": "medium"}
+Inputs:       0 to 3
+Outputs:      0
+Subnet:       false
+Python:       false
+Empty:        false
+Modified:     Sun Sep 13 10:18:09 2020
+
+Operator:     pbrt_medium_cloud
+Label:        PBRT CloudMedium
+Path:         oplib:/Vop/pbrt_medium_cloud?Vop/pbrt_medium_cloud
+Icon:         opdef:/Vop/pbrt_medium_cloud?IconImage
+Table:        Vop
+License:      
+Extra:        
+User:         {"dtype": "cloud", "directive": "medium"}
+Inputs:       0 to 2
+Outputs:      0
+Subnet:       false
+Python:       false
+Empty:        false
+Modified:     Sun Sep 13 10:10:24 2020
+
+Operator:     pbrt_medium_nanovdb
+Label:        PBRT NanoVDBMedium
+Path:         oplib:/Vop/pbrt_medium_nanovdb?Vop/pbrt_medium_nanovdb
+Icon:         opdef:/Vop/pbrt_medium_nanovdb?IconImage
+Table:        Vop
+License:      
+Extra:        
+User:         {"dtype": "nanovdb", "directive": "medium"}
+Inputs:       0 to 3
+Outputs:      0
+Subnet:       false
+Python:       false
+Empty:        false
+Modified:     Sun Sep 13 14:21:56 2020
 
