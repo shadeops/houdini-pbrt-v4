@@ -48,7 +48,10 @@ if gdp is not None:
         self.exterior = None
         self.tesselator = None
         self.have_nanovdb_convert = True
-
+        self.allow_geofiles = None
+        self.geo_location = None
+        self.nanovdb_converter = None
+        self.geofile_threshold = None
         self.rop = None
         self.output_mode = None
         self.disk_file = None
@@ -65,8 +68,12 @@ if gdp is not None:
         """Queries Soho to initialize the attributes of the class"""
         state_parms = {
             "rop": soho.SohoParm("object:name", "string", key="rop"),
-            "soho_outputmode" : soho.SohoParm("soho_outputmode", "string", skipdefault=False, key="output_mode")
-            "soho_diskfile" : soho.SohoParm("soho_diskfile", "string", skipdefault=False, key="disk_file")
+            "soho_outputmode": soho.SohoParm(
+                "soho_outputmode", "integer", skipdefault=False, key="output_mode"
+            ),
+            "soho_diskfile": soho.SohoParm(
+                "soho_diskfile", "string", skipdefault=False, key="disk_file"
+            ),
             "hip": soho.SohoParm("$HIP", "string", key="hip"),
             "hipname": soho.SohoParm("$HIPNAME", "string", key="hipname"),
             "hipfile": soho.SohoParm("$HIPFILE", "string", key="hipfile"),
@@ -75,6 +82,26 @@ if gdp is not None:
             ),
             "now": soho.SohoParm("state:time", "real", [0], False, key="now"),
             "fps": soho.SohoParm("state:fps", "real", [24], False, key="fps"),
+            "pbrt_allow_geofiles": soho.SohoParm(
+                "pbrt_allow_geofiles", "bool", [1], False, key="allow_geofiles"
+            ),
+            "pbrt_geo_location": soho.SohoParm(
+                "pbrt_geo_location",
+                "string",
+                ["$HIP/geometry"],
+                False,
+                key="geo_location",
+            ),
+            "pbrt_nanovdb_converter": soho.SohoParm(
+                "pbrt_nanovdb_converter",
+                "string",
+                ["nanovdb_convert"],
+                False,
+                key="nanovdb_converter",
+            ),
+            "pbrt_geofile_threshold": soho.SohoParm(
+                "pbrt_geofile_threshold", "integer", [10000], key="geofile_threshold"
+            ),
         }
         rop = soho.getOutputDriver()
         parms = soho.evaluate(state_parms, None, rop)
@@ -97,13 +124,35 @@ if gdp is not None:
 
     @property
     def output_location(self):
-        if self.output_mode == 1:
-            return os.path.dirname(self.disk_file)
-        # if we are piping to a location we don't have a disk_file path, so we'll use
-        # the hip file
-        if self.hipfile is not None:
-            return os.path.dirname(self.hipfile)
-        return ""
+        """Provide a relative geo location path if its a subdir of the disk file"""
+        if self.output_mode != 1:
+            return self.geo_location
+        disk_file_path = os.path.dirname(self.disk_file)
+        rel_geo_path = os.path.relpath(self.geo_location, disk_file_path)
+        if rel_geo_path.startswith(".."):
+            return self.geo_location
+        return rel_geo_path
+
+    def get_geo_path_and_part(self, sop_path, ext):
+        part_num = self.geometry_parts[sop_path]
+        self.geometry_parts[sop_path] += 1
+
+        # TODO: We could be smart and not output frames that are not time dependent.
+        #       we can check this via a sohog gdp.globalValue('geo:timedependent')[0]
+
+        frame = hou.timeToFrame(self.now)
+        filename = sop_path
+        if filename.startswith("/obj/"):
+            filename = filename[5:]
+        filename = filename.replace("/", "-")
+        geo_path = "{location}/{filename}-{part}.{frame:g}.{ext}".format(
+            location=self.output_location,
+            filename=filename,
+            part=part_num,
+            frame=frame,
+            ext=ext,
+        )
+        return geo_path, part_num
 
     def reset(self):
         """Resets the class attributes back to their default state"""
@@ -116,6 +165,10 @@ if gdp is not None:
         self.ver = None
         self.now = None
         self.inv_fps = None
+        self.allow_geofiles = None
+        self.geo_location = None
+        self.nanovdb_converter = None
+        self.geofile_threshold = None
         self.shading_nodes.clear()
         self.invalid_shading_nodes.clear()
         self.medium_nodes.clear()

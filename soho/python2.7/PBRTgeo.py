@@ -1,11 +1,13 @@
 from __future__ import print_function, division, absolute_import
 
 import os
-import re
 import array
+import shlex
+import subprocess
 import collections
 
 import hou
+import soho
 
 import PBRTapi as api
 from PBRTnodes import BaseNode, MaterialNode, PBRTParam, ParamSet
@@ -90,7 +92,10 @@ def linear_vtx_gen(gdp, vtx_per_face_hint=None):
 
 def prim_transform(prim):
     """Return a tuple representing the Matrix4 of the transform intrinsic"""
-    rot_mat = hou.Matrix3(prim.intrinsicValue("transform"))
+    # VDBs have a transform intrinsic that is a hou.Matrix4
+    # rot_mat = hou.Matrix3(prim.intrinsicValue("transform"))
+    # so we'll rely on the prim's transform() method
+    rot_mat = prim.transform()
     vtx = prim.vertex(0)
     pt = vtx.point()
     pos = pt.position()
@@ -517,103 +522,430 @@ class FloatGrid(object):
         self.density = prim
         self.lescale = None
 
-    def is_index_free(self, channel):
-        return False
+    def does_res_match(self):
+        if self.lescale is None:
+            return True
+        return self.density.resolution() == self.lescale.resolution()
 
-    def is_float(self):
+
+class VDBGrid(object):
+    def __init__(self, prim):
+        self.density = prim
+        self.temperature = None
+
+    def does_res_match(self):
         return True
 
 
 class RGBGrid(object):
-    def __init__(self, style):
-        self.density = [None, None, None]
+    def __init__(self, r, g, b):
+        self.r = r
+        self.g = g
+        self.b = b
         self.lescale = None
-        self.style = style
 
-    def is_index_free(self, channel):
-        if channel not in self.style:
-            return False
-        index = self.style.index(channel)
-        return self.density[index] is None
+    def does_res_match(self):
+        to_check = [self.r, self.g, self.b]
+        if self.lescale is not None:
+            to_check.append(self.lescale)
+        return len(set([p.resolution() for p in to_check])) == 1
 
-    def is_float(self):
-        return False
 
-    def add_prim(self, channel, prim):
-        index = self.style.index(channel)
-        if self.density[index] is not None:
-            raise ValueError(
-                "Trying to assign prim to %i that already has data" % index
+def build_vdb_grid_list(sop_path, gdp):
+    prims = gdp.prims()
+
+    name_attrib = gdp.findPrimAttrib("name")
+    medium_grids_attrib = gdp.findPrimAttrib("medium_grids")
+
+    name_map = collections.defaultdict(set)
+    mediums_map = collections.defaultdict(set)
+    for prim in prims:
+        name_map[prim.attribValue(name_attrib)].add(prim)
+        medium_name = ""
+        if medium_grids_attrib is not None:
+            medium_name = prim.attribValue(medium_grids_attrib)
+        mediums_map[medium_name].add(prim)
+
+    # The only senarios which are valid are-
+
+    # Scenario 1
+    # We do not have any secondary fields so we don't have to worry about linking
+    # density fields to temperature
+    name_counts = collections.Counter(prim.attribValue(name_attrib) for prim in prims)
+    if not name_counts["temperature"]:
+        return [VDBGrid(prim) for prim in prims]
+
+    # Scenario 2
+    # If a single temperature field and a density field exist but not a medium_grids
+    # attribute we will infer that they are meant to be linked.
+    if (
+        name_counts["density"] == 1
+        and name_counts["temperature"] == 1
+        and medium_grids_attrib is None
+    ):
+        density_prim = gdp.globPrims("@name=density")[0]
+        temperature_prim = gdp.globPrims("@name=temperature")[0]
+        vdb = VDBGrid(density_prim)
+        vdb.temperature = temperature_prim
+        return [vdb]
+
+    # Scenario 3
+    # We have a medium_grids attribute and for each unqiue value we have only
+    # one density, and 0 or 1 of our secondary field
+    # But first we'll exit out if some of these conditions are not met.
+    if (
+        name_counts["density"] > 1
+        and name_counts["temperature"] > 1
+        and medium_grids_attrib is None
+    ):
+        soho.warning(
+            "{}: has multiple density and temperature VDBs and no way to link"
+            " them, please delete the temperature fields or use a "
+            '"medium_grids" attribute'.format(sop_path)
+        )
+        return []
+
+    grids = []
+    for medium, medium_prims in mediums_map.iteritems():
+        medium_counts = collections.Counter(
+            prim.attribValue(name_attrib) for prim in medium_prims
+        )
+        # Issue warnings for poorly defined medium_grids.
+        # The only cases that are valid are, 1 density to 0 or 1 temperature grids.
+        # Or multiple density grids and 0 temperature grids
+        if medium_counts["temperature"] > 1:
+            soho.warning(
+                "{}: has multiple temperature VDBs in a {}".format(sop_path, medium)
             )
-        self.density[index] = prim
+            continue
+        if medium_counts["density"] > 1 and medium_counts["temperature"]:
+            soho.warning(
+                "{}: the medium_grid {} has a mismatch of density and "
+                "temperature VDBs".format(sop_path, medium)
+            )
+            continue
+        if not medium_counts["density"]:
+            soho.warning(
+                "{}: the medium_grid {} has no density VDB".format(sop_path, medium)
+            )
+            continue
 
-    @property
-    def r(self):
-        return self.density[0]
-
-    @property
-    def g(self):
-        return self.density[1]
-
-    @property
-    def b(self):
-        return self.density[2]
-
-
-class NamedGridList(object):
-    def __init__(self):
-        self.grids = []
-
-    def add_grid(self, prim):
-        """Assume we are getting a 'density' or 'density.[rgbxyz]'"""
-        name = prim.attribValue("name")
-        if name == "density":
-            self.grids.append(FloatGrid(prim))
-            return
-        channel = name[-1]
-        for grid in self.grids:
-            if grid.is_index_free(channel):
-                grid.add_prim(channel, prim)
-                return
-
-        # If we have reached this point there are no grids left so we need
-        # a new one
-        if channel in "rgb":
-            style = "rgb"
-        else:
-            style = "xyz"
-        new_grid = RGBGrid(style)
-        new_grid.add_prim(channel, prim)
-        self.grids.append(new_grid)
-
-    def cull_incomplete(self):
-        new_grids = []
-        for grid in self.grids:
-            if grid.is_float():
-                if grid.density is not None:
-                    new_grids.append(grid)
-            else:
-                if all(grid.density):
-                    new_grids.append(grid)
-                else:
-                    api.Comment("Culled incomplete RGB Density grids")
-        self.grids[:] = new_grids
-
-    def __iter__(self):
-        return iter(self.grids)
-
-    def add_lescale(self, prim):
-        for grid in self.grids:
-            if grid.lescale is not None:
+        if medium_counts["density"] == 1 and medium_counts["temperature"] in (0, 1):
+            density_prim = name_map["density"] & medium_prims
+            if len(density_prim) != 1:
+                soho.warning("{}: Invalid density and medium_grid".format(sop_path))
                 continue
-            grid.lescale = prim
-        # If we reached here, all the prims have a lescale
-        # which means we have more lescale grids than density.
-        raise ValueError("Cannot bind Lescale as there are no density grids available")
+            density_grid = VDBGrid(density_prim.pop())
+            temperature_prim = name_map["temperature"] & medium_prims
+            if temperature_prim:
+                density_grid.temperature = temperature_prim.pop()
+            grids.append(density_grid)
+        else:
+            soho.warning("{}: density grid failure".format(sop_path))
+
+    return grids
+
+
+def vdb_wrangler(gdp, paramset=None, properties=None, override_node=None):
+
+    medium_paramset = ParamSet(paramset)
+
+    # Perform a series of checks to see if we have a valid VDB
+    if properties is None:
+        properties = {}
+
+    if not scene_state.allow_geofiles:
+        return None
+
+    if not scene_state.nanovdb_converter:
+        return None
+
+    if "pbrt_ignorevolumes" in properties and properties["pbrt_ignorevolumes"].Value[0]:
+        api.Comment("Ignoring volumes because pbrt_ignorevolumes is enabled")
+        return None
+
+    sop_path = properties["object:soppath"].Value[0]
+
+    name_attrib = gdp.findPrimAttrib("name")
+    if name_attrib is None:
+        soho.warning("Skipping {}, VDB prims do not have name attrib".format(sop_path))
+        return None
+
+    non_vdb_prims = gdp.globPrims("@name!=density,temperature")
+    gdp.deletePrims(non_vdb_prims)
+
+    if not gdp.prims():
+        soho.warning(
+            "Skipping {}, No VDBs prims named 'density' or 'temperature' found.".format(
+                sop_path
+            )
+        )
+        return None
+
+    medium_grids = build_vdb_grid_list(sop_path, gdp)
+    if not medium_grids:
+        return None
+
+    for medium_grid in medium_grids:
+
+        # Cull prims we are not interested in
+        grid_prim_numbers = set([medium_grid.density.number()])
+        if medium_grid.temperature is not None:
+            grid_prim_numbers.add(medium_grid.temperature.number())
+
+        medium_gdp = hou.Geometry(gdp)
+        cull_prims = [
+            prim
+            for prim in medium_gdp.iterPrims()
+            if prim.number() not in grid_prim_numbers
+        ]
+        medium_gdp.deletePrims(cull_prims)
+
+        bbox = medium_gdp.boundingBox()
+
+        # TODO replace vdb_path with tempdir/?
+        vdb_path, part = scene_state.get_geo_path_and_part(sop_path, "vdb")
+        basename = os.path.splitext(vdb_path)[0]
+        nvdb_path = "{}.nvdb".format(basename)
+        soho.makeFilePathDirsIfEnabled(vdb_path)
+        gdp.saveToFile(vdb_path)
+        convert_args = shlex.split(scene_state.nanovdb_converter)
+        convert_args.append(vdb_path)
+        convert_args.append(nvdb_path)
+        try:
+            proc = subprocess.Popen(
+                convert_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            )
+        except OSError:
+            os.remove(vdb_path)
+            soho.error(
+                "Failed to run {}\nYou can disable VDB conversion by setting the"
+                "'OpenVDB->NanoVDB Tool' to be empty on the PBRT ROP".format(
+                    convert_args[0]
+                )
+            )
+            medium_gdp.clear()
+            return None
+
+        stdout, stderr = proc.communicate()
+
+        if proc.returncode:
+            os.remove(vdb_path)
+            soho.warning("Unable to convert VDB file: {}".format(vdb_path))
+            medium_gdp.clear()
+            return None
+
+        vdb_paramset = ParamSet()
+
+        # TODO Full Point instancing might be an issue when using VDBs.
+        #       conversion might take forever, might need to cache based on
+        #       parameters and reuse?
+        vdb_paramset |= medium_paramset
+        if "pbrt_interior" in properties:
+            interior = BaseNode.from_node(properties["pbrt_interior"].Value[0])
+            if interior is not None:
+                if (
+                    interior.directive_type != "nanovdb"
+                    and interior.directive != "medium"
+                ):
+                    soho.warning(
+                        "{} is not a valid medium for {}".format(
+                            interior.node.path(), sop_path
+                        )
+                    )
+                else:
+                    vdb_paramset.update(interior.paramset)
+            # These are special overrides that come from full point instancing.
+            # It allows "per point" medium values to be "stamped" out to volume prims.
+            interior_paramset = properties.get(".interior_overrides")
+            if interior_paramset is not None:
+                vdb_paramset.update(interior_paramset)
+
+        exterior = None
+        if "pbrt_exterior" in properties:
+            exterior = properties["pbrt_exterior"].Value[0]
+        exterior = "" if exterior is None else exterior
+
+        extra_attribs = [
+            ("float", "LeScale"),
+            ("float", "temperaturecutoff"),
+            ("float", "temperaturescale"),
+        ]
+        medium_prim_overrides = medium_prim_paramset(
+            medium_grid.density, extra_attribs=extra_attribs
+        )
+        vdb_paramset.update(medium_prim_overrides)
+
+        # By default we'll set a sigma_a and sigma_s to be more Houdini-like
+        # however the object's pbrt_interior, or prim's pbrt_interior
+        # or prim attribs will override these.
+
+        if (
+            PBRTParam("rgb", "sigma_a") not in vdb_paramset
+            and PBRTParam("rgb", "sigma_s") not in vdb_paramset
+        ) and PBRTParam("string", "preset") not in vdb_paramset:
+            vdb_paramset.add(PBRTParam("spectrum", "sigma_a", [400.0, 0.0, 800.0, 0.0]))
+            vdb_paramset.add(PBRTParam("spectrum", "sigma_s", [400.0, 1.0, 800.0, 1.0]))
+
+        medium_suffix = ""
+        instance_info = properties.get(".instance_info")
+        if instance_info is not None:
+            medium_suffix = ":%s[%i]" % (instance_info.source, instance_info.number)
+
+        medium_name = "{}-{}{}".format(sop_path, part, medium_suffix)
+
+        vdb_paramset.add(PBRTParam("string", "filename", nvdb_path))
+        with api.AttributeBlock():
+            with api.TransformBlock():
+                # xform = prim_transform(medium_grid.density)
+                # api.ConcatTransform(xform)
+                api.MakeNamedMedium(medium_name, "nanovdb", vdb_paramset)
+                api.Material("none")
+                api.MediumInterface(medium_name, exterior)
+            vals = [x for pair in zip(bbox.minvec(), bbox.maxvec()) for x in pair]
+            bounds_to_api_box(vals)
+
+        medium_gdp.clear()
+
+    return None
+
+
+def build_uniform_grid_list(sop_path, gdp):
+    prims = gdp.prims()
+
+    name_attrib = gdp.findPrimAttrib("name")
+    medium_grids_attrib = gdp.findPrimAttrib("medium_grids")
+
+    # The only senarios which are valid are-
+    # The first few senarios are convenience and don't enforce a medium_grids
+    # attribute on the user
+
+    # Scenario 1
+    # No name attribute, we'll assume everything is density
+    if name_attrib is None:
+        return [FloatGrid(prim) for prim in prims]
+
+    name_map = collections.defaultdict(set)
+    mediums_map = collections.defaultdict(set)
+    res_map = collections.defaultdict(set)
+
+    for prim in prims:
+        res = tuple(prim.resolution())
+        res_map[res].add(prim)
+        name = prim.attribValue(name_attrib)
+        # Instead of dealing with two different variation of vectors
+        # we'll rename to rgb
+        if name in ("density.x", "density.y", "density.z"):
+            rename_component = {k: v for k, v in zip("xyz", "rgb")}
+            component = name.rsplit(".", 1)[1]
+            name = "density.{}".format(rename_component[component])
+        name_map[name].add(prim)
+        medium_name = ""
+        if medium_grids_attrib is not None:
+            medium_name = prim.attribValue(medium_grids_attrib)
+        mediums_map[medium_name].add(prim)
+
+    name_counts = collections.Counter(prim.attribValue(name_attrib) for prim in prims)
+    # Scenario 2
+    # We just have density grids and no rgbs or Lescale
+    if len(prims) == name_counts["density"]:
+        return [FloatGrid(prim) for prim in prims]
+
+    # Scenario 3
+    # We just one density grid and one Lescale
+    if (
+        len(prims) == 2
+        and name_counts["density"] == 1
+        and name_counts["Lescale"]
+        and medium_grids_attrib is None
+    ):
+        grid = FloatGrid(name_map["density"].pop())
+        grid.lescale = name_map["Lescale"].pop()
+        return [grid]
+
+    grid_list = []
+    den_rgb_strs = ("density.r", "density.g", "density.b")
+    is_one_den_rgb = all(name_counts[c] == 1 for c in den_rgb_strs)
+    is_no_den_rgb = all(name_counts[c] == 0 for c in den_rgb_strs)
+    is_many_den_rgb = all(name_counts[c] > 1 for c in den_rgb_strs)
+
+    # Scenario 4
+    # We have no Lescale, but a mix of density and density.rgb
+    # We can first remove all the density, then check the density.rgb
+    if not name_counts["Lescale"] and (is_one_den_rgb or is_no_den_rgb):
+        grid_list.extend(list(name_map["density"]))
+        if is_one_den_rgb:
+            grid_list.append(
+                RGBGrid(
+                    name_map["density.r"].pop(),
+                    name_map["density.g"].pop(),
+                    name_map["density.b"].pop(),
+                )
+            )
+        return grid_list
+
+    # Scenario 5
+    # From this point on we won't be able to derive pairings without using the
+    # medium_grids exit out if we don't fit bsaic requirements
+    if (
+        (name_counts["density"] > 1 and name_counts["Lescale"]) or is_many_den_rgb
+    ) and medium_grids_attrib is None:
+        soho.warning(
+            "{}: has density or density.rgb/Lescale and no way to link"
+            " them, please use a medium_grids attribute".format(sop_path)
+        )
+        return []
+
+    grids = []
+    for medium, medium_prims in mediums_map.iteritems():
+        medium_counts = collections.Counter(
+            prim.attribValue(name_attrib) for prim in medium_prims
+        )
+        is_no_den_rgb = all(medium_counts[c] == 0 for c in den_rgb_strs)
+        is_one_den_rgb = all(medium_counts[c] == 1 for c in den_rgb_strs)
+
+        if (
+            medium_counts["density"] == 1
+            and is_no_den_rgb
+            and medium_counts["Lescale"] <= 1
+        ):
+            density_prim = name_map["density"] & medium_prims
+            if len(density_prim) != 1:
+                soho.warning("{}: Invalid density and medium_grid".format(sop_path))
+            density_grid = FloatGrid(density_prim.pop())
+            lescale_prim = name_map["Lescale"] & medium_prims
+            if lescale_prim:
+                density_grid.lescale = lescale_prim.pop()
+            grids.append(density_grid)
+        elif (
+            not medium_counts["density"]
+            and is_one_den_rgb
+            and medium_counts["Lescale"] <= 1
+        ):
+            r_prim = name_map["density.r"] & medium_prims
+            g_prim = name_map["density.g"] & medium_prims
+            b_prim = name_map["density.b"] & medium_prims
+            if len(r_prim) != 1 or len(g_prim) != 1 or len(b_prim) != 1:
+                soho.warning(
+                    "{}: Invalid density.rgb and medium_grid {}".format(
+                        sop_path, medium
+                    )
+                )
+                continue
+            rgb_grid = RGBGrid(r_prim.pop(), g_prim.pop(), b_prim.pop())
+            lescale_prim = name_map["Lescale"] & medium_prims
+            if lescale_prim:
+                rgb_grid.lescale = lescale_prim.pop()
+            grids.append(rgb_grid)
+        else:
+            soho.warning(
+                "{}: Can not map density grids for {}".format(sop_path, medium)
+            )
+
+    return grids
 
 
 def volume_wrangler(gdp, paramset=None, properties=None, override_node=None):
-    """Call either the smoke_prim_wrangler"""
 
     # Houdini only supports one type of Volume primitive to be in a geometry network.
     # So if both a heightfield and a fog volume exists, the heightfield takes priority
@@ -654,56 +986,15 @@ def volume_wrangler(gdp, paramset=None, properties=None, override_node=None):
     #       as density.
     # Further complicating things is pbrt can render either density or density.[rgb]
     #
-    # The approach we will take is to iterate through all the grids of the same
-    # resolution, this will ensure we don't match a Lescale to a different res density.
-    # To handle the density.rgb fields, we'll doa first come first serve to fill out
-    # the fields. If we have two density.r fields, then we'll create two separate
-    # containers for them. Once we get a density.g or density.b field then we'll
-    # search through or existing containers in order they were added and fill those
-    # slots.
-    # TODO a better heuristic would be to match bounding boxes
-    # TODO reevaluate all of this, we are adding a lot of complicated logic when we
-    #       could simply make hard demands of the user. "Only have a single density
-    #       and single Lescale" for example.
+    # The approach we will take is to require a medium_name attribute to group
+    # prims together that form a medium. We'll derive some of the base mappings
+    # automatically if the medium_name attribute does not exist.
 
-    # If we don't have names, this is easy
-    name_attrib = gdp.findPrimAttrib("name")
-    if not name_attrib:
-        density_grids = [FloatGrid(prim) for prim in gdp.iterPrims()]
-        smoke_prim_wrangler(density_grids, paramset, properties)
-        return None
+    sop_path = properties["object:soppath"].Value[0]
 
-    # If we do have names, we need to start grouping.
-    res_group = collections.defaultdict(list)
-    for prim in prims:
-        res_group[tuple(prim.resolution())].append(prim)
-
-    # We'll first iterate over all the volumes of the same resolution
-    for res, prims in res_group.iteritems():
-        # Find Density Prims
-        lescale_prims = []
-        density_grids = NamedGridList()
-        for prim in prims:
-            name = prim.attribValue(name_attrib)
-            if re.match(r"density(\.[xyzrgb])?", name):
-                density_grids.add_grid(prim)
-            elif name == "Lescale":
-                lescale_prims.append(prim)
-        # Now that we have populated our density grids we can back
-        # and add the Lescales in prim order.
-        # TODO a better approach would be to match the bounding box
-        #   sizes of lescales to density grids.
-        if len(lescale_prims) > len(density_grids.grids):
-            # TODO ROP warning?
-            api.Comment(
-                "Skipping Lescale grids that don't have matching density fields"
-            )
-        density_grids.cull_incomplete()
-        for density_grid, lescale in zip(density_grids, lescale_prims):
-            density_grid.lescale = lescale
-
-        if density_grids.grids:
-            smoke_prim_wrangler(density_grids, paramset, properties)
+    grids = build_uniform_grid_list(sop_path, gdp)
+    for grid in grids:
+        smoke_prim_wrangler(grids, paramset, properties)
 
     return None
 
@@ -798,7 +1089,7 @@ def bounds_to_api_box(b):
 #
 
 
-def medium_prim_paramset(prim, paramset=None):
+def medium_prim_paramset(prim, paramset=None, extra_attribs=()):
     """Build a ParamSet of medium values based off of hou.Prim attribs"""
     medium_paramset = ParamSet(paramset)
 
@@ -824,7 +1115,7 @@ def medium_prim_paramset(prim, paramset=None):
         if preset_value:
             medium_paramset.replace(PBRTParam("string", "preset", preset_value))
     except hou.OperationFailed:
-        pass
+        preset_value = None
 
     try:
         g_value = prim.floatAttribValue("g")
@@ -838,26 +1129,43 @@ def medium_prim_paramset(prim, paramset=None):
     except hou.OperationFailed:
         pass
 
-    try:
-        Le_value = prim.floatListAttribValue("Le")
-        if len(Le_value) == 3:
-            medium_paramset.replace(PBRTParam("rgb", "Le", Le_value))
-    except hou.OperationFailed:
-        pass
+    if preset_value is not None:
+        try:
+            sigma_a_value = prim.floatListAttribValue("sigma_a")
+            if len(sigma_a_value) == 3:
+                medium_paramset.replace(PBRTParam("rgb", "sigma_a", sigma_a_value))
+        except hou.OperationFailed:
+            pass
 
-    try:
-        sigma_a_value = prim.floatListAttribValue("sigma_a")
-        if len(sigma_a_value) == 3:
-            medium_paramset.replace(PBRTParam("rgb", "sigma_a", sigma_a_value))
-    except hou.OperationFailed:
-        pass
+        try:
+            sigma_s_value = prim.floatListAttribValue("sigma_s")
+            if len(sigma_s_value) == 3:
+                medium_paramset.replace(PBRTParam("rgb", "sigma_s", sigma_s_value))
+        except hou.OperationFailed:
+            pass
 
-    try:
-        sigma_s_value = prim.floatListAttribValue("sigma_s")
-        if len(sigma_s_value) == 3:
-            medium_paramset.replace(PBRTParam("rgb", "sigma_s", sigma_s_value))
-    except hou.OperationFailed:
-        pass
+    if not extra_attribs:
+        return medium_paramset
+
+    # This won't support every possible param types, just the
+    # ones that are common (known)
+    for attrib_type, name in extra_attribs:
+        try:
+            if attrib_type == "float":
+                val = prim.floatAttribValue(name)
+            elif attrib_type == "integer":
+                val = prim.intAttribValue(name)
+            elif attrib_type == "rgb":
+                val = prim.floatListAttribValue(name)
+                if len(val) != 3:
+                    continue
+            elif attrib_type == "string":
+                val = prim.stringAttribValue(name)
+            else:
+                continue
+        except hou.OperationFailed:
+            continue
+        medium_paramset.replace(PBRTParam(attrib_type, name, val))
 
     return medium_paramset
 
@@ -871,7 +1179,6 @@ def smoke_prim_wrangler(grids, paramset=None, properties=None, override_node=Non
     preset (prim), string
     g (prim), float
     scale (prim), float
-    Le (prim), float[3]
     sigma_a (prim), float[3]
     sigma_s (prim), float[3]
 
@@ -885,9 +1192,6 @@ def smoke_prim_wrangler(grids, paramset=None, properties=None, override_node=Non
     if properties is None:
         properties = {}
 
-    # TODO START {
-    #   We could move this out of the wrangler since it will be the same
-    #   for every prim
     medium_paramset = ParamSet()
     if "pbrt_interior" in properties:
         interior = BaseNode.from_node(properties["pbrt_interior"].Value[0])
@@ -909,12 +1213,20 @@ def smoke_prim_wrangler(grids, paramset=None, properties=None, override_node=Non
         exterior = properties["pbrt_exterior"].Value[0]
     exterior = "" if exterior is None else exterior
 
-    # TODO END }
+    sop_path = properties["object:soppath"].Value[0]
 
     for grid in grids:
         smoke_paramset = ParamSet()
 
-        if grid.is_float():
+        if not grid.does_res_match():
+            soho.warning(
+                "{}: Skipping volumes that do not have matching resolutions".format(
+                    sop_path
+                )
+            )
+            continue
+
+        if isinstance(grid, FloatGrid):
             prim_num_str = str(grid.density.number())
             ref_prim = grid.density
             voxeldata = array.array("f")
@@ -937,11 +1249,13 @@ def smoke_prim_wrangler(grids, paramset=None, properties=None, override_node=Non
             voxeldata[2::3] = b_voxeldata
             smoke_paramset.add(PBRTParam("rgb", "density", voxeldata))
 
-        medium_name = "%s[%s]%s" % (
-            properties["object:soppath"].Value[0],
-            prim_num_str,
-            medium_suffix,
-        )
+        medium_name = "%s[%s]%s" % (sop_path, prim_num_str, medium_suffix)
+
+        if grid.lescale is not None:
+            lescale_voxeldata = array.array("f")
+            lescale_voxeldata.fromstring(grid.lescale.allVoxelsAsString())
+            smoke_paramset.add(PBRTParam("float", "Lescale", lescale_voxeldata))
+
         resolution = ref_prim.resolution()
         # TODO: Benchmark this vs other methods like fetching volumeSlices
 
@@ -951,12 +1265,10 @@ def smoke_prim_wrangler(grids, paramset=None, properties=None, override_node=Non
         smoke_paramset.add(PBRTParam("point", "p0", [-1, -1, -1]))
         smoke_paramset.add(PBRTParam("point", "p1", [1, 1, 1]))
 
-        if grid.lescale is not None:
-            lescale_voxeldata = array.array("f")
-            lescale_voxeldata.fromstring(grid.lescale.allVoxelsAsString())
-            smoke_paramset.add(PBRTParam("float", "Lescale", lescale_voxeldata))
-
-        medium_prim_overrides = medium_prim_paramset(ref_prim, medium_paramset)
+        extra_attribs = [("rgb", "Le")]
+        medium_prim_overrides = medium_prim_paramset(
+            ref_prim, medium_paramset, extra_attribs=extra_attribs
+        )
         smoke_paramset.update(medium_prim_overrides)
         smoke_paramset |= paramset
 
@@ -1167,6 +1479,7 @@ shape_wranglers = {
     "BezierCurve": curve_wrangler,
     "NURBCurve": curve_wrangler,
     "Volume": volume_wrangler,
+    "VDB": vdb_wrangler,
     "PackedDisk": packeddisk_wrangler,
     "TriFan": tesselated_wrangler,
     "TriStrip": tesselated_wrangler,

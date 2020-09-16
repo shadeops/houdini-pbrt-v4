@@ -195,7 +195,7 @@ class ParamSet(collections.MutableSet):
         self.add(param)
 
     def find_param(self, ptype, name):
-        """Find a return a PBRTParam of ptype and name if in the ParamSet"""
+        """Find and return a PBRTParam of ptype and name if in the ParamSet"""
         param_to_find = PBRTParam(ptype, name)
         for p in self._data:
             if p == param_to_find:
@@ -208,6 +208,11 @@ class ParamSet(collections.MutableSet):
             return
         for o in other:
             self.replace(o)
+
+
+def get_dtype_from_nodetype(node_type):
+    function_definition = node_type.definition().sections()["FunctionName"]
+    return function_definition.contents().strip()
 
 
 def get_directive_from_nodetype(node_type):
@@ -283,7 +288,7 @@ class BaseNode(object):
         if directive is None:
             return None
 
-        dtype = node.type().definition().sections()["FunctionName"].contents()
+        dtype = get_dtype_from_nodetype(node.type())
 
         if directive == "material":
             return MaterialNode(node, ignore_defaults)
@@ -323,8 +328,7 @@ class BaseNode(object):
         # I'm not sure why that is the case but I suspect its due to the
         # shopclerk althought further experiments are needed.
         # For now we'll brute force it
-        function_definition = self.node.type().definition().sections()["FunctionName"]
-        return function_definition.contents().strip()
+        return get_dtype_from_nodetype(self.node.type())
 
     @property
     def path(self):
@@ -369,6 +373,15 @@ class BaseNode(object):
                 continue
 
             if parm_tup.isDisabled() or parm_tup.isHidden():
+                continue
+
+            # NOTE: We could (should?) check for all other non valid types like
+            # Button, Folder, etc but this may or may not cause slow downs? (I
+            # have a vague memory of this being the case but no commit msgs
+            # or comments describe so a TODO to add them and profile is required
+            if parm_tup.parmTemplate().type() in set(
+                [hou.parmTemplateType.Label, hou.parmTemplateType.FolderSet]
+            ):
                 continue
 
             if (

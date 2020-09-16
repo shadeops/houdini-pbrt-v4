@@ -166,20 +166,20 @@ def process_full_pt_instance_medium(instance_info, medium_type):
     medium_node = BaseNode.from_node(medium)
     medium_node.path_suffix = suffix
 
-    if not (medium_node and medium_node.directive_type == "pbrt_medium"):
+    if not (medium_node and medium_node.directive == "medium"):
         return None, None
 
     medium_paramset = ParamSet(medium_node.paramset)
 
     # TODO: Currently both this and the geometry overrides
     #       for mediums only, support "rgb" and not spectrums.
+    # TODO pbrt-v4, support the different Medium types
     parms = {
         "sigma_a": "rgb",
         "sigma_s": "rgb",
         "preset": "string",
         "g": "float",
         "scale": "float",
-        "Le" : "rgb",
     }
 
     for parm, ptype in parms.iteritems():
@@ -195,7 +195,9 @@ def process_full_pt_instance_medium(instance_info, medium_type):
 
     # We might be outputing a named medium even if its not going to be needed
     # as in the case of instancing volume prims
-    api.MakeNamedMedium(medium_node.full_name, "homogeneous", medium_paramset)
+    api.MakeNamedMedium(
+        medium_node.full_name, medium_node.directive_type, medium_paramset
+    )
 
     return medium_node.full_name, medium_paramset
 
@@ -935,14 +937,14 @@ def wrangle_medium(medium):
     medium_vop = BaseNode.from_node(medium)
     if medium_vop is None:
         return None
-    if medium_vop.directive_type != "pbrt_medium":
+    if medium_vop.directive != "medium":
         return None
 
     colorspace = medium_vop.colorspace
     if colorspace:
         api.AttributeBegin()
         api.ColorSpace(colorspace)
-    api.MakeNamedMedium(medium_vop.path, "homogeneous", medium_vop.paramset)
+    api.MakeNamedMedium(medium_vop.path, medium_vop.directive_type, medium_vop.paramset)
     if colorspace:
         api.AttributeEnd()
     return medium_vop.path
