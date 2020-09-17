@@ -1107,7 +1107,9 @@ def medium_prim_paramset(prim, paramset=None, extra_attribs=()):
     except hou.OperationFailed:
         interior = None
 
-    if interior and interior.directive_type == "pbrt_medium":
+    # TODO We should check the directive type too? From the prim?
+    #      or passed in by the wrangler?
+    if interior and interior.directive == "medium":
         medium_paramset |= interior.paramset
 
     try:
@@ -1195,7 +1197,11 @@ def smoke_prim_wrangler(grids, paramset=None, properties=None, override_node=Non
     medium_paramset = ParamSet()
     if "pbrt_interior" in properties:
         interior = BaseNode.from_node(properties["pbrt_interior"].Value[0])
-        if interior is not None and interior.directive_type == "pbrt_medium":
+        if (
+            interior is not None
+            and interior.directive == "medium"
+            and interior.directive_type == "uniformgrid"
+        ):
             medium_paramset |= interior.paramset
         # These are special overrides that come from full point instancing.
         # It allows "per point" medium values to be "stamped" out to volume prims.

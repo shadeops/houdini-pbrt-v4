@@ -139,14 +139,6 @@
         parmtag { "script_callback_language" "python" }
     }
     parm {
-        name    "from_object_bounds"
-        label   "From Object Bounds"
-        type    toggle
-        default { "1" }
-        parmtag { "pbrt.meta" "1" }
-        parmtag { "script_callback_language" "python" }
-    }
-    parm {
         name    "p0"
         label   "Bounds Min"
         type    vector
@@ -154,6 +146,7 @@
         default { "0" "0" "0" }
         disablewhen "{ from_object_bounds 1 }"
         range   { -1 1 }
+        parmtag { "pbrt.type" "point" }
         parmtag { "script_callback_language" "python" }
     }
     parm {
@@ -164,6 +157,7 @@
         default { "1" "1" "1" }
         disablewhen "{ from_object_bounds 1 }"
         range   { -1 1 }
+        parmtag { "pbrt.type" "point" }
         parmtag { "script_callback_language" "python" }
     }
 }

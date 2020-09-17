@@ -634,7 +634,7 @@ class BaseNode(object):
             pbrt_value = coshader.full_name
         # PBRT: point*/vector*/normal
         elif parm_type == hou.parmTemplateType.Float and "pbrt.type" in parm_tags:
-            pbrt_type = parm_tags()["pbrt.type"]
+            pbrt_type = parm_tags["pbrt.type"]
             pbrt_value = parm.eval()
         # PBRT: float (sometimes a float is just a float)
         elif parm_type == hou.parmTemplateType.Float:
