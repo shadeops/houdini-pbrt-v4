@@ -416,8 +416,9 @@ class BaseNode(object):
     def type_and_paramset(self):
         return (self.directive_type, self.paramset)
 
-    def pbrt_parm_name(self, name):
-        return name
+    def pbrt_parm_name(self, parm):
+        tags = parm.parmTemplate().tags()
+        return tags.get("pbrt.alias", parm.name())
 
     def paramset_with_overrides(self, override_str):
         paramset = ParamSet(self.paramset)
@@ -509,21 +510,21 @@ class BaseNode(object):
 
             # This is for wrangling parm names of texture nodes due to having a
             # signature parm.
-            pbrt_parm_name = self.pbrt_parm_name(parm_tuple.name())
+            pbrt_name = self.pbrt_parm_name(parm_tuple)
 
             if spectrum_type is None and tuple_names:
                 # This is a "traditional" override, no spectrum or node name prefix
                 value = [override[x] for x in tuple_names]
                 pbrt_param = self._hou_parm_to_pbrt_param(
-                    parm_tuple, pbrt_parm_name, value
+                    parm_tuple, pbrt_name, value
                 )
             elif spectrum_type in ("spectrum", "xyz", "blackbody"):
                 pbrt_param = PBRTParam(
-                    spectrum_type, pbrt_parm_name, override[override_name]
+                    spectrum_type, pbrt_name, override[override_name]
                 )
             elif not tuple_names:
                 pbrt_param = self._hou_parm_to_pbrt_param(
-                    parm_tuple, pbrt_parm_name, override[override_name]
+                    parm_tuple, pbrt_name, override[override_name]
                 )
             else:
                 raise ValueError("Unable to wrangle override name: %s" % override_name)
@@ -657,7 +658,9 @@ class BaseNode(object):
             if callback is not None:
                 pbrt_value = callback(node, parm)
 
-        return PBRTParam(pbrt_type, parm_name, pbrt_value)
+        pbrt_name = parm_tags.get("pbrt.alias", parm_name)
+
+        return PBRTParam(pbrt_type, pbrt_name, pbrt_value)
 
 
 class SpectrumNode(BaseNode):
@@ -780,7 +783,10 @@ class TextureNode(MaterialNode):
             new_parms[new_parm_name] = parm
         return new_parms
 
-    def pbrt_parm_name(self, name):
+    def pbrt_parm_name(self, parm):
+        tags = parm.parmTemplate().tags()
+        if "pbrt.alias" in tags:
+            return tags.get("pbrt.alias")
         signature = self.node.currentSignatureName()
         if signature != "default":
             return name.rsplit("_", 1)[0]
