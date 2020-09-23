@@ -515,9 +515,7 @@ class BaseNode(object):
             if spectrum_type is None and tuple_names:
                 # This is a "traditional" override, no spectrum or node name prefix
                 value = [override[x] for x in tuple_names]
-                pbrt_param = self._hou_parm_to_pbrt_param(
-                    parm_tuple, pbrt_name, value
-                )
+                pbrt_param = self._hou_parm_to_pbrt_param(parm_tuple, pbrt_name, value)
             elif spectrum_type in ("spectrum", "xyz", "blackbody"):
                 pbrt_param = PBRTParam(
                     spectrum_type, pbrt_name, override[override_name]
@@ -787,6 +785,7 @@ class TextureNode(MaterialNode):
         tags = parm.parmTemplate().tags()
         if "pbrt.alias" in tags:
             return tags.get("pbrt.alias")
+        name = parm.name()
         signature = self.node.currentSignatureName()
         if signature != "default":
             return name.rsplit("_", 1)[0]
