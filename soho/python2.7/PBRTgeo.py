@@ -239,6 +239,10 @@ def tube_wrangler(gdp, paramset=None, properties=None, override_node=None):
         shape_paramset = ParamSet(paramset)
         shape_paramset |= prim_override(prim, override_node)
 
+        phimax_attrib = gdp.findPrimAttrib("phimax")
+        if phimax_attrib is not None:
+            shape_paramset.add("phimax", "float", prim.attribValue(phimax_attrib))
+
         with api.TransformBlock():
 
             side_paramset = ParamSet(shape_paramset)
