@@ -829,23 +829,27 @@ def build_uniform_grid_list(sop_path, gdp):
     mediums_map = collections.defaultdict(set)
     res_map = collections.defaultdict(set)
 
+    density_renamer = {
+        "density.x": "density.r",
+        "density.y": "density.g",
+        "density.z": "density.b",
+    }
+
+    name_counts = collections.defaultdict(int)
     for prim in prims:
         res = tuple(prim.resolution())
         res_map[res].add(prim)
         name = prim.attribValue(name_attrib)
         # Instead of dealing with two different variation of vectors
         # we'll rename to rgb
-        if name in ("density.x", "density.y", "density.z"):
-            rename_component = {k: v for k, v in zip("xyz", "rgb")}
-            component = name.rsplit(".", 1)[1]
-            name = "density.{}".format(rename_component[component])
+        name = density_renamer.get(name, name)
+        name_counts[name] += 1
         name_map[name].add(prim)
         medium_name = ""
         if medium_grids_attrib is not None:
             medium_name = prim.attribValue(medium_grids_attrib)
         mediums_map[medium_name].add(prim)
 
-    name_counts = collections.Counter(prim.attribValue(name_attrib) for prim in prims)
     # Scenario 2
     # We just have density grids and no rgbs or Lescale
     if len(prims) == name_counts["density"]:
@@ -898,16 +902,19 @@ def build_uniform_grid_list(sop_path, gdp):
 
     grids = []
     for medium, medium_prims in mediums_map.iteritems():
-        medium_counts = collections.Counter(
-            prim.attribValue(name_attrib) for prim in medium_prims
-        )
+
+        medium_counts = collections.defaultdict(int)
+        for prim in medium_prims:
+            name = prim.attribValue(name_attrib)
+            name = density_renamer.get(name, name)
+            medium_counts[name] += 1
+
         is_no_den_rgb = all(medium_counts[c] == 0 for c in den_rgb_strs)
         is_one_den_rgb = all(medium_counts[c] == 1 for c in den_rgb_strs)
-
         if (
             medium_counts["density"] == 1
-            and is_no_den_rgb
             and medium_counts["Lescale"] <= 1
+            and is_no_den_rgb
         ):
             density_prim = name_map["density"] & medium_prims
             if len(density_prim) != 1:
@@ -919,8 +926,8 @@ def build_uniform_grid_list(sop_path, gdp):
             grids.append(density_grid)
         elif (
             not medium_counts["density"]
-            and is_one_den_rgb
             and medium_counts["Lescale"] <= 1
+            and is_one_den_rgb
         ):
             r_prim = name_map["density.r"] & medium_prims
             g_prim = name_map["density.g"] & medium_prims
@@ -1239,7 +1246,9 @@ def smoke_prim_wrangler(grids, paramset=None, properties=None, override_node=Non
             voxeldata.fromstring(grid.density.allVoxelsAsString())
             smoke_paramset.add(PBRTParam("float", "density", voxeldata))
         else:
-            prim_num_str = "%i,%i,%i" % tuple((i.number() for i in grid.density))
+            prim_num_str = "{},{},{}".format(
+                grid.r.number(), grid.g.number(), grid.b.number()
+            )
             # We'll use the r|x channel as the reference
             ref_prim = grid.r
 
