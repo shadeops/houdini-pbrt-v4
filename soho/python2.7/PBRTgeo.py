@@ -508,11 +508,24 @@ def patch_wrangler(gdp, paramset=None, properties=None, override_node=None):
     if "pbrt_computeN" in properties:
         computeN = properties["pbrt_computeN"].Value[0]
 
-    prim_paramset = ParamSet(paramset)
-    wrangler_paramset = mesh_params(gdp, computeN, is_patchmesh=True)
-    prim_paramset.update(wrangler_paramset)
+    emission_attrib = gdp.findPrimAttrib("emissionfilename")
+    if emission_attrib is None:
+        if "pbrt_emissionfilename" in properties:
+            emission_file = properties["pbrt_emissionfilename"].Value[0]
+        else:
+            emission_file = ""
+        patch_gdps = {emission_file: gdp}
+    else:
+        patch_gdps = partition_by_attrib(gdp, emission_attrib)
 
-    api.Shape("bilinearmesh", prim_paramset)
+    for emission_file, emission_gdp in patch_gdps:
+        prim_paramset = ParamSet(paramset)
+        if emission_file:
+            prim_paramset.add(PBRTParam("string", "emissionfilename", emission_file))
+        wrangler_paramset = mesh_params(gdp, computeN, is_patchmesh=True)
+        prim_paramset.update(wrangler_paramset)
+
+        api.Shape("bilinearmesh", prim_paramset)
 
     return None
 
