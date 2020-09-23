@@ -57,7 +57,7 @@
         }
         parm {
             SOHO_INT(pbrt_subdlevels, "Subvision Levels", "Geometry", 3)
-            disablewhen  "{ pbrt_subdivision == 0 }"
+            disablewhen  "{ pbrt_rendersubd == 0 }"
             range { 1 5 }
         }
     }
@@ -107,6 +107,15 @@
         parmtag     { spare_category "Geometry" }
         type        oppath
         default     { "" }
+        parmtag     { spare_opfilter "!!VOP!!" }
+    }
+    parm {
+        name        pbrt_emission_filename
+        label       "Emission Filename"
+        parmtag     { spare_category "Geometry" }
+        type        oppath
+        default     { "" }
+		help		"A special sampling option for Bilinear Patch Meshes"
         parmtag     { spare_opfilter "!!VOP!!" }
     }
     parm {
