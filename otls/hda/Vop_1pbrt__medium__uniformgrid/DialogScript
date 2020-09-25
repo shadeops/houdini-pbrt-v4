@@ -85,7 +85,7 @@
         label   "Sigma a"
         type    color
         size    3
-        default { "0.0011" "0.0024" "0.014" }
+        default { "1" "1" "1" }
         help    "The absorption cross section."
         disablewhen "{ preset != none }"
         range   { 0 1 }
@@ -95,7 +95,7 @@
         label   "Sigma s"
         type    color
         size    3
-        default { "2.55" "3.12" "3.77" }
+        default { "1" "1" "1" }
         help    "The scattering cross section."
         disablewhen "{ preset != none }"
         range   { 0 1 }
