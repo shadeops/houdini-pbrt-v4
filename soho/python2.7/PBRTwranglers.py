@@ -757,9 +757,11 @@ def wrangle_light(light, wrangler, now):
 
     node = wrangle_node_parm(light, "light_node", now)
 
+    # We skip the light_color if its at default so we avoid setting rgb values
+    # if at all possible, that way we get a constant spectrum instead
     parm_selection = {
         "light_wrangler": SohoPBRT("light_wrangler", "string", [""], False),
-        "light_color": SohoPBRT("light_color", "float", [1, 1, 1], False),
+        "light_color": SohoPBRT("light_color", "float", [1, 1, 1], True),
         "light_intensity": SohoPBRT("light_intensity", "float", [1], False),
         "light_exposure": SohoPBRT("light_exposure", "float", [0], False),
     }
@@ -771,9 +773,12 @@ def wrangle_light(light, wrangler, now):
 
     if light_wrangler == "HoudiniEnvLight":
         env_map = []
-        if light.evalString("env_map", now, env_map):
+        light.evalString("env_map", now, env_map)
+        # evalString will return [""] if the parm exists yet at its default
+        env_map = env_map[0] if env_map else ""
+        if env_map:
             paramset.add(PBRTParam("string", "filename", env_map))
-        else:
+        elif "light_color" in parms:
             paramset.add(PBRTParam("rgb", "L", parms["light_color"].Value))
 
         # Portal lights are only supported when supplying an env_map
@@ -803,8 +808,9 @@ def wrangle_light(light, wrangler, now):
         single_sided = light.wrangleInt(wrangler, "singlesided", now, [0])[0]
         visible = light.wrangleInt(wrangler, "light_contribprimary", now, [0])[0]
         size = light.wrangleFloat(wrangler, "areasize", now, [1, 1])
-        paramset.add(PBRTParam("rgb", "L", parms["light_color"].Value))
         paramset.add(PBRTParam("bool", "twosided", [not single_sided]))
+        if "light_color" in parms:
+            paramset.add(PBRTParam("rgb", "L", parms["light_color"].Value))
 
         # TODO, Possibly get the xform's scale and scale the geo, not the light.
         #       (for example, further multiplying down the radius)
