@@ -1328,14 +1328,14 @@
 				name    "pbrt_geo_location"
 				label   "Geometry Output Path"
 				type    directory
-				default { "$HIP/geometry" }
+				default { "geometry" }
 				disablewhen "{ pbrt_allow_geofiles != 1 }"
 			}
 			parm {
 				name    "pbrt_nanovdb_converter"
 				label   "VDB -> NanoVDB Tool"
 				type    file
-				default { "nanovdb_convert -b -f" }
+				default { "nanovdb_convert -z -f {vdb} {nanovdb}" }
 				disablewhen "{ pbrt_allow_geofiles != 1 }"
 			}
             parm {

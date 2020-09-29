@@ -637,10 +637,45 @@
                 parmtag { "spare_category" "SOHO Intrinsics" }
             }
         }
-
+        
+		groupsimple {
+            name    "soho_geo_output"
+            label   "SOHO Geo Output"
+			
+			parm {
+				name    "pbrt_allow_geofiles"
+				label   "Allow Geo Archives"
+				type    toggle
+				default { "1" }
+				help    "When outputing we have the option to save NanoVDB and meshes to separate files."
+			}
+			parm {
+				name    "pbrt_geo_location"
+				label   "Geometry Output Path"
+				type    directory
+				default { "$HIP/geometry" }
+				disablewhen "{ pbrt_allow_geofiles != 1 }"
+			}
+			parm {
+				name    "pbrt_nanovdb_converter"
+				label   "VDB -> NanoVDB Tool"
+				type    file
+				default { "nanovdb_convert -z -f {vdb} {nanovdb}" }
+				disablewhen "{ pbrt_allow_geofiles != 1 }"
+			}
+            parm {
+                name    "pbrt_geofile_threshold"
+                label   "Geo. File Threshold"
+                type    integer
+                default { "10000" }
+                help    "Threshold for when PLY files are used"
+				disablewhen "{ pbrt_allow_geofiles != 1 }"
+            }
+		}
         groupsimple {
             name    "soho_config"
             label   "Soho Config"
+			invisible
 
             parm {
                 name    "soho_program"
