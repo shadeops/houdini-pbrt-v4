@@ -1183,6 +1183,8 @@ def medium_prim_paramset(prim, paramset=None, extra_attribs=()):
     except hou.OperationFailed:
         pass
 
+    # TODO: What happens when we have a preset defined in pbrt_interior and
+    #       a sigma_a or sigma_s supplied?
     if not preset_value:
         try:
             sigma_a_value = prim.floatListAttribValue("sigma_a")

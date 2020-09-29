@@ -40,7 +40,7 @@ WorldBegin	# {
 	ConcatTransform [ 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 ]
 	AttributeBegin	# {
 	    TransformBegin	# {
-		MakeNamedMedium "/obj/test_vdb_attribs_medium/attribwrangle1-0" "string type" "nanovdb" "rgb sigma_s" [ 1 2 3 ] "float temperaturecutoff" [ 0 ] "rgb sigma_a" [ 0.01 0.02 0.03 ] "float scale" [ 1 ] "string preset" [ "" ] "float temperaturescale" [ 1 ] "string filename" [ "../../geometry/test_vdb_attribs_medium-attribwrangle1-0.1.nvdb" ] "float LeScale" [ 1 ] "float g" [ -0.5 ]
+		MakeNamedMedium "/obj/test_vdb_attribs_medium/attribwrangle1-0" "string type" "nanovdb" "string filename" [ "../../geometry/test_vdb_attribs_medium-attribwrangle1-0.1.nvdb" ] "rgb sigma_a" [ 0.01 0.02 0.03 ] "float g" [ -0.5 ] "rgb sigma_s" [ 1 2 3 ]
 		Material "none"
 		MediumInterface "/obj/test_vdb_attribs_medium/attribwrangle1-0" ""
 	    TransformEnd	# }
