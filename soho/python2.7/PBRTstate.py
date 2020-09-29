@@ -95,7 +95,7 @@ if gdp is not None:
             "pbrt_nanovdb_converter": soho.SohoParm(
                 "pbrt_nanovdb_converter",
                 "string",
-                ["nanovdb_convert"],
+                ["nanovdb_convert -z -f {vdb} {nanovdb}"],
                 False,
                 key="nanovdb_converter",
             ),
@@ -122,18 +122,42 @@ if gdp is not None:
         self.reset()
         return
 
-    @property
-    def output_location(self):
-        """Provide a relative geo location path if its a subdir of the disk file"""
-        if self.output_mode != 1:
-            return self.geo_location
-        disk_file_path = os.path.dirname(self.disk_file)
-        rel_geo_path = os.path.relpath(self.geo_location, disk_file_path)
-        if rel_geo_path.startswith(".."):
-            return self.geo_location
-        return rel_geo_path
-
     def get_geo_path_and_part(self, sop_path, ext):
+        SaveLocations = collections.namedtuple(
+            "SaveLocations", ["save_path", "pbrt_path", "part"]
+        )
+
+        # Since we have two modes of operation, piping to the renderer and saving
+        # to a diskfile, our output options need to have two different meanings.
+        # Generally when working with relative paths, for diskfiles you want them
+        # to be relative to your diskfile, however when piping to a renderer it
+        # makes more sense to have relative paths to your $HIP. Technically we could
+        # use os.chdir, but his might break other file references within the session.
+
+        if not os.path.isabs(self.geo_location):
+            if self.output_mode == 1:
+                # Disk file behavior (diskfile)
+                # os.getcwd : /my/project
+                # disk_file : /my/project/pbrt/scene.pbrt
+                # geo_location : geometry
+                # pbrt_path : geometry/filename.ext
+                # save_path : /my/project/pbrt/geometry/filename.ext
+                diskfile_dir = os.path.dirname(self.disk_file)
+                # Note, we can't use os.path.join, since on Windows Houdini still
+                # prefers "/"
+                diskfile_dir = "." if not diskfile_dir else diskfile_dir
+                save_dir = "{}/{}".format(diskfile_dir, self.geo_location)
+            else:
+                # Stdout behavior ($HIP)
+                # os.getcwd : /my/project
+                # geo_location : geometry
+                # pbrt_path : geometry/filename.ext
+                # save_path : /my/project/geometry/filename.ext
+                save_dir = "./{}".format(self.geo_location)
+        else:
+            save_dir = self.geo_location
+        pbrt_dir = self.geo_location
+
         part_num = self.geometry_parts[sop_path]
         self.geometry_parts[sop_path] += 1
 
@@ -145,14 +169,14 @@ if gdp is not None:
         if filename.startswith("/obj/"):
             filename = filename[5:]
         filename = filename.replace("/", "-")
-        geo_path = "{location}/{filename}-{part}.{frame:g}.{ext}".format(
-            location=self.output_location,
-            filename=filename,
-            part=part_num,
-            frame=frame,
-            ext=ext,
+        filename = "{filename}-{part}.{frame:g}.{ext}".format(
+            filename=filename, part=part_num, frame=frame, ext=ext
         )
-        return geo_path, part_num
+        return SaveLocations(
+            "{}/{}".format(save_dir, filename),
+            "{}/{}".format(pbrt_dir, filename),
+            part_num,
+        )
 
     def reset(self):
         """Resets the class attributes back to their default state"""
