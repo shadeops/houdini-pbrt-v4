@@ -1,5 +1,5 @@
 
-Film "rgb" "integer xresolution" [ 320 ] "integer yresolution" [ 240 ] "string filename" [ "test_loopsubdiv.exr" ]
+Film "rgb" "integer xresolution" [ 320 ] "integer yresolution" [ 240 ] "string filename" [ "test_curve_bezier_width01.exr" ]
 PixelFilter "gaussian" "float yradius" [ 2 ] "float xradius" [ 2 ]
 Sampler "pmj02bn" "integer pixelsamples" [ 16 ]
 Integrator "volpath" "integer maxdepth" [ 5 ]
@@ -35,10 +35,10 @@ WorldBegin	# {
     #  ==================================================
     #  Object Definitions
     #  --------------------------------------------------
-    #  /obj/test_loopsubdiv
+    #  /obj/test_curve_bezier_width01
     AttributeBegin	# {
 	ConcatTransform [ 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 ]
-	Shape "loopsubdiv" "integer indices" [ 1 5 4 2 6 5 3 7 6 0 4 7 2 1 0 5 6 7 7 4 5 0 3 2 7 3 0 6 2 3 5 1 2 4 0 1 ] "point3 P" [ -0.5 -0.5 -0.5 0.5 -0.5 -0.5 0.5 -0.5 0.5 -0.5 -0.5 0.5 -0.5 0.5 -0.5 0.5 0.5 -0.5 0.5 0.5 0.5 -0.5 0.5 0.5 ] "integer levels" [ 3 ]
+	Shape "curve" "float width0" [ 0.01 ] "string basis" [ "bezier" ] "integer degree" [ 3 ] "point3 P" [ -1 0 0 -1 0 -1 0 0 -1 0 0 0 ] "float width1" [ 0.1 ]
     AttributeEnd	# }
 
 
