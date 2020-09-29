@@ -26,10 +26,10 @@
         name    "preset"
         label   "Preset"
         type    ordinal
-        default { "none" }
+        default { "" }
         help    "Name of measured subsurface scattering coefficients. See the file src/core/media.cpp in the pbrt distribution for all of the measurements that are available."
         menu {
-            "none"                          "----"
+            ""                              "----"
             "Apple"                         "Apple"
             "Chicken1"                      "Chicken1"
             "Chicken2"                      "Chicken2"
@@ -85,7 +85,7 @@
         size    3
         default { "1" "1" "1" }
         help    "The absorption cross section."
-        disablewhen "{ preset != none }"
+        disablewhen "{ preset != \"\" }"
         range   { 0 1 }
     }
     parm {
@@ -95,7 +95,7 @@
         size    3
         default { "1" "1" "1" }
         help    "The scattering cross section."
-        disablewhen "{ preset != none }"
+        disablewhen "{ preset != \"\" }"
         range   { 0 1 }
     }
     parm {
