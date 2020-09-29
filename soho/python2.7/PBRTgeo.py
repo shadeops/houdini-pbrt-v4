@@ -203,7 +203,7 @@ def disk_wrangler(gdp, paramset=None, properties=None, override_node=None):
         with api.TransformBlock():
             xform = prim_transform(prim)
             api.ConcatTransform(xform)
-            api.Shape("disk", paramset)
+            api.Shape("disk", shape_paramset)
     return
 
 
@@ -276,9 +276,11 @@ def tube_wrangler(gdp, paramset=None, properties=None, override_node=None):
             side_paramset.add(PBRTParam("float", "zmax", 0.5))
 
             with api.AttributeBlock():
-                api.ReverseOrientation()
                 # Flip in Y so parameteric UV's match Houdini's
-                api.Scale(1, -1, 1)
+                # Note: We are disabling this so that phimax will line up
+                #       between the disks and the cylinder
+                # api.ReverseOrientation()
+                # api.Scale(1, -1, 1)
                 api.Shape(shape, side_paramset)
 
             if closed:
