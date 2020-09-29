@@ -12,7 +12,7 @@ os.environ["SOHO_PBRT_NO_HEADER"] = "1"
 
 
 def build_checker_material():
-    matte = hou.node("/mat").createNode("pbrt_material_matte", run_init_scripts=False)
+    matte = hou.node("/mat").createNode("pbrt_material_diffuse", run_init_scripts=False)
     checks = hou.node("/mat").createNode(
         "pbrt_texture_checkerboard", run_init_scripts=False
     )
@@ -21,7 +21,7 @@ def build_checker_material():
     checks.parmTuple("tex2_s").set([0.375, 0.5, 0.5])
     checks.parm("uscale").set(10)
     checks.parm("vscale").set(10)
-    matte.setNamedInput("Kd", checks, "output")
+    matte.setNamedInput("reflectance", checks, "output")
     return matte
 
 
@@ -32,7 +32,7 @@ def clear_mat():
 
 def build_envlight():
     env = hou.node("/obj").createNode("envlight")
-    env.parm("light_intensity").set(0.1)
+    env.parm("light_intensity").set(0.5)
     return env
 
 
@@ -42,12 +42,13 @@ def build_spherelight():
     light.parmTuple("areasize").set([1, 1])
     light.parmTuple("t").set([3, 3, 3])
     light.parm("light_intensity").set(50)
+    return light
 
 
 def build_cam():
     cam = hou.node("/obj").createNode("cam")
-    cam.parmTuple("t").set([0, 1, 5])
-    cam.parmTuple("r").set([-12, 0, 0])
+    cam.parmTuple("t").set([8, 8, 8])
+    cam.parmTuple("r").set([-35, 48, 0])
     cam.parmTuple("res").set([320, 240])
     return cam
 
@@ -81,6 +82,43 @@ def build_ground():
     return ground
 
 
+def build_volume(geo, name="", res=8, rgb=False, density_ramp=True):
+    volume = geo.createNode("volume")
+    volume.parm("name").set(name)
+    volume.parm("samplediv").set(res)
+    volume.parmTuple("initialval").set([1, 1, 1])
+
+    if rgb:
+        volume.parm("rank").set("vector")
+
+    if not density_ramp:
+        return volume
+
+    wrangler = geo.createNode("volumewrangle")
+    wrangler.setFirstInput(volume)
+    wrangle_field = name if name else "density"
+    if rgb:
+        wrangler.parm("snippet").set(
+            "vector res = set(i@resx, i@resy, i@resz);\n"
+            "vector i = set(i@ix, i@iy, i@iz);\n"
+            "v@{} = fit(i,0,res,0,1);".format(wrangle_field)
+        )
+    else:
+        wrangler.parm("snippet").set(
+            "@{} = fit(i@ix,0,i@resx,0,1);".format(wrangle_field)
+        )
+
+    return wrangler
+
+
+def build_vdb(geo, name="density", res=8, density_ramp=True):
+    volume = build_volume(geo, name=name, res=res, density_ramp=density_ramp)
+    vdb = geo.createNode("convertvdb")
+    vdb.parm("conversion").set("vdb")
+    vdb.setFirstInput(volume)
+    return vdb
+
+
 def build_rop(filename=None, diskfile=None):
     rop = hou.node("/out").createNode("pbrt")
     ptg = rop.parmTemplateGroup()
@@ -92,6 +130,7 @@ def build_rop(filename=None, diskfile=None):
     rop.parm("soho_precision").set(2)
     rop.parm("soho_almostzero").set(0.001)
     rop.parm("soho_outputmode").set(1)
+    rop.parm("pbrt_geo_location").set("../../geometry")
     if diskfile:
         rop.parm("soho_diskfile").set(diskfile)
     if filename:
@@ -112,6 +151,34 @@ def build_archive(diskfile=None):
     if diskfile:
         rop.parm("soho_diskfile").set(diskfile)
     return rop
+
+
+class TestRoot(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        hou.hipFile.clear(suppress_save_prompt=True)
+
+    @classmethod
+    def tearDownClass(cls):
+        hou.hipFile.clear(suppress_save_prompt=True)
+        if CLEANUP_FILES:
+            shutil.rmtree("tests/tmp")
+
+    @property
+    def testfile(self):
+        return "tests/tmp/%s.pbrt" % "/".join(self.id().split(".")[1:])
+
+    @property
+    def basefile(self):
+        return "tests/scenes/%s.pbrt" % "/".join(self.id().split(".")[1:])
+
+    @property
+    def name(self):
+        return self.id().split(".")[-1]
+
+
+class NoTest(object):
+    pass
 
 
 class TestParamBase(unittest.TestCase):
@@ -183,7 +250,7 @@ class TestParamBase(unittest.TestCase):
         self.assertEqual(str(param), "spectrum my_name [ ... ]")
 
 
-class TestBase(unittest.TestCase):
+class TestBase(NoTest):
     @classmethod
     def setUpClass(cls):
         build_cam()
@@ -582,18 +649,18 @@ class TestMaterials(TestGeo):
         self.assertTrue(filecmp.cmp(self.testfile, self.basefile))
 
     def test_mix_material(self):
-        matte1 = hou.node("/mat").createNode("pbrt_material_matte")
-        matte2 = hou.node("/mat").createNode("pbrt_material_matte")
+        matte1 = hou.node("/mat").createNode("pbrt_material_diffuse")
+        matte2 = hou.node("/mat").createNode("pbrt_material_diffuse")
         mix = hou.node("/mat").createNode("pbrt_material_mix")
         mix.setNamedInput("namedmaterial1", matte1, "material")
         mix.setNamedInput("namedmaterial2", matte2, "material")
         self.geo.parm("shop_materialpath").set(mix.path())
         self.compare_scene()
 
-    def test_bumpmap_material(self):
-        matte = hou.node("/mat").createNode("pbrt_material_matte")
+    def test_displacement_material(self):
+        matte = hou.node("/mat").createNode("pbrt_material_diffuse")
         bump = hou.node("/mat").createNode("pbrt_texture_wrinkled")
-        matte.setNamedInput("bumpmap", bump, "output")
+        matte.setNamedInput("displacement", bump, "output")
         self.geo.parm("shop_materialpath").set(matte.path())
         self.compare_scene()
 
@@ -601,12 +668,12 @@ class TestMaterials(TestGeo):
         space = hou.node("/obj").createNode("null")
         space.parmTuple("t").set([1, 2, 3])
         space.parmTuple("s").set([5, 10, 20])
-        matte = hou.node("/mat").createNode("pbrt_material_matte")
+        matte = hou.node("/mat").createNode("pbrt_material_diffuse")
         checks = hou.node("/mat").createNode("pbrt_texture_checkerboard")
         checks.parm("signature").set("s")
         checks.parm("dimension").set(3)
         checks.parm("texture_space").set(space.path())
-        matte.setNamedInput("Kd", checks, "output")
+        matte.setNamedInput("reflectance", checks, "output")
 
         self.geo.parm("shop_materialpath").set(matte.path())
         self.compare_scene()
@@ -615,9 +682,9 @@ class TestMaterials(TestGeo):
 class TestSpectrum(TestGeo):
     def setUp(self):
         self.geo = build_geo()
-        material = hou.node("/mat").createNode("pbrt_material_matte")
+        material = hou.node("/mat").createNode("pbrt_material_diffuse")
         spectrum = hou.node("/mat").createNode("pbrt_spectrum")
-        material.setNamedInput("Kd", spectrum, "output")
+        material.setNamedInput("reflectance", spectrum, "output")
         self.spectrum = spectrum
 
         exr = "%s.exr" % self.name
@@ -721,29 +788,51 @@ class TestMotionBlur(TestBase):
         self.compare_scene()
 
 
-class TestShapes(TestGeo):
+class TestShapes(TestRoot):
+    @classmethod
+    def setUpClass(cls):
+        hou.hipFile.clear(suppress_save_prompt=True)
+        cls.cam = build_cam()
+        cls.env = build_envlight()
+        cls.alpha_tex = hou.node("/mat").createNode("pbrt_texture_dots")
+        cls.alpha_tex.parm("uscale").set(10)
+        cls.alpha_tex.parm("vscale").set(10)
+
+    @classmethod
+    def tearDownClass(cls):
+        hou.hipFile.clear(suppress_save_prompt=True)
+        if CLEANUP_FILES:
+            shutil.rmtree("tests/tmp")
+
     def setUp(self):
-        self.geo = build_geo()
-        self.mat = build_checker_material()
-
         exr = "%s.exr" % self.name
+        self.geo = self.build_geo()
         self.rop = build_rop(filename=exr, diskfile=self.testfile)
-
-        self.geo.parm("shop_materialpath").set(self.mat.path())
-        self.extras = []
 
     def tearDown(self):
         self.geo.destroy()
         self.rop.destroy()
-        clear_mat()
-        for extra in self.extras:
-            extra.destroy()
-        self.extras[:] = []
         if CLEANUP_FILES:
             os.remove(self.testfile)
 
+    def build_geo(self):
+        geo = hou.node("/obj").createNode("geo", node_name=self.name)
+        for child in geo.children():
+            child.destroy()
+        return geo
+
+    def add_alpha_texture(self):
+        parm = hou.properties.parmTemplate("pbrt-v4", "pbrt_alpha_texture")
+        ptg = self.geo.parmTemplateGroup()
+        ptg.append(parm)
+        self.geo.setParmTemplateGroup(ptg)
+        self.geo.parm("pbrt_alpha_texture").set(self.alpha_tex.path())
+
     def compare_scene(self):
         self.rop.render()
+        # warnings = self.rop.warnings()
+        # if warnings:
+        #     print('\n'.join(warnings))
         self.assertTrue(filecmp.cmp(self.testfile, self.basefile))
 
     def test_sphere(self):
@@ -760,28 +849,68 @@ class TestShapes(TestGeo):
         xform.setRenderFlag(True)
         self.compare_scene()
 
-    def test_circle(self):
+    def test_sphere_attribs(self):
+        sphere = self.geo.createNode("sphere")
+        wrangler = self.geo.createNode("attribwrangle")
+        wrangler.parm("class").set("primitive")
+        wrangler.parm("snippet").set("@zmin=-0.2;\n" "@zmax=0.2;\n" "@phimax=180;\n")
+        wrangler.setFirstInput(sphere)
+        wrangler.setRenderFlag(True)
+        self.compare_scene()
+
+    def test_sphere_many(self):
+        sphere = self.geo.createNode("sphere")
+        sphere.parm("scale").set(0.1)
+        copy = self.geo.createNode("copyxform")
+        copy.parm("ncy").set(5)
+        copy.parm("tx").set(-0.5)
+        copy.setFirstInput(sphere)
+        copy.setRenderFlag(True)
+        self.compare_scene()
+
+    def test_sphere_alpha(self):
+        self.geo.createNode("sphere")
+        self.add_alpha_texture()
+        self.compare_scene()
+
+    def test_disk(self):
         self.geo.createNode("circle")
+        self.compare_scene()
+
+    def test_disk_xformed(self):
+        disk = self.geo.createNode("circle")
+        disk.parmTuple("rad").set([1.5, 0.75])
+        disk.parmTuple("t").set([1, 2, 3])
+        disk.parm("ry").set(15)
+        disk.parm("scale").set(2)
+        self.compare_scene()
+
+    def test_disk_attribs(self):
+        disk = self.geo.createNode("circle")
+        wrangler = self.geo.createNode("attribwrangle")
+        wrangler.parm("class").set("primitive")
+        wrangler.parm("snippet").set("@innerradius=0.25;\n" "@phimax=180;\n")
+        wrangler.setFirstInput(disk)
+        wrangler.setRenderFlag(True)
+        self.compare_scene()
+
+    def test_disk_many(self):
+        disk = self.geo.createNode("circle")
+        disk.parm("scale").set(0.1)
+        copy = self.geo.createNode("copyxform")
+        copy.parm("ncy").set(5)
+        copy.parm("tz").set(-0.5)
+        copy.setFirstInput(disk)
+        copy.setRenderFlag(True)
+        self.compare_scene()
+
+    def test_disk_alpha(self):
+        self.geo.createNode("circle")
+        self.add_alpha_texture()
         self.compare_scene()
 
     def test_cylinder(self):
         self.geo.createNode("tube")
-        self.compare_scene()
-
-    def test_cone(self):
-        tube = self.geo.createNode("tube")
-        tube.parm("rad1").set(0)
-        self.compare_scene()
-
-    def test_cone_caps(self):
-        tube = self.geo.createNode("tube")
-        tube.parm("rad1").set(0)
-        tube.parm("cap").set(True)
-        self.compare_scene()
-
-    def test_unsupported_tube(self):
-        tube = self.geo.createNode("tube")
-        tube.parm("rad1").set(0.5)
         self.compare_scene()
 
     def test_cylinder_caps(self):
@@ -789,8 +918,44 @@ class TestShapes(TestGeo):
         tube.parm("cap").set(True)
         self.compare_scene()
 
+    def test_cylinder_xformed(self):
+        tube = self.geo.createNode("tube")
+        tube.parm("cap").set(True)
+        tube.parmTuple("t").set([1, 2, 3])
+        tube.parm("rx").set(45)
+        tube.parm("radscale").set(1.25)
+        self.compare_scene()
+
+    def test_unsupported_cylinder(self):
+        tube = self.geo.createNode("tube")
+        tube.parm("rad1").set(0.5)
+        self.compare_scene()
+
+    def test_cylinder_attribs(self):
+        tube = self.geo.createNode("tube")
+        tube.parm("cap").set(True)
+        wrangler = self.geo.createNode("attribwrangle")
+        wrangler.parm("class").set("primitive")
+        wrangler.parm("snippet").set("@phimax=270;\n")
+        wrangler.setFirstInput(tube)
+        wrangler.setRenderFlag(True)
+        self.compare_scene()
+
+    def test_cylinder_alpha(self):
+        tube = self.geo.createNode("tube")
+        tube.parm("cap").set(True)
+        self.add_alpha_texture()
+        self.compare_scene()
+
     def test_trianglemesh(self):
         self.geo.createNode("box")
+        self.compare_scene()
+
+    def test_trianglemesh_polysoup(self):
+        box = self.geo.createNode("box")
+        soup = self.geo.createNode("polysoup")
+        soup.setFirstInput(box)
+        soup.setRenderFlag(True)
         self.compare_scene()
 
     def test_trianglemesh_vtxN(self):
@@ -834,6 +999,36 @@ class TestShapes(TestGeo):
         uvtex.setFirstInput(box)
         self.compare_scene()
 
+    def test_trianglemesh_vtxUV_alpha(self):
+        box = self.geo.createNode("box")
+        uvtex = self.geo.createNode("texture")
+        uvtex.parm("type").set("polar")
+        uvtex.setRenderFlag(True)
+        uvtex.setFirstInput(box)
+        self.add_alpha_texture()
+        self.compare_scene()
+
+    def test_trianglemesh_ptN_ptS(self):
+        box = self.geo.createNode("box")
+        frame = self.geo.createNode("polyframe")
+        frame.setFirstInput(box)
+        frame.parm("tangentu").set("S")
+        frame.parm("ortho").set(True)
+        frame.parm("style").set("edge1")
+        frame.setRenderFlag(True)
+        self.compare_scene()
+
+    def test_trianglemesh_faceIndices(self):
+        box = self.geo.createNode("box")
+        divide = self.geo.createNode("divide")
+        divide.setFirstInput(box)
+        wrangler = self.geo.createNode("attribwrangle")
+        wrangler.parm("class").set("primitive")
+        wrangler.parm("snippet").set("i@faceIndices = @primnum;")
+        wrangler.setFirstInput(divide)
+        wrangler.setRenderFlag(True)
+        self.compare_scene()
+
     def test_loopsubdiv(self):
         self.geo.createNode("box")
         ptg = self.geo.parmTemplateGroup()
@@ -843,7 +1038,7 @@ class TestShapes(TestGeo):
         self.geo.parm("pbrt_rendersubd").set(True)
         self.compare_scene()
 
-    def test_loopsubdiv_level_1(self):
+    def test_loopsubdiv_levels(self):
         self.geo.createNode("box")
         ptg = self.geo.parmTemplateGroup()
         subd_parm = hou.properties.parmTemplate("pbrt-v4", "pbrt_rendersubd")
@@ -852,105 +1047,83 @@ class TestShapes(TestGeo):
         ptg.append(level_parm)
         self.geo.setParmTemplateGroup(ptg)
         self.geo.parm("pbrt_rendersubd").set(True)
-        self.geo.parm("pbrt_subdlevels").set(1)
+        self.geo.parm("pbrt_subdlevels").set(2)
         self.compare_scene()
 
-    def test_nurbs(self):
+    def test_loopsubdiv_alpha(self):
+        self.geo.createNode("box")
+        ptg = self.geo.parmTemplateGroup()
+        parm = hou.properties.parmTemplate("pbrt-v4", "pbrt_rendersubd")
+        ptg.append(parm)
+        self.geo.setParmTemplateGroup(ptg)
+        self.geo.parm("pbrt_rendersubd").set(True)
+        self.add_alpha_texture()
+        self.compare_scene()
+
+    def test_tesselated_metaball(self):
+        self.geo.createNode("metaball")
+        self.compare_scene()
+
+    def test_tesselated_nurbs(self):
         box = self.geo.createNode("box")
         box.parm("type").set("nurbs")
         self.compare_scene()
 
-    def test_nurbs_wrap(self):
-        torus = self.geo.createNode("torus")
-        torus.parm("type").set("nurbs")
-        torus.parm("orderu").set(3)
-        torus.parm("orderv").set(3)
+    def test_tesselated_bezier(self):
+        box = self.geo.createNode("box")
+        box.parm("type").set("bezier")
         self.compare_scene()
 
-    def test_curves(self):
-        grid = self.geo.createNode("grid")
-        grid.parmTuple("size").set([2, 2])
-        fur = self.geo.createNode("fur")
-        fur.setFirstInput(grid)
-        fur.parm("density").set(10)
-        fur.parm("length").set(1)
-        convert = self.geo.createNode("convert")
-        convert.setFirstInput(fur)
-        convert.parm("totype").set("bezCurve")
-        convert.setRenderFlag(True)
+    def test_unsupported_packed(self):
+        box = self.geo.createNode("box")
+        pack = self.geo.createNode("pack")
+        pack.setFirstInput(box)
+        pack.setRenderFlag(True)
         self.compare_scene()
 
-    def test_curves_vtxwidth(self):
-        grid = self.geo.createNode("grid")
-        grid.parmTuple("size").set([2, 2])
-        fur = self.geo.createNode("fur")
-        fur.setFirstInput(grid)
-        fur.parm("density").set(10)
-        fur.parm("length").set(1)
-        wrangler = self.geo.createNode("attribwrangle")
-        wrangler.parm("class").set("vertex")
-        wrangler.parm("snippet").set("@width = fit(@ptnum%5,0,4,0.1,0.01);")
-        wrangler.setFirstInput(fur)
-        convert = self.geo.createNode("convert")
-        convert.setFirstInput(wrangler)
-        convert.parm("totype").set("bezCurve")
-        convert.setRenderFlag(True)
+    def test_unsupported_heightfield(self):
+        hf = self.geo.createNode("heightfield")
+        hf.parmTuple("size").set([10, 10])
         self.compare_scene()
 
-    def test_curves_ptwidth(self):
-        grid = self.geo.createNode("grid")
-        grid.parmTuple("size").set([2, 2])
-        fur = self.geo.createNode("fur")
-        fur.setFirstInput(grid)
-        fur.parm("density").set(10)
-        fur.parm("length").set(1)
-        wrangler = self.geo.createNode("attribwrangle")
-        wrangler.parm("class").set("point")
-        wrangler.parm("snippet").set("@width = fit(@ptnum%5,0,4,0.1,0.01);")
-        wrangler.setFirstInput(fur)
-        convert = self.geo.createNode("convert")
-        convert.setFirstInput(wrangler)
-        convert.parm("totype").set("bezCurve")
-        convert.setRenderFlag(True)
+    def test_curve_bezier(self):
+        curve = self.geo.createNode("curve")
+        curve.parm("coords").set("-1,0,0 -1,0,-1 0,0,-1 0,0,0")
+        curve.parm("type").set("bezier")
         self.compare_scene()
 
-    @unittest.skipIf(
-        hou.applicationVersion() < (17, 5), "Only supported in Houdini 17.5 and higher"
-    )
-    def test_curves_bspline(self):
-        grid = self.geo.createNode("grid")
-        grid.parmTuple("size").set([2, 2])
-        fur = self.geo.createNode("fur")
-        fur.setFirstInput(grid)
-        fur.parm("density").set(10)
-        fur.parm("length").set(1)
-        fur.setRenderFlag(True)
+    def test_curve_bezier_many(self):
+        curve = self.geo.createNode("curve")
+        curve.parm("coords").set("-1,0,0 -1,0,-1 0,0,-1 0,0,0")
+        curve.parm("type").set("bezier")
+        copy = self.geo.createNode("copyxform")
+        copy.parm("ncy").set(5)
+        copy.parm("tz").set(-0.5)
+        copy.setFirstInput(curve)
+        copy.setRenderFlag(True)
         self.compare_scene()
 
-    def test_curves_primwidth(self):
-        grid = self.geo.createNode("grid")
-        grid.parmTuple("size").set([2, 2])
-        fur = self.geo.createNode("fur")
-        fur.setFirstInput(grid)
-        fur.parm("density").set(10)
-        fur.parm("length").set(1)
-        wrangler = self.geo.createNode("attribwrangle")
-        wrangler.parm("class").set("primitive")
-        wrangler.parm("snippet").set("@width = fit01(@primnum/10.0, 0.05, 0.1);")
-        wrangler.setFirstInput(fur)
-        convert = self.geo.createNode("convert")
-        convert.setFirstInput(wrangler)
-        convert.parm("totype").set("bezCurve")
-        convert.setRenderFlag(True)
+    def test_curve_bezier_long(self):
+        curve = self.geo.createNode("curve")
+        curve.parm("coords").set(
+            "-1,0,0 -1,0,-1 0,0,-1 "
+            "0,0,0 0,0,1 1,0,1 "
+            "1,0,0 1,0,-1 1,0,-2 "
+            "0,0,-2 -1,0,-2 -2,0,-2 "
+            "-2,0,-1 -2,0,0 -2,0,1 "
+            "-1,0,1"
+        )
+        curve.parm("type").set("bezier")
         self.compare_scene()
 
-    def test_curves_primcurvetype(self):
-        grid = self.geo.createNode("grid")
-        grid.parmTuple("size").set([2, 2])
-        fur = self.geo.createNode("fur")
-        fur.setFirstInput(grid)
-        fur.parm("density").set(10)
-        fur.parm("length").set(1)
+    def test_curve_bezier_types(self):
+        curve = self.geo.createNode("curve")
+        curve.parm("coords").set("-1,0,0 -1,0,-1 0,0,-1 0,0,0")
+        curve.parm("type").set("bezier")
+        copy = self.geo.createNode("copyxform")
+        copy.parm("ncy").set(3)
+        copy.parm("tz").set(-1)
+        copy.setFirstInput(curve)
         wrangler = self.geo.createNode("attribwrangle")
         wrangler.parm("class").set("primitive")
         wrangler.parm("snippet").set(
@@ -958,87 +1131,365 @@ class TestShapes(TestGeo):
             'if (@primnum%3 == 1) s@curvetype = "cylinder";\n'
             'if (@primnum%3 == 2) s@curvetype = "flat";'
         )
-        wrangler.setFirstInput(fur)
-        convert = self.geo.createNode("convert")
-        convert.setFirstInput(wrangler)
-        convert.parm("totype").set("bezCurve")
-        convert.setRenderFlag(True)
+        wrangler.setFirstInput(copy)
+        wrangler.setRenderFlag(True)
         self.compare_scene()
 
-    def test_curves_curvetype(self):
+    def test_curve_bezier_width(self):
+        curve = self.geo.createNode("curve")
+        curve.parm("coords").set("-1,0,0 -1,0,-1 0,0,-1 0,0,0")
+        curve.parm("type").set("bezier")
+        wrangler = self.geo.createNode("attribwrangle")
+        wrangler.parm("class").set("primitive")
+        wrangler.parm("snippet").set("@width = 0.01;")
+        wrangler.setFirstInput(curve)
+        wrangler.setRenderFlag(True)
+        self.compare_scene()
+
+    def test_curve_bezier_width01(self):
+        curve = self.geo.createNode("curve")
+        curve.parm("coords").set("-1,0,0 -1,0,-1 0,0,-1 0,0,0")
+        curve.parm("type").set("bezier")
+        wrangler = self.geo.createNode("attribwrangle")
+        wrangler.parm("class").set("primitive")
+        wrangler.parm("snippet").set("@width0 = 0.01;\n" "@width1 = 0.1;")
+        wrangler.setFirstInput(curve)
+        wrangler.setRenderFlag(True)
+        self.compare_scene()
+
+    def test_curve_bezier_vtxwidth(self):
+        curve = self.geo.createNode("curve")
+        curve.parm("coords").set("-1,0,0 -1,0,-1 0,0,-1 0,0,0")
+        curve.parm("type").set("bezier")
+        wrangler = self.geo.createNode("attribwrangle")
+        wrangler.parm("class").set("vertex")
+        wrangler.parm("snippet").set("@width = fit(@ptnum, 0, @numpt-1, 0.01, 0.1);")
+        wrangler.setFirstInput(curve)
+        wrangler.setRenderFlag(True)
+        self.compare_scene()
+
+    def test_curve_bezier_ptwidth(self):
+        curve = self.geo.createNode("curve")
+        curve.parm("coords").set("-1,0,0 -1,0,-1 0,0,-1 0,0,0")
+        curve.parm("type").set("bezier")
+        wrangler = self.geo.createNode("attribwrangle")
+        wrangler.parm("class").set("point")
+        wrangler.parm("snippet").set("@width = fit(@ptnum, 0, @numpt-1, 0.01, 0.1);")
+        wrangler.setFirstInput(curve)
+        wrangler.setRenderFlag(True)
+        self.compare_scene()
+
+    def test_curve_bezier_type_prop(self):
+        parm = hou.properties.parmTemplate("pbrt-v4", "pbrt_curvetype")
+        ptg = self.geo.parmTemplateGroup()
+        ptg.append(parm)
+        self.geo.setParmTemplateGroup(ptg)
+        self.geo.parm("pbrt_curvetype").set("cylinder")
+        curve = self.geo.createNode("curve")
+        curve.parm("coords").set("-1,0,0 -1,0,-1 0,0,-1 0,0,0")
+        curve.parm("type").set("bezier")
+        self.compare_scene()
+
+    def test_curve_bezier_splitdepth_prop(self):
+        parm = hou.properties.parmTemplate("pbrt-v4", "pbrt_splitdepth")
+        ptg = self.geo.parmTemplateGroup()
+        ptg.append(parm)
+        self.geo.setParmTemplateGroup(ptg)
+        self.geo.parm("pbrt_splitdepth").set(9)
+        curve = self.geo.createNode("curve")
+        curve.parm("coords").set(
+            "-1,0,0 -1,0,-1 0,0,-1 "
+            "0,0,0 0,0,1 1,0,1 "
+            "1,0,0 1,0,-1 1,0,-2 "
+            "0,0,-2 -1,0,-2 -2,0,-2 "
+            "-2,0,-1 -2,0,0 -2,0,1 "
+            "-1,0,1"
+        )
+        curve.parm("type").set("bezier")
+        self.compare_scene()
+
+    def test_curve_bezier_ribbon_N(self):
         parm = hou.properties.parmTemplate("pbrt-v4", "pbrt_curvetype")
         ptg = self.geo.parmTemplateGroup()
         ptg.append(parm)
         self.geo.setParmTemplateGroup(ptg)
         self.geo.parm("pbrt_curvetype").set("ribbon")
-        grid = self.geo.createNode("grid")
-        grid.parmTuple("size").set([2, 2])
-        fur = self.geo.createNode("fur")
-        fur.setFirstInput(grid)
-        fur.parm("density").set(10)
-        fur.parm("length").set(1)
-        convert = self.geo.createNode("convert")
-        convert.setFirstInput(fur)
-        convert.parm("totype").set("bezCurve")
-        convert.setRenderFlag(True)
+        curve = self.geo.createNode("curve")
+        curve.parm("coords").set("-1,0,0 -1,0,-1 0,0,-1 0,0,0")
+        curve.parm("type").set("bezier")
+        wrangler = self.geo.createNode("attribwrangle")
+        wrangler.parm("class").set("point")
+        wrangler.parm("snippet").set("v@N = {0,1,0};")
+        wrangler.setFirstInput(curve)
+        wrangler.setRenderFlag(True)
         self.compare_scene()
 
-    def test_heightfield(self):
-        hf = self.geo.createNode("heightfield")
-        hf.parm("gridspacing").set(0.05)
-        hf.parmTuple("size").set([3, 3])
-        hf_n = self.geo.createNode("heightfield_noise")
-        hf_n.setFirstInput(hf)
-        hf_n.parm("amp").set(1)
-        hf_n.parm("elementsize").set(0.5)
-        hf_n.setRenderFlag(True)
+    @unittest.skipIf(
+        hou.applicationVersion() < (17, 5), "Only supported in Houdini 17.5 and higher"
+    )
+    def test_curve_bspline(self):
+        curve = self.geo.createNode("curve")
+        curve.parm("coords").set("-1,0,0 -1,0,-1 0,0,-1 0,0,0")
+        curve.parm("type").set("nurbs")
+        self.compare_scene()
+
+    def test_curve_bezier_bad_order(self):
+        curve = self.geo.createNode("curve")
+        curve.parm("coords").set(
+            "-1,0,0 -1,0,-1 0,0,-1 "
+            "0,0,0 0,0,1 1,0,1 "
+            "1,0,0 1,0,-1 1,0,-2 "
+            "0,0,-2 -1,0,-2 -2,0,-2 "
+            "-2,0,-1 -2,0,0 -2,0,1 "
+            "-1,0,1"
+        )
+        curve.parm("type").set("bezier")
+        curve.parm("order").set(6)
+        self.compare_scene()
+
+    def test_curve_bezier_closed(self):
+        curve = self.geo.createNode("circle")
+        curve.parm("type").set("bezier")
+        curve.parm("divs").set(4)
         self.compare_scene()
 
     def test_volume(self):
-        volume = self.geo.createNode("volume")
-        volume.parmTuple("size").set([10, 10, 10])
-        wrangle = self.geo.createNode("volumewrangle")
-        wrangle.parm("snippet").set("@density = floor(@P.x+0.5);")
-        wrangle.setFirstInput(volume)
-        wrangle.setRenderFlag(True)
-        self.rop.parm("integrator").set("volpath")
+        volume = build_volume(self.geo)
+        volume.setRenderFlag(True)
         self.compare_scene()
 
-    def test_volume_vdb(self):
-        volume = self.geo.createNode("volume")
-        volume.parmTuple("size").set([10, 10, 10])
-        wrangle = self.geo.createNode("volumewrangle")
-        wrangle.parm("snippet").set("@density = floor(@P.x+0.5);")
-        wrangle.setFirstInput(volume)
-        convertvdb = self.geo.createNode("convertvdb")
-        convertvdb.setFirstInput(wrangle)
-        convertvdb.parm("conversion").set("vdb")
-        convertvdb.setRenderFlag(True)
-        self.rop.parm("integrator").set("volpath")
+    def test_volume_Lescale(self):
+        density = build_volume(self.geo, name="density")
+        Lescale = build_volume(self.geo, name="Lescale")
+        merge = self.geo.createNode("merge")
+        merge.setInput(0, density)
+        merge.setInput(1, Lescale)
+        merge.setRenderFlag(True)
         self.compare_scene()
 
-    def test_tesselated(self):
-        self.geo.createNode("metaball")
+    def test_volume_many(self):
+        volume = build_volume(self.geo)
+        copies = self.geo.createNode("copyxform")
+        copies.parm("ncy").set(3)
+        copies.parm("tx").set(1)
+        copies.setFirstInput(volume)
+        copies.setRenderFlag(True)
+        self.compare_scene()
+
+    def test_volume_Lescale_many(self):
+        density = build_volume(self.geo, name="density")
+        Lescale = build_volume(self.geo, name="Lescale")
+        merge = self.geo.createNode("merge")
+        merge.setInput(0, density)
+        merge.setInput(1, Lescale)
+        copies = self.geo.createNode("copyxform")
+        copies.parm("ncy").set(3)
+        copies.parm("tx").set(1)
+        copies.setFirstInput(merge)
+        copies.setRenderFlag(True)
+        self.compare_scene()
+
+    def test_volume_Lescale_many_mapped(self):
+        density = build_volume(self.geo, name="density")
+        Lescale = build_volume(self.geo, name="Lescale")
+        merge = self.geo.createNode("merge")
+        merge.setInput(0, density)
+        merge.setInput(1, Lescale)
+        copies = self.geo.createNode("copyxform")
+        copies.parm("ncy").set(3)
+        copies.parm("tx").set(1)
+        copies.setFirstInput(merge)
+        wrangler = self.geo.createNode("attribwrangle")
+        wrangler.parm("class").set("primitive")
+        wrangler.parm("snippet").set("i@medium_grids = @primnum/2;")
+        wrangler.setFirstInput(copies)
+        wrangler.setRenderFlag(True)
+        self.compare_scene()
+
+    def test_volume_Lescale_wrong_res(self):
+        density = build_volume(self.geo, name="density")
+        Lescale = build_volume(self.geo, res=10, name="Lescale")
+        merge = self.geo.createNode("merge")
+        merge.setInput(0, density)
+        merge.setInput(1, Lescale)
+        merge.setRenderFlag(True)
+        self.compare_scene()
+
+    def test_volume_rgb(self):
+        volume = build_volume(self.geo, rgb=True)
+        volume.setRenderFlag(True)
+        self.compare_scene()
+
+    def test_volume_rgb_Lescale(self):
+        density = build_volume(self.geo, rgb=True, name="density")
+        Lescale = build_volume(self.geo, name="Lescale")
+        merge = self.geo.createNode("merge")
+        merge.setInput(0, density)
+        merge.setInput(1, Lescale)
+        merge.setRenderFlag(True)
+        self.compare_scene()
+
+    def test_volume_floats_rgb(self):
+        density_float1 = build_volume(self.geo, name="density")
+        density_float2 = build_volume(self.geo, name="density")
+        density_rgb = build_volume(self.geo, rgb=True, name="density")
+        merge = self.geo.createNode("merge")
+        merge.setInput(0, density_float1)
+        merge.setInput(1, density_float2)
+        merge.setInput(2, density_rgb)
+        merge.setRenderFlag(True)
+        self.compare_scene()
+
+    def test_volume_attribs(self):
+        volume = build_volume(self.geo)
+        wrangler = self.geo.createNode("attribwrangle")
+        wrangler.parm("class").set("primitive")
+        wrangler.parm("snippet").set(
+            "@g = 0.2;\n"
+            "@scale = 0.5;\n"
+            "v@sigma_a = {0.01, 0.02, 0.03};\n"
+            "v@sigma_s = {1, 2, 3};\n"
+            "v@Le = {2,2,2};\n"
+        )
+        wrangler.setFirstInput(volume)
+        wrangler.setRenderFlag(True)
+        self.compare_scene()
+
+    def test_volume_attribs_preset(self):
+        volume = build_volume(self.geo)
+        wrangler = self.geo.createNode("attribwrangle")
+        wrangler.parm("class").set("primitive")
+        wrangler.parm("snippet").set(
+            's@preset = "Regular Milk";'
+            "v@sigma_a = {0.01, 0.02, 0.03};\n"
+            "v@sigma_s = {1, 2, 3};\n"
+        )
+        wrangler.setFirstInput(volume)
+        wrangler.setRenderFlag(True)
+        self.compare_scene()
+
+    def test_volume_attribs_medium(self):
+        medium = hou.node("/mat").createNode("pbrt_medium_uniformgrid")
+        medium.parm("g").set(-0.5)
+        volume = build_volume(self.geo)
+        wrangler = self.geo.createNode("attribwrangle")
+        wrangler.parm("class").set("primitive")
+        wrangler.parm("snippet").set(
+            "v@sigma_a = {{0.01, 0.02, 0.03}};\n"
+            "v@sigma_s = {{1, 2, 3}};\n"
+            's@pbrt_interior = "{}";'.format(medium.path())
+        )
+        wrangler.setFirstInput(volume)
+        wrangler.setRenderFlag(True)
+        self.compare_scene()
+
+    def test_vdb(self):
+        vdb = build_vdb(self.geo)
+        vdb.setRenderFlag(True)
+        self.compare_scene()
+
+    def test_vdb_temperature(self):
+        density = build_vdb(self.geo, name="density")
+        temperature = build_vdb(self.geo, name="temperature")
+        merge = self.geo.createNode("merge")
+        merge.setInput(0, density)
+        merge.setInput(1, temperature)
+        merge.setRenderFlag(True)
+        self.compare_scene()
+
+    def test_vdb_many(self):
+        vdb = build_vdb(self.geo)
+        copies = self.geo.createNode("copyxform")
+        copies.parm("ncy").set(3)
+        copies.parm("tx").set(1)
+        copies.setFirstInput(vdb)
+        copies.setRenderFlag(True)
+        self.compare_scene()
+
+    def test_vdb_temperature_many(self):
+        density = build_vdb(self.geo, name="density")
+        temperature = build_vdb(self.geo, name="temperature")
+        merge = self.geo.createNode("merge")
+        merge.setInput(0, density)
+        merge.setInput(1, temperature)
+        copies = self.geo.createNode("copyxform")
+        copies.parm("ncy").set(3)
+        copies.parm("tx").set(1)
+        copies.setFirstInput(merge)
+        copies.setRenderFlag(True)
+        self.compare_scene()
+
+    def test_vdb_temperature_many_mapped(self):
+        density = build_vdb(self.geo, name="density")
+        temperature = build_vdb(self.geo, name="temperature")
+        merge = self.geo.createNode("merge")
+        merge.setInput(0, density)
+        merge.setInput(1, temperature)
+        copies = self.geo.createNode("copyxform")
+        copies.parm("ncy").set(3)
+        copies.parm("tx").set(1)
+        copies.setFirstInput(merge)
+        wrangler = self.geo.createNode("attribwrangle")
+        wrangler.parm("class").set("primitive")
+        wrangler.parm("snippet").set("i@medium_grids = @primnum/2;")
+        wrangler.setFirstInput(copies)
+        wrangler.setRenderFlag(True)
+        self.compare_scene()
+
+    def test_vdb_one_density_many_temperature(self):
+        density = build_vdb(self.geo, name="density")
+        temp1 = build_vdb(self.geo, name="temperature")
+        temp2 = build_vdb(self.geo, name="temperature")
+        merge = self.geo.createNode("merge")
+        merge.setInput(0, density)
+        merge.setInput(1, temp1)
+        merge.setInput(2, temp2)
+        merge.setRenderFlag(True)
+        self.compare_scene()
+
+    def test_vdb_attribs_preset(self):
+        vdb = build_vdb(self.geo)
+        wrangler = self.geo.createNode("attribwrangle")
+        wrangler.parm("class").set("primitive")
+        wrangler.parm("snippet").set(
+            's@preset = "Regular Milk";'
+            "v@sigma_a = {0.01, 0.02, 0.03};\n"
+            "v@sigma_s = {1, 2, 3};\n"
+        )
+        wrangler.setFirstInput(vdb)
+        wrangler.setRenderFlag(True)
+        self.compare_scene()
+
+    def test_vdb_attribs_medium(self):
+        medium = hou.node("/mat").createNode("pbrt_medium_nanovdb")
+        medium.parm("g").set(-0.5)
+        vdb = build_vdb(self.geo)
+        wrangler = self.geo.createNode("attribwrangle")
+        wrangler.parm("class").set("primitive")
+        wrangler.parm("snippet").set(
+            "v@sigma_a = {{0.01, 0.02, 0.03}};\n"
+            "v@sigma_s = {{1, 2, 3}};\n"
+            's@pbrt_interior = "{}";'.format(medium.path())
+        )
+        wrangler.setFirstInput(vdb)
+        wrangler.setRenderFlag(True)
         self.compare_scene()
 
     def test_geo_materials(self):
-        disney = hou.node("/mat").createNode(
-            "pbrt_material_disney", run_init_scripts=False
-        )
+        diffuse = hou.node("/mat").createNode("pbrt_material_diffuse")
+        diffuse.parmTuple("reflectance").set([0.0625, 0.0625, 0.75])
         box = self.geo.createNode("box")
         material = self.geo.createNode("material")
-        material.parm("shop_materialpath1").set(disney.path())
+        material.parm("shop_materialpath1").set(diffuse.path())
         material.setFirstInput(box)
         material.setRenderFlag(True)
         self.compare_scene()
 
     def test_geo_material_overrides(self):
-        disney = hou.node("/mat").createNode(
-            "pbrt_material_disney", run_init_scripts=False
-        )
+        diffuse = hou.node("/mat").createNode("pbrt_material_diffuse")
         box = self.geo.createNode("box")
         material = self.geo.createNode("material")
-        material.parm("shop_materialpath1").set(disney.path())
+        material.parm("shop_materialpath1").set(diffuse.path())
         material.parm("num_local1").set(1)
         material.parm("local1_name1").set("color")
         material.parm("local1_type1").set("color")
@@ -1048,12 +1499,10 @@ class TestShapes(TestGeo):
         self.compare_scene()
 
     def test_geo_material_overrides_spectrum_xyz(self):
-        disney = hou.node("/mat").createNode(
-            "pbrt_material_disney", run_init_scripts=False
-        )
+        diffuse = hou.node("/mat").createNode("pbrt_material_diffuse")
         box = self.geo.createNode("box")
         material = self.geo.createNode("material")
-        material.parm("shop_materialpath1").set(disney.path())
+        material.parm("shop_materialpath1").set(diffuse.path())
         material.parm("num_local1").set(1)
         material.parm("local1_name1").set("color:xyz")
         material.parm("local1_type1").set("vector3")
@@ -1063,12 +1512,10 @@ class TestShapes(TestGeo):
         self.compare_scene()
 
     def test_geo_material_overrides_spectrum_file(self):
-        disney = hou.node("/mat").createNode(
-            "pbrt_material_disney", run_init_scripts=False
-        )
+        diffuse = hou.node("/mat").createNode("pbrt_material_diffuse")
         box = self.geo.createNode("box")
         material = self.geo.createNode("material")
-        material.parm("shop_materialpath1").set(disney.path())
+        material.parm("shop_materialpath1").set(diffuse.path())
         material.parm("num_local1").set(1)
         material.parm("local1_name1").set("color:spectrum")
         material.parm("local1_type1").set("string")
@@ -1078,12 +1525,10 @@ class TestShapes(TestGeo):
         self.compare_scene()
 
     def test_geo_material_overrides_spectrum_spd(self):
-        disney = hou.node("/mat").createNode(
-            "pbrt_material_disney", run_init_scripts=False
-        )
+        diffuse = hou.node("/mat").createNode("pbrt_material_diffuse")
         box = self.geo.createNode("box")
         material = self.geo.createNode("material")
-        material.parm("shop_materialpath1").set(disney.path())
+        material.parm("shop_materialpath1").set(diffuse.path())
         material.parm("num_local1").set(1)
         material.parm("local1_name1").set("color:spectrum")
         material.parm("local1_type1").set("string")
@@ -1098,12 +1543,11 @@ class TestShapes(TestGeo):
         ptg.append(parm)
         self.geo.setParmTemplateGroup(ptg)
         self.geo.parm("pbrt_ignorematerials").set(True)
-        disney = hou.node("/mat").createNode(
-            "pbrt_material_disney", run_init_scripts=False
-        )
+        diffuse = hou.node("/mat").createNode("pbrt_material_diffuse")
+        diffuse.parmTuple("reflectance").set([0.0625, 0.0625, 0.75])
         box = self.geo.createNode("box")
         material = self.geo.createNode("material")
-        material.parm("shop_materialpath1").set(disney.path())
+        material.parm("shop_materialpath1").set(diffuse.path())
         material.setFirstInput(box)
         material.setRenderFlag(True)
         self.compare_scene()
