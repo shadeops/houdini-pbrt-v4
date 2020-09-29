@@ -145,11 +145,17 @@ def sphere_wrangler(gdp, paramset=None, properties=None, override_node=None):
         shape_paramset |= prim_override(prim, override_node)
 
         if zmin_attrib is not None:
-            shape_paramset.add("zmin", "float", prim.attribValue(zmin_attrib))
+            shape_paramset.add(
+                PBRTParam("float", "zmin", prim.attribValue(zmin_attrib))
+            )
         if zmax_attrib is not None:
-            shape_paramset.add("zmax", "float", prim.attribValue(zmax_attrib))
+            shape_paramset.add(
+                PBRTParam("float", "zmax", prim.attribValue(zmax_attrib))
+            )
         if phimax_attrib is not None:
-            shape_paramset.add("phimax", "float", prim.attribValue(phimax_attrib))
+            shape_paramset.add(
+                PBRTParam("float", "phimax", prim.attribValue(phimax_attrib))
+            )
 
         with api.TransformBlock():
             xform = prim_transform(prim)
@@ -187,10 +193,12 @@ def disk_wrangler(gdp, paramset=None, properties=None, override_node=None):
 
         if innerradius_attrib is not None:
             shape_paramset.add(
-                "innerradius", "float", prim.attribValue(innerradius_attrib)
+                PBRTParam("float", "innerradius", prim.attribValue(innerradius_attrib))
             )
         if phimax_attrib is not None:
-            shape_paramset.add("phimax", "float", prim.attribValue(phimax_attrib))
+            shape_paramset.add(
+                PBRTParam("float", "phimax", prim.attribValue(phimax_attrib))
+            )
 
         with api.TransformBlock():
             xform = prim_transform(prim)
@@ -241,7 +249,9 @@ def tube_wrangler(gdp, paramset=None, properties=None, override_node=None):
 
         phimax_attrib = gdp.findPrimAttrib("phimax")
         if phimax_attrib is not None:
-            shape_paramset.add("phimax", "float", prim.attribValue(phimax_attrib))
+            shape_paramset.add(
+                PBRTParam("float", "phimax", prim.attribValue(phimax_attrib))
+            )
 
         with api.TransformBlock():
 
