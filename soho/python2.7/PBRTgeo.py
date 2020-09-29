@@ -733,14 +733,31 @@ def vdb_wrangler(gdp, paramset=None, properties=None, override_node=None):
         bbox = medium_gdp.boundingBox()
 
         # TODO replace vdb_path with tempdir/?
-        vdb_path, part = scene_state.get_geo_path_and_part(sop_path, "vdb")
-        basename = os.path.splitext(vdb_path)[0]
-        nvdb_path = "{}.nvdb".format(basename)
+        # vdb_path, part = scene_state.get_geo_path_and_part(sop_path, "vdb")
+        save_locations = scene_state.get_geo_path_and_part(sop_path, "vdb")
+        vdb_path = save_locations.save_path
+        pathname = os.path.splitext(vdb_path)[0]
+        nvdb_path = "{}.nvdb".format(pathname)
+        nvdb_basename = os.path.basename(nvdb_path)
+        pbrt_geo_dir = os.path.dirname(save_locations.pbrt_path)
+        # Can't use os.path.join due to Houdini's / use on Windows
+        pbrt_geo_dir = "." if not pbrt_geo_dir else pbrt_geo_dir
+        pbrt_nvdb_path = "{}/{}".format(pbrt_geo_dir, nvdb_basename)
+
+        if (
+            "{vdb}" not in scene_state.nanovdb_converter
+            or "{nanovdb}" not in scene_state.nanovdb_converter
+        ):
+            soho.error("'OpenVDB->NanoVDB Tool' needs {vdb} and {nanovdb} tokens")
+            medium_gdp.clear()
+            return None
+
         soho.makeFilePathDirsIfEnabled(vdb_path)
-        gdp.saveToFile(vdb_path)
-        convert_args = shlex.split(scene_state.nanovdb_converter)
-        convert_args.append(vdb_path)
-        convert_args.append(nvdb_path)
+        convert_str = scene_state.nanovdb_converter.format(
+            vdb=vdb_path, nanovdb=nvdb_path
+        )
+        convert_args = shlex.split(convert_str)
+        medium_gdp.saveToFile(vdb_path)
         try:
             proc = subprocess.Popen(
                 convert_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE
@@ -821,9 +838,9 @@ def vdb_wrangler(gdp, paramset=None, properties=None, override_node=None):
         if instance_info is not None:
             medium_suffix = ":%s[%i]" % (instance_info.source, instance_info.number)
 
-        medium_name = "{}-{}{}".format(sop_path, part, medium_suffix)
+        medium_name = "{}-{}{}".format(sop_path, save_locations.part, medium_suffix)
 
-        vdb_paramset.add(PBRTParam("string", "filename", nvdb_path))
+        vdb_paramset.replace(PBRTParam("string", "filename", pbrt_nvdb_path))
         with api.AttributeBlock():
             with api.TransformBlock():
                 # xform = prim_transform(medium_grid.density)
@@ -906,7 +923,7 @@ def build_uniform_grid_list(sop_path, gdp):
     # We have no Lescale, but a mix of density and density.rgb
     # We can first remove all the density, then check the density.rgb
     if not name_counts["Lescale"] and (is_one_den_rgb or is_no_den_rgb):
-        grid_list.extend(list(name_map["density"]))
+        grid_list.extend([FloatGrid(x) for x in name_map["density"]])
         if is_one_den_rgb:
             grid_list.append(
                 RGBGrid(
@@ -1029,8 +1046,7 @@ def volume_wrangler(gdp, paramset=None, properties=None, override_node=None):
     sop_path = properties["object:soppath"].Value[0]
 
     grids = build_uniform_grid_list(sop_path, gdp)
-    for grid in grids:
-        smoke_prim_wrangler(grids, paramset, properties)
+    smoke_prim_wrangler(grids, paramset, properties)
 
     return None
 
