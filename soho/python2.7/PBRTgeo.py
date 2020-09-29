@@ -1165,7 +1165,7 @@ def medium_prim_paramset(prim, paramset=None, extra_attribs=()):
     except hou.OperationFailed:
         pass
 
-    if preset_value is not None:
+    if not preset_value:
         try:
             sigma_a_value = prim.floatListAttribValue("sigma_a")
             if len(sigma_a_value) == 3:
