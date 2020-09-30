@@ -28,7 +28,6 @@
         default { "0" }
         menu {
             "rgb"       "RGB"
-            "xyz"       "XYZ"
             "spd"       "SPD"
             "file"      "SPD File"
             "ramp"      "SPD Ramp"
@@ -42,15 +41,6 @@
         size    3
         default { "1" "1" "1" }
         hidewhen "{ type != rgb }"
-        range   { 0 1 }
-    }
-    parm {
-        name    "xyz"
-        label   "XYZ"
-        type    vector
-        size    3
-        default { "0.9504" "1" "1.0888" }
-        hidewhen "{ type != xyz }"
         range   { 0 1 }
     }
     parm {
@@ -117,10 +107,9 @@
     }
     parm {
         name    "blackbody"
-        label   "Kelvin/Value"
-        type    vector2
-        size    2
-        default { "6500" "1" }
+        label   "Kelvin"
+        type    float
+        default { "6500" }
         hidewhen "{ type != blackbody }"
         range   { 0! 1 }
     }

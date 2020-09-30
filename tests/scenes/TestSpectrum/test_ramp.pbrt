@@ -1,11 +1,12 @@
-Film "image" "integer xresolution" [ 320 ] "integer yresolution" [ 240 ] "string filename" [ "test_ramp.exr" ]
-PixelFilter "gaussian" "float xwidth" [ 2 ] "float ywidth" [ 2 ]
-Sampler "halton" "integer pixelsamples" [ 16 ]
-Integrator "path" "integer maxdepth" [ 5 ]
+
+Film "rgb" "integer xresolution" [ 320 ] "integer yresolution" [ 240 ] "string filename" [ "test_ramp.exr" ]
+PixelFilter "gaussian" "float yradius" [ 2 ] "float xradius" [ 2 ]
+Sampler "pmj02bn" "integer pixelsamples" [ 16 ]
+Integrator "volpath" "integer maxdepth" [ 5 ]
 Accelerator "bvh"
 
 #  /obj/cam1
-Transform [ 1 0 0 0 0 0.9781 -0.2079 0 0 -0.2079 -0.9781 0 0 0.06141 5.099 1 ]
+Transform [ 0.6691 -0.4263 -0.6087 0 0 0.8192 -0.5736 0 -0.7431 -0.3838 -0.5481 0 0.5921 -0.07283 13.84 1 ]
 Camera "perspective" "float fov" [ 45 ] "float screenwindow" [ -1 1 -0.75 0.75 ]
 
 WorldBegin	# {
@@ -18,23 +19,13 @@ WorldBegin	# {
 	Scale 1 1 -1
 	Rotate 90 0 0 1
 	Rotate 90 0 1 0
-	LightSource "infinite" "rgb L" [ 1 1 1 ] "string mapname" [ "" ] "rgb scale" [ 0.1 0.1 0.1 ]
-    AttributeEnd	# }
-
-    #  /obj/hlight1
-    AttributeBegin	# {
-	Translate 3 3 3
-	AreaLightSource "diffuse" "bool twosided" [ "true" ] "rgb L" [ 1 1 1 ] "rgb scale" [ 50 50 50 ]
-	AttributeBegin	# {
-	    Material "none"
-	    Shape "sphere" "float radius" [ 0.5 ]
-	AttributeEnd	# }
+	LightSource "infinite" "float scale" [ 0.5 ]
     AttributeEnd	# }
 
 
     #  ==================================================
     #  NamedMaterial Definitions
-    MakeNamedMaterial "/mat/pbrt_material_matte1" "string type" "matte" "spectrum Kd" [ 380 0.25 385 0.2688 390 0.2875 395 0.3063 400 0.325 405 0.3438 410 0.3625 415 0.3812 420 0.4 425 0.4187 430 0.4375 435 0.4563 440 0.475 445 0.4938 450 0.5125 455 0.5312 460 0.55 465 0.5688 470 0.5875 475 0.6062 480 0.625 485 0.6438 490 0.6625 495 0.6812 500 0.7 505 0.7188 510 0.7375 515 0.7563 520 0.775 525 0.7937 530 0.8125 535 0.8313 540 0.85 545 0.8687 550 0.8875 555 0.9062 560 0.925 565 0.9438 570 0.9625 575 0.9812 580 1 585 0.9875 590 0.975 595 0.9625 600 0.95 605 0.9375 610 0.925 615 0.9125 620 0.9 625 0.8875 630 0.875 635 0.8625 640 0.85 645 0.8375 650 0.825 655 0.8125 660 0.8 665 0.7875 670 0.775 675 0.7625 680 0.75 685 0.7375 690 0.725 695 0.7125 700 0.7 705 0.6875 710 0.675 715 0.6625 720 0.65 725 0.6375 730 0.625 735 0.6125 740 0.6 745 0.5875 750 0.575 755 0.5625 760 0.55 765 0.5375 770 0.525 775 0.5125 780 0.5 ]
+    MakeNamedMaterial "/mat/pbrt_material_diffuse1" "string type" "diffuse" "spectrum reflectance" [ 380 0.25 385 0.2688 390 0.2875 395 0.3063 400 0.325 405 0.3438 410 0.3625 415 0.3812 420 0.4 425 0.4187 430 0.4375 435 0.4563 440 0.475 445 0.4938 450 0.5125 455 0.5312 460 0.55 465 0.5688 470 0.5875 475 0.6062 480 0.625 485 0.6438 490 0.6625 495 0.6812 500 0.7 505 0.7188 510 0.7375 515 0.7563 520 0.775 525 0.7937 530 0.8125 535 0.8313 540 0.85 545 0.8687 550 0.8875 555 0.9062 560 0.925 565 0.9438 570 0.9625 575 0.9812 580 1 585 0.9875 590 0.975 595 0.9625 600 0.95 605 0.9375 610 0.925 615 0.9125 620 0.9 625 0.8875 630 0.875 635 0.8625 640 0.85 645 0.8375 650 0.825 655 0.8125 660 0.8 665 0.7875 670 0.775 675 0.7625 680 0.75 685 0.7375 690 0.725 695 0.7125 700 0.7 705 0.6875 710 0.675 715 0.6625 720 0.65 725 0.6375 730 0.625 735 0.6125 740 0.6 745 0.5875 750 0.575 755 0.5625 760 0.55 765 0.5375 770 0.525 775 0.5125 780 0.5 ]
 
 
     #  ==================================================
@@ -48,10 +39,10 @@ WorldBegin	# {
     #  --------------------------------------------------
     #  /obj/geo1
     AttributeBegin	# {
-	Transform [ 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 ]
-	NamedMaterial "/mat/pbrt_material_matte1"
+	ConcatTransform [ 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 ]
+	NamedMaterial "/mat/pbrt_material_diffuse1"
 	#  Can not find soppath for object
     AttributeEnd	# }
 
 
-WorldEnd	# }
+	# }

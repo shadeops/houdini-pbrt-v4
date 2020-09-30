@@ -50,13 +50,12 @@ class PBRTParam(object):
         "integer",
         "spectrum",
         "rgb",
-        "xyz",
         "blackbody",
         "string",
         "bool",
     )
     type_synonyms = {"point": "point3", "vector": "vector3", "color": "rgb"}
-    spectrum_types = set(["rgb", "blackbody", "xyz", "spectrum"])
+    spectrum_types = set(["rgb", "blackbody", "spectrum"])
 
     def __init__(self, param_type, param_name, param_value=None):
         """
@@ -516,7 +515,7 @@ class BaseNode(object):
                 # This is a "traditional" override, no spectrum or node name prefix
                 value = [override[x] for x in tuple_names]
                 pbrt_param = self._hou_parm_to_pbrt_param(parm_tuple, pbrt_name, value)
-            elif spectrum_type in ("spectrum", "xyz", "blackbody"):
+            elif spectrum_type in ("spectrum", "blackbody"):
                 pbrt_param = PBRTParam(
                     spectrum_type, pbrt_name, override[override_name]
                 )
