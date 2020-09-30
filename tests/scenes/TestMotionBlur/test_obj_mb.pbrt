@@ -1,7 +1,8 @@
-Film "image" "integer xresolution" [ 320 ] "integer yresolution" [ 240 ] "string filename" [ "test_obj_mb.exr" ]
-PixelFilter "gaussian" "float xwidth" [ 2 ] "float ywidth" [ 2 ]
-Sampler "halton" "integer pixelsamples" [ 16 ]
-Integrator "path" "integer maxdepth" [ 5 ]
+
+Film "rgb" "integer xresolution" [ 320 ] "integer yresolution" [ 240 ] "string filename" [ "test_obj_mb.exr" ]
+PixelFilter "gaussian" "float yradius" [ 2 ] "float xradius" [ 2 ]
+Sampler "pmj02bn" "integer pixelsamples" [ 16 ]
+Integrator "volpath" "integer maxdepth" [ 5 ]
 Accelerator "bvh"
 
 #  /obj/cam1
@@ -18,7 +19,7 @@ WorldBegin	# {
 	Scale 1 1 -1
 	Rotate 90 0 0 1
 	Rotate 90 0 1 0
-	LightSource "infinite" "rgb L" [ 1 1 1 ] "string mapname" [ "" ] "rgb scale" [ 0.1 0.1 0.1 ]
+	LightSource "infinite" "float scale" [ 0.5 ]
     AttributeEnd	# }
 
 
@@ -37,12 +38,12 @@ WorldBegin	# {
     #  /obj/geo1
     AttributeBegin	# {
 	ActiveTransform StartTime
-	Transform [ 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 ]
+	ConcatTransform [ 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 ]
 	ActiveTransform EndTime
-	Transform [ 1 0 0 0 0 1 0 0 0 0 1 0 0.5 0 0 1 ]
+	ConcatTransform [ 1 0 0 0 0 1 0 0 0 0 1 0 0.5 0 0 1 ]
 	ActiveTransform All
 	#  Can not find soppath for object
     AttributeEnd	# }
 
 
-WorldEnd	# }
+	# }

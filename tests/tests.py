@@ -60,8 +60,8 @@ def build_zcam():
     return cam
 
 
-def build_geo():
-    geo = hou.node("/obj").createNode("geo")
+def build_geo(name=None):
+    geo = hou.node("/obj").createNode("geo", node_name=name)
     for child in geo.children():
         child.destroy()
     return geo
@@ -739,10 +739,11 @@ class TestSpectrum(TestGeo):
         self.compare_scene()
 
 
-class TestMotionBlur(TestBase):
+class TestMotionBlur(TestRoot):
     @classmethod
     def setUpClass(cls):
-        build_envlight()
+        hou.hipFile.clear(suppress_save_prompt=True)
+        cls.env = build_envlight()
 
     @classmethod
     def tearDownClass(cls):
@@ -806,7 +807,7 @@ class TestShapes(TestRoot):
 
     def setUp(self):
         exr = "%s.exr" % self.name
-        self.geo = self.build_geo()
+        self.geo = build_geo(self.name)
         self.rop = build_rop(filename=exr, diskfile=self.testfile)
 
     def tearDown(self):
@@ -814,12 +815,6 @@ class TestShapes(TestRoot):
         self.rop.destroy()
         if CLEANUP_FILES:
             os.remove(self.testfile)
-
-    def build_geo(self):
-        geo = hou.node("/obj").createNode("geo", node_name=self.name)
-        for child in geo.children():
-            child.destroy()
-        return geo
 
     def add_alpha_texture(self):
         parm = hou.properties.parmTemplate("pbrt-v4", "pbrt_alpha_texture")
@@ -830,9 +825,6 @@ class TestShapes(TestRoot):
 
     def compare_scene(self):
         self.rop.render()
-        # warnings = self.rop.warnings()
-        # if warnings:
-        #     print('\n'.join(warnings))
         self.assertTrue(filecmp.cmp(self.testfile, self.basefile))
 
     def test_sphere(self):
