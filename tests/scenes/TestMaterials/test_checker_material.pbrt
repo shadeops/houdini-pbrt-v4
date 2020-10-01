@@ -1,11 +1,12 @@
-Film "image" "integer xresolution" [ 320 ] "integer yresolution" [ 240 ] "string filename" [ "test_checker_material.exr" ]
-PixelFilter "gaussian" "float xwidth" [ 2 ] "float ywidth" [ 2 ]
-Sampler "halton" "integer pixelsamples" [ 16 ]
-Integrator "path" "integer maxdepth" [ 5 ]
+
+Film "rgb" "integer xresolution" [ 320 ] "integer yresolution" [ 240 ] "string filename" [ "test_checker_material.exr" ]
+PixelFilter "gaussian" "float yradius" [ 2 ] "float xradius" [ 2 ]
+Sampler "pmj02bn" "integer pixelsamples" [ 16 ]
+Integrator "volpath" "integer maxdepth" [ 5 ]
 Accelerator "bvh"
 
 #  /obj/cam1
-Transform [ 1 0 0 0 0 0.9781 -0.2079 0 0 -0.2079 -0.9781 0 0 0.06141 5.099 1 ]
+Transform [ 0.6691 -0.4263 -0.6087 0 0 0.8192 -0.5736 0 -0.7431 -0.3838 -0.5481 0 0.5921 -0.07283 13.84 1 ]
 Camera "perspective" "float fov" [ 45 ] "float screenwindow" [ -1 1 -0.75 0.75 ]
 
 WorldBegin	# {
@@ -18,17 +19,7 @@ WorldBegin	# {
 	Scale 1 1 -1
 	Rotate 90 0 0 1
 	Rotate 90 0 1 0
-	LightSource "infinite" "rgb L" [ 1 1 1 ] "string mapname" [ "" ] "rgb scale" [ 0.1 0.1 0.1 ]
-    AttributeEnd	# }
-
-    #  /obj/hlight1
-    AttributeBegin	# {
-	Translate 3 3 3
-	AreaLightSource "diffuse" "bool twosided" [ "true" ] "rgb L" [ 1 1 1 ] "rgb scale" [ 50 50 50 ]
-	AttributeBegin	# {
-	    Material "none"
-	    Shape "sphere" "float radius" [ 0.5 ]
-	AttributeEnd	# }
+	LightSource "infinite" "float scale" [ 0.5 ]
     AttributeEnd	# }
 
 
@@ -38,7 +29,7 @@ WorldBegin	# {
 	Transform [ 5 0 0 0 0 10 0 0 0 0 20 0 1 2 3 1 ]
 	Texture "/mat/pbrt_texture_checkerboard1" "spectrum" "checkerboard" "integer dimension" [ 3 ]
     TransformEnd	# }
-    MakeNamedMaterial "/mat/pbrt_material_matte1" "string type" "matte" "texture Kd" [ "/mat/pbrt_texture_checkerboard1" ]
+    MakeNamedMaterial "/mat/pbrt_material_diffuse1" "string type" "diffuse" "texture reflectance" [ "/mat/pbrt_texture_checkerboard1" ]
 
 
     #  ==================================================
@@ -52,10 +43,10 @@ WorldBegin	# {
     #  --------------------------------------------------
     #  /obj/geo1
     AttributeBegin	# {
-	Transform [ 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 ]
-	NamedMaterial "/mat/pbrt_material_matte1"
+	ConcatTransform [ 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 ]
+	NamedMaterial "/mat/pbrt_material_diffuse1"
 	#  Can not find soppath for object
     AttributeEnd	# }
 
 
-WorldEnd	# }
+	# }

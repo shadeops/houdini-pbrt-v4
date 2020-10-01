@@ -290,7 +290,12 @@ class BaseNode(object):
         dtype = get_dtype_from_nodetype(node.type())
 
         if directive == "material":
-            return MaterialNode(node, ignore_defaults)
+            if dtype == "mix":
+                # This is incredibly annoying as the Mix material is a special case
+                # in pbrt-v4, see MixMaterialNode below
+                return MixMaterialNode(node, ignore_defaults)
+            else:
+                return MaterialNode(node, ignore_defaults)
         elif directive == "texture":
             return TextureNode(node, ignore_defaults)
         elif dtype == "pbrt_spectrum":
@@ -699,65 +704,13 @@ class SpectrumNode(BaseNode):
 
 
 class MaterialNode(BaseNode):
-
-    # TODO pbrt-v4 We now have signatures on Materials
-    #   for eta (float/spectrum) see dielectric
-
-    # Can be a Material or Texture or a Spectrum Helper
-    # spectrum helpers will be ignored as they are just
-    # improved interfaces for a parm
-    def inputs(self):
-        # should this return the parm name and the input
-        # or just the input
-        for input_node in self.node.inputs():
-            if input_node is None:
-                continue
-            directive = get_directive_from_nodetype(input_node.type())
-            if directive not in ("material", "texture"):
-                continue
-            yield input_node.path()
-
-    @property
-    def output_type(self):
-        return "string type"
-
-    @property
-    def paramset(self):
-        params = super(MaterialNode, self).paramset
-
-        # Materials might inputs that don't exist as parms
-        # (bumpmap float textures, and materials for example)
-        input_names = self.node.inputNames()
-        input_types = self.node.inputDataTypes()
-
-        for idx, input_node in enumerate(self.node.inputs()):
-            if input_node is None:
-                continue
-            input_name = input_names[idx]
-            if self.node.parmTuple(input_name) is not None:
-                continue
-            coshaders = self.node.coshaderNodes(input_name)
-            if not coshaders:
-                continue
-            pbrt_parm_type = "texture"
-            if input_types[idx] == "struct_PBRTMaterial":
-                pbrt_parm_type = "string"
-            coshader = BaseNode.from_node(coshaders[0])
-            coshader.path_prefix = self.path_prefix
-            coshader.path_suffix = self.path_suffix
-            params.replace(PBRTParam(pbrt_parm_type, input_name, coshader.full_name))
-
-        return params
-
-
-class TextureNode(MaterialNode):
     def get_used_parms(self):
         # Special handling for Texture nodes as they have a signature parm
 
         # Start off with the base filtering, we can do this because
         # so far this filters away everything we don't care about.
         # (Parms belonging to the other signature are hidden)
-        parms = super(TextureNode, self).get_used_parms()
+        parms = super(MaterialNode, self).get_used_parms()
 
         # If the signature is the default then it means
         # parms won't have a suffix so we are done.
@@ -790,6 +743,80 @@ class TextureNode(MaterialNode):
             return name.rsplit("_", 1)[0]
         return name
 
+    # Can be a Material or Texture or a Spectrum Helper
+    # spectrum helpers will be ignored as they are just
+    # improved interfaces for a parm
+    def inputs(self):
+        # should this return the parm name and the input
+        # or just the input
+        for input_node in self.node.inputs():
+            if input_node is None:
+                continue
+            directive = get_directive_from_nodetype(input_node.type())
+            if directive not in ("material", "texture"):
+                continue
+            yield input_node.path()
+
+    @property
+    def output_type(self):
+        return "string type"
+
+    @property
+    def paramset(self):
+        params = super(MaterialNode, self).paramset
+
+        # Materials might inputs that don't exist as parms
+        # (displacement float textures, and materials for example)
+        input_names = self.node.inputNames()
+        input_types = self.node.inputDataTypes()
+
+        for idx, input_node in enumerate(self.node.inputs()):
+            if input_node is None:
+                continue
+            input_name = input_names[idx]
+            if self.node.parmTuple(input_name) is not None:
+                continue
+            coshaders = self.node.coshaderNodes(input_name)
+            if not coshaders:
+                continue
+            pbrt_parm_type = "texture"
+            if input_types[idx] == "struct_PBRTMaterial":
+                pbrt_parm_type = "string"
+            coshader = BaseNode.from_node(coshaders[0])
+            coshader.path_prefix = self.path_prefix
+            coshader.path_suffix = self.path_suffix
+            params.replace(PBRTParam(pbrt_parm_type, input_name, coshader.full_name))
+
+        return params
+
+
+class MixMaterialNode(MaterialNode):
+    # This node is a special case, in pbrt-v4 instead of taking two separate
+    # material inputs, it now takes a string[2]. There isn't a good way to do
+    # this in VOPs so we'll have to custom wrangle the two inputs into a single
+    # PBRTParam. Ugh. So gross.
+    @property
+    def paramset(self):
+        # Get the MaterialNode's params
+        params = super(MixMaterialNode, self).paramset
+
+        # Find the two params we want combine
+        mat1 = params.find_param("string", "namedmaterial1")
+        mat2 = params.find_param("string", "namedmaterial2")
+        if mat1 is not None and mat2 is not None:
+            mats = PBRTParam("string", "materials", [mat1.value, mat2.value])
+            params.add(mats)
+
+        # Now remove them so they don't end up as standard params
+        if mat1:
+            params.discard(mat1)
+        if mat2:
+            params.discard(mat2)
+
+        return params
+
+
+class TextureNode(MaterialNode):
     @property
     def coord_sys(self):
         space_parm = self.node.parm("texture_space")

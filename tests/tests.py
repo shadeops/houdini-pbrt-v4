@@ -606,7 +606,19 @@ class TestMediums(TestGeo):
         self.compare_scene()
 
 
-class TestProperties(TestGeo):
+class TestProperties(TestRoot):
+    @classmethod
+    def setUpClass(cls):
+        hou.hipFile.clear(suppress_save_prompt=True)
+        cls.env = build_envlight()
+        cls.cam = build_cam()
+
+    @classmethod
+    def tearDownClass(cls):
+        hou.hipFile.clear(suppress_save_prompt=True)
+        if CLEANUP_FILES:
+            shutil.rmtree("tests/tmp")
+
     def setUp(self):
         self.geo = build_geo()
         exr = "%s.exr" % self.name
@@ -631,7 +643,19 @@ class TestProperties(TestGeo):
         self.compare_scene()
 
 
-class TestMaterials(TestGeo):
+class TestMaterials(TestRoot):
+    @classmethod
+    def setUpClass(cls):
+        hou.hipFile.clear(suppress_save_prompt=True)
+        cls.env = build_envlight()
+        cls.cam = build_cam()
+
+    @classmethod
+    def tearDownClass(cls):
+        hou.hipFile.clear(suppress_save_prompt=True)
+        if CLEANUP_FILES:
+            shutil.rmtree("tests/tmp")
+
     def setUp(self):
         self.geo = build_geo()
         exr = "%s.exr" % self.name
@@ -676,6 +700,28 @@ class TestMaterials(TestGeo):
         matte.setNamedInput("reflectance", checks, "output")
 
         self.geo.parm("shop_materialpath").set(matte.path())
+        self.compare_scene()
+
+    def test_signature_float_material(self):
+        dielectric = hou.node("/mat").createNode("pbrt_material_dieletric")
+        dielectric.parm("eta").set(1.3)
+        self.geo.parm("shop_materialpath").set(dielectric.path())
+        self.compare_scene()
+
+    def test_signature_spectrum_material(self):
+        dielectric = hou.node("/mat").createNode("pbrt_material_dieletric")
+        dielectric.parm("signature").set("s")
+        dielectric.parmTuple("eta_s").set([1.25, 1.5, 1.75])
+        self.geo.parm("shop_materialpath").set(dielectric.path())
+        self.compare_scene()
+
+    def test_signature_spectrum_texture_material(self):
+        dielectric = hou.node("/mat").createNode("pbrt_material_dieletric")
+        dielectric.parm("signature").set("s")
+        checks = hou.node("/mat").createNode("pbrt_texture_checkerboard")
+        checks.parm("signature").set("s")
+        dielectric.setNamedInput("eta", checks, "output")
+        self.geo.parm("shop_materialpath").set(dielectric.path())
         self.compare_scene()
 
 
