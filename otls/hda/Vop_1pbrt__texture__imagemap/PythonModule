@@ -1,6 +1,6 @@
-def custom_gamma(node, parm):
-	encoding = parm.evalAsString()
-	if encoding != "gamma":
-		return encoding
-	gamma = node.parm("gamma").eval()	
-	return "gamma {}".format(gamma)
+def custom_gamma(node, parm_tuple):
+    encoding = parm_tuple.evalAsStrings()[0]
+    if encoding != "gamma":
+        return encoding
+    gamma = node.parm("gamma").eval()
+    return "gamma {}".format(gamma)

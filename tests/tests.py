@@ -681,6 +681,24 @@ class TestMaterials(TestRoot):
         self.geo.parm("shop_materialpath").set(mix.path())
         self.compare_scene()
 
+    def test_aliased_parm_material(self):
+        coated = hou.node("/mat").createNode("pbrt_material_coatedconductor")
+        coated.parm("interface_roughness").set(0.2)
+        self.geo.parm("shop_materialpath").set(coated.path())
+        self.compare_scene()
+
+    def test_callback_parm_material(self):
+        diffuse = hou.node("/mat").createNode("pbrt_material_diffuse")
+        tex = hou.node("/mat").createNode("pbrt_texture_imagemap")
+        tex.parm("filename").set("test.exr")
+        tex.parm("signature").set("s")
+        tex.parm("auto_gamma").set(False)
+        tex.parm("encoding").set("gamma")
+        tex.parm("gamma").set(2.1)
+        diffuse.setNamedInput("reflectance", tex, "output")
+        self.geo.parm("shop_materialpath").set(diffuse.path())
+        self.compare_scene()
+
     def test_displacement_material(self):
         matte = hou.node("/mat").createNode("pbrt_material_diffuse")
         bump = hou.node("/mat").createNode("pbrt_texture_wrinkled")
@@ -698,7 +716,6 @@ class TestMaterials(TestRoot):
         checks.parm("dimension").set(3)
         checks.parm("texture_space").set(space.path())
         matte.setNamedInput("reflectance", checks, "output")
-
         self.geo.parm("shop_materialpath").set(matte.path())
         self.compare_scene()
 
