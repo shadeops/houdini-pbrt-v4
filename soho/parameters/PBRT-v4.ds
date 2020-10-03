@@ -110,13 +110,9 @@
         parmtag     { spare_opfilter "!!VOP!!" }
     }
     parm {
-        name        pbrt_emission_filename
-        label       "Emission Filename"
-        parmtag     { spare_category "Geometry" }
-        type        oppath
-        default     { "" }
+		SOHO_IMAGE(pbrt_emissionfilename, "Emission Filename", "Geometry", "")
+        parmtag     { filechooser_mode  "read" }
 		help		"A special sampling option for Bilinear Patch Meshes"
-        parmtag     { spare_opfilter "!!VOP!!" }
     }
     parm {
         name        pbrt_interior

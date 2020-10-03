@@ -534,7 +534,7 @@ def patch_wrangler(gdp, paramset=None, properties=None, override_node=None):
     else:
         patch_gdps = partition_by_attrib(gdp, emission_attrib)
 
-    for emission_file, emission_gdp in patch_gdps:
+    for emission_file, emission_gdp in patch_gdps.items():
         prim_paramset = ParamSet(paramset)
         if emission_file:
             prim_paramset.add(PBRTParam("string", "emissionfilename", emission_file))

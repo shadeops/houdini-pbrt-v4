@@ -809,7 +809,11 @@ def wrangle_light(light, wrangler, now):
         visible = light.wrangleInt(wrangler, "light_contribprimary", now, [0])[0]
         size = light.wrangleFloat(wrangler, "areasize", now, [1, 1])
         paramset.add(PBRTParam("bool", "twosided", [not single_sided]))
-        if "light_color" in parms:
+
+        texmap = light.wrangleString(wrangler, "light_texture", now, [""])[0]
+        if texmap:
+            paramset.add(PBRTParam("string", "filename", texmap))
+        elif "light_color" in parms:
             paramset.add(PBRTParam("rgb", "L", parms["light_color"].Value))
 
         # TODO, Possibly get the xform's scale and scale the geo, not the light.
@@ -1010,7 +1014,7 @@ def wrangle_geo(obj, wrangler, now):
         "pbrt_splitdepth": SohoPBRT(
             "pbrt_splitdepth", "integer", [3], True, key="splitdepth"
         ),
-        # We don't use the key=type since its a bit too generic of a name
+        "pbrt_emissionfilename": SohoPBRT("pbrt_emissionfilename", "string", [""], True),
         "pbrt_curvetype": SohoPBRT("pbrt_curvetype", "string", ["flat"], True),
         "pbrt_include": SohoPBRT("pbrt_include", "string", [""], False),
         "pbrt_alpha_texture": SohoPBRT(
