@@ -153,30 +153,6 @@ def build_archive(diskfile=None):
     return rop
 
 
-class TestRoot(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        hou.hipFile.clear(suppress_save_prompt=True)
-
-    @classmethod
-    def tearDownClass(cls):
-        hou.hipFile.clear(suppress_save_prompt=True)
-        if CLEANUP_FILES:
-            shutil.rmtree("tests/tmp")
-
-    @property
-    def testfile(self):
-        return "tests/tmp/%s.pbrt" % "/".join(self.id().split(".")[1:])
-
-    @property
-    def basefile(self):
-        return "tests/scenes/%s.pbrt" % "/".join(self.id().split(".")[1:])
-
-    @property
-    def name(self):
-        return self.id().split(".")[-1]
-
-
 class NoTest(object):
     pass
 
@@ -250,10 +226,10 @@ class TestParamBase(unittest.TestCase):
         self.assertEqual(str(param), "spectrum my_name [ ... ]")
 
 
-class TestBase(NoTest):
+class TestRoot(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        build_cam()
+        hou.hipFile.clear(suppress_save_prompt=True)
 
     @classmethod
     def tearDownClass(cls):
@@ -274,7 +250,12 @@ class TestBase(NoTest):
         return self.id().split(".")[-1]
 
 
-class TestROP(TestBase):
+class TestROP(TestRoot):
+    @classmethod
+    def setUpClass(cls):
+        hou.hipFile.clear(suppress_save_prompt=True)
+        cls.cam = build_cam()
+
     def setUp(self):
         exr = "%s.exr" % self.name
         self.rop = build_rop(filename=exr, diskfile=self.testfile)
@@ -290,6 +271,7 @@ class TestROP(TestBase):
 
     def test_filter_gaussian(self):
         self.rop.parm("filter").set("gaussian")
+        self.rop.parmTuple("filter_radius").set([1.5, 1.5])
         self.rop.parm("gauss_alpha").set(3)
         self.compare_scene()
 
@@ -313,7 +295,18 @@ class TestROP(TestBase):
         self.compare_scene()
 
 
-class TestArchive(TestBase):
+class TestArchive(TestRoot):
+    @classmethod
+    def setUpClass(cls):
+        hou.hipFile.clear(suppress_save_prompt=True)
+        cls.cam = build_cam()
+
+    @classmethod
+    def tearDownClass(cls):
+        hou.hipFile.clear(suppress_save_prompt=True)
+        if CLEANUP_FILES:
+            shutil.rmtree("tests/tmp")
+
     def setUp(self):
         self.geo = build_ground()
         self.rop = build_archive(diskfile=self.testfile)
