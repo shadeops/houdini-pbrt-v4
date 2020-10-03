@@ -333,11 +333,18 @@ class TestArchive(TestBase):
         self.compare_scene()
 
 
-class TestLights(TestBase):
+class TestLights(TestRoot):
     @classmethod
     def setUpClass(cls):
-        build_cam()
-        build_ground()
+        hou.hipFile.clear(suppress_save_prompt=True)
+        cls.cam = build_cam()
+        cls.geo = build_ground()
+
+    @classmethod
+    def tearDownClass(cls):
+        hou.hipFile.clear(suppress_save_prompt=True)
+        if CLEANUP_FILES:
+            shutil.rmtree("tests/tmp")
 
     def setUp(self):
         self.light = hou.node("/obj").createNode("hlight")
@@ -356,20 +363,47 @@ class TestLights(TestBase):
         self.rop.render()
         self.assertTrue(filecmp.cmp(self.testfile, self.basefile))
 
+    def test_pointlight_no_color(self):
+        self.light.parm("light_type").set("point")
+        self.light.parm("light_intensity").set(5)
+        self.compare_scene()
+
+    def test_spotlight_no_color(self):
+        self.light.parm("light_type").set("point")
+        self.light.parm("light_intensity").set(5)
+        self.light.parm("coneenable").set(True)
+        self.compare_scene()
+
+    def test_projectorlight_no_color(self):
+        self.light.parm("light_type").set("point")
+        self.light.parm("light_intensity").set(5)
+        self.light.parm("coneenable").set(True)
+        self.light.parm("projmap").set("../../maps/tex.exr")
+        self.compare_scene()
+
+    def test_goniometriclight_no_color(self):
+        self.light.parm("light_type").set("point")
+        self.light.parm("light_intensity").set(5)
+        self.light.parm("areamap").set("../../maps/tex.exr")
+        self.compare_scene()
+
     def test_pointlight(self):
         self.light.parm("light_type").set("point")
         self.light.parm("light_intensity").set(5)
+        self.light.parmTuple("light_color").set([0.5, 0.75, 1])
         self.compare_scene()
 
     def test_spotlight(self):
         self.light.parm("light_type").set("point")
         self.light.parm("light_intensity").set(5)
+        self.light.parmTuple("light_color").set([0.5, 0.75, 1])
         self.light.parm("coneenable").set(True)
         self.compare_scene()
 
     def test_projectorlight(self):
         self.light.parm("light_type").set("point")
         self.light.parm("light_intensity").set(5)
+        self.light.parmTuple("light_color").set([0.5, 0.75, 1])
         self.light.parm("coneenable").set(True)
         self.light.parm("projmap").set("../../maps/tex.exr")
         self.compare_scene()
@@ -377,51 +411,59 @@ class TestLights(TestBase):
     def test_goniometriclight(self):
         self.light.parm("light_type").set("point")
         self.light.parm("light_intensity").set(5)
+        self.light.parmTuple("light_color").set([0.5, 0.75, 1])
         self.light.parm("areamap").set("../../maps/tex.exr")
         self.compare_scene()
 
     def test_distantlight(self):
         self.light.parm("light_type").set("distant")
         self.light.parm("light_intensity").set(5)
+        self.light.parmTuple("light_color").set([0.5, 0.75, 1])
         self.compare_scene()
 
     def test_spherelight(self):
         self.light.parm("light_type").set("sphere")
         self.light.parm("light_intensity").set(5)
+        self.light.parmTuple("light_color").set([0.5, 0.75, 1])
         self.compare_scene()
 
     def test_spherelight_rotated(self):
         self.light.parm("light_type").set("sphere")
         self.light.parm("light_intensity").set(5)
+        self.light.parmTuple("light_color").set([0.5, 0.75, 1])
         self.light.parmTuple("r").set([15, 30, 45])
         self.compare_scene()
 
     def test_tubelight(self):
         self.light.parm("light_type").set("tube")
         self.light.parm("light_intensity").set(5)
+        self.light.parmTuple("light_color").set([0.5, 0.75, 1])
         self.compare_scene()
 
     def test_disklight(self):
         self.light.parm("light_type").set("disk")
         self.light.parm("light_intensity").set(5)
+        self.light.parmTuple("light_color").set([0.5, 0.75, 1])
         self.compare_scene()
 
     def test_gridlight(self):
         self.light.parm("light_type").set("grid")
         self.light.parm("light_intensity").set(5)
+        self.light.parmTuple("light_color").set([0.5, 0.75, 1])
         self.compare_scene()
 
     def test_sunlight(self):
         self.light.parm("light_type").set("sun")
         self.light.parm("light_intensity").set(5)
+        self.light.parmTuple("light_color").set([0.5, 0.75, 1])
         self.compare_scene()
 
 
-class TestGeoLight(TestBase):
+class TestGeoLight(TestRoot):
     @classmethod
     def setUpClass(cls):
-        build_cam()
-        build_ground()
+        cls.cam = build_cam()
+        cls.geo = build_ground()
 
     def compare_scene(self):
         self.rop.render()
@@ -455,20 +497,6 @@ class TestGeoLight(TestBase):
         self.light.parm("areageometry").set("")
         self.light.parm("light_intensity").set(5)
         self.compare_scene()
-
-
-class TestGeo(TestBase):
-    @classmethod
-    def setUpClass(cls):
-        build_cam()
-        build_envlight()
-        build_spherelight()
-
-    @classmethod
-    def tearDownClass(cls):
-        hou.hipFile.clear(suppress_save_prompt=True)
-        if CLEANUP_FILES:
-            shutil.rmtree("tests/tmp")
 
 
 class TestInstance(TestRoot):

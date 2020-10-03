@@ -1,5 +1,5 @@
 
-Film "rgb" "integer xresolution" [ 320 ] "integer yresolution" [ 240 ] "string filename" [ "test_goniometriclight.exr" ]
+Film "rgb" "integer xresolution" [ 320 ] "integer yresolution" [ 240 ] "string filename" [ "test_goniometriclight_no_color.exr" ]
 PixelFilter "gaussian" "float yradius" [ 2 ] "float xradius" [ 2 ]
 Sampler "pmj02bn" "integer pixelsamples" [ 16 ]
 Integrator "volpath" "integer maxdepth" [ 5 ]
@@ -18,7 +18,7 @@ WorldBegin	# {
 	Transform [ 1 0 0 0 0 0 -1 0 0 1 0 0 0 1.5 0 1 ]
 	Scale 1 -1 1
 	Rotate 90 0 1 0
-	LightSource "goniometric" "string filename" [ "../../maps/tex.exr" ] "float scale" [ 5 ] "rgb I" [ 0.5 0.75 1 ]
+	LightSource "goniometric" "string filename" [ "../../maps/tex.exr" ] "float scale" [ 5 ]
     AttributeEnd	# }
 
 

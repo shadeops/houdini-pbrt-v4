@@ -895,7 +895,8 @@ def wrangle_light(light, wrangler, now):
     if light_type == "point":
         if areamap:
             light_name = "goniometric"
-            paramset.add(PBRTParam("rgb", "I", parms["light_color"].Value))
+            if "light_color" in parms:
+                paramset.add(PBRTParam("rgb", "I", parms["light_color"].Value))
             paramset.add(PBRTParam("string", "filename", [areamap]))
             api_calls = []
             api_calls.append(_apiclosure(output_xform, light, now, no_motionblur=True))
@@ -903,7 +904,8 @@ def wrangle_light(light, wrangler, now):
             api_calls.append(_apiclosure(api.Rotate, 90, 0, 1, 0))
         elif not cone_enable:
             light_name = "point"
-            paramset.add(PBRTParam("rgb", "I", parms["light_color"].Value))
+            if "light_color" in parms:
+                paramset.add(PBRTParam("rgb", "I", parms["light_color"].Value))
         elif projmap:
             light_name = "projection"
             coneangle = light.wrangleFloat(wrangler, "coneangle", now, [45])[0]
@@ -911,7 +913,8 @@ def wrangle_light(light, wrangler, now):
             paramset.add(PBRTParam("string", "filename", [projmap]))
         else:
             light_name = "spot"
-            paramset.add(PBRTParam("rgb", "I", parms["light_color"].Value))
+            if "light_color" in parms:
+                paramset.add(PBRTParam("rgb", "I", parms["light_color"].Value))
             conedelta = light.wrangleFloat(wrangler, "conedelta", now, [10])[0]
             coneangle = light.wrangleFloat(wrangler, "coneangle", now, [45])[0]
             coneangle *= 0.5
@@ -920,7 +923,8 @@ def wrangle_light(light, wrangler, now):
             paramset.add(PBRTParam("float", "conedeltaangle", [conedelta]))
     elif light_type == "distant":
         light_name = light_type
-        paramset.add(PBRTParam("rgb", "L", parms["light_color"].Value))
+        if "light_color" in parms:
+            paramset.add(PBRTParam("rgb", "L", parms["light_color"].Value))
     else:
         api.Comment("Light Type, %s, not supported" % light_type)
         return
