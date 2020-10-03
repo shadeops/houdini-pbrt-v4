@@ -39,9 +39,9 @@ def build_envlight():
 def build_spherelight():
     light = hou.node("/obj").createNode("hlight")
     light.parm("light_type").set("sphere")
-    light.parmTuple("areasize").set([1, 1])
-    light.parmTuple("t").set([3, 3, 3])
-    light.parm("light_intensity").set(50)
+    light.parmTuple("areasize").set([2, 2])
+    light.parmTuple("t").set([0, 10, 0])
+    light.parm("light_intensity").set(10)
     return light
 
 
@@ -471,7 +471,19 @@ class TestGeo(TestBase):
             shutil.rmtree("tests/tmp")
 
 
-class TestInstance(TestGeo):
+class TestInstance(TestRoot):
+    @classmethod
+    def setUpClass(cls):
+        hou.hipFile.clear(suppress_save_prompt=True)
+        cls.env = build_envlight()
+        cls.cam = build_cam()
+
+    @classmethod
+    def tearDownClass(cls):
+        hou.hipFile.clear(suppress_save_prompt=True)
+        if CLEANUP_FILES:
+            shutil.rmtree("tests/tmp")
+
     def setUp(self):
         self.geo1 = build_geo()
         self.geo1.createNode("sphere")
@@ -487,7 +499,6 @@ class TestInstance(TestGeo):
 
         self.geo1.parm("shop_materialpath").set(self.mat.path())
         self.geo2.parm("shop_materialpath").set(self.mat.path())
-        self.extras = []
 
     def tearDown(self):
         self.geo1.destroy()
@@ -495,9 +506,6 @@ class TestInstance(TestGeo):
         self.instance.destroy()
         self.rop.destroy()
         clear_mat()
-        for extra in self.extras:
-            extra.destroy()
-        self.extras[:] = []
         if CLEANUP_FILES:
             os.remove(self.testfile)
 
@@ -572,18 +580,23 @@ class TestInstance(TestGeo):
         self.compare_scene()
 
 
-class TestMediums(TestGeo):
+class TestMediums(TestRoot):
+    @classmethod
+    def setUpClass(cls):
+        hou.hipFile.clear(suppress_save_prompt=True)
+
+    @classmethod
+    def tearDownClass(cls):
+        hou.hipFile.clear(suppress_save_prompt=True)
+        if CLEANUP_FILES:
+            shutil.rmtree("tests/tmp")
+
     def setUp(self):
         self.geo = build_geo()
+        self.cam = build_cam()
+        self.lgt = build_spherelight()
         self.geo.createNode("sphere")
-        ptg = self.geo.parmTemplateGroup()
-        interior = hou.properties.parmTemplate("pbrt-v4", "pbrt_interior")
-        exterior = hou.properties.parmTemplate("pbrt-v4", "pbrt_exterior")
-        ptg.append(interior)
-        ptg.append(exterior)
-        self.geo.setParmTemplateGroup(ptg)
         self.none = hou.node("/mat").createNode("pbrt_material_none")
-        self.medium = hou.node("/mat").createNode("pbrt_medium")
 
         exr = "%s.exr" % self.name
         self.rop = build_rop(filename=exr, diskfile=self.testfile)
@@ -591,6 +604,8 @@ class TestMediums(TestGeo):
     def tearDown(self):
         self.geo.destroy()
         self.rop.destroy()
+        self.cam.destroy()
+        self.lgt.destroy()
         clear_mat()
         if CLEANUP_FILES:
             os.remove(self.testfile)
@@ -599,9 +614,69 @@ class TestMediums(TestGeo):
         self.rop.render()
         self.assertTrue(filecmp.cmp(self.testfile, self.basefile))
 
-    def test_interior(self):
-        self.geo.parm("pbrt_interior").set(self.medium.path())
-        self.geo.parm("pbrt_exterior").set("")
+    def add_medium_shaders(self, node, interior=None, exterior=None):
+        if interior is None and exterior is None:
+            return None
+        ptg = node.parmTemplateGroup()
+        if interior:
+            interior_pt = hou.properties.parmTemplate("pbrt-v4", "pbrt_interior")
+            ptg.append(interior_pt)
+        if exterior:
+            exterior_pt = hou.properties.parmTemplate("pbrt-v4", "pbrt_exterior")
+            ptg.append(exterior_pt)
+        node.setParmTemplateGroup(ptg)
+        if interior:
+            node.parm("pbrt_interior").set(interior)
+        if exterior:
+            node.parm("pbrt_exterior").set(exterior)
+        return None
+
+    def test_interior_homogeneous(self):
+        medium = hou.node("/mat").createNode("pbrt_medium_homogeneous")
+        self.add_medium_shaders(self.geo, interior=medium.path())
+        self.geo.parm("shop_materialpath").set(self.none.path())
+        self.compare_scene()
+
+    def test_interior_cloud(self):
+        medium = hou.node("/mat").createNode("pbrt_medium_cloud")
+        medium.parmTuple("p0").set([-1, -1, -1])
+        medium.parmTuple("p1").set([1, 1, 1])
+        medium.parm("density").set(10)
+        self.add_medium_shaders(self.geo, interior=medium.path())
+        self.geo.parm("shop_materialpath").set(self.none.path())
+        self.compare_scene()
+
+    def test_interior_nanovdb(self):
+        medium = hou.node("/mat").createNode("pbrt_medium_nanovdb")
+        medium.parmTuple("sigma_s").set([0.9, 1.2, 1.5])
+        medium.parm("filename").set("./test.nvdb")
+        self.add_medium_shaders(self.geo, interior=medium.path())
+        self.geo.parm("shop_materialpath").set(self.none.path())
+        self.compare_scene()
+
+    def test_exterior_cam(self):
+        air = hou.node("/mat").createNode("pbrt_medium_homogeneous")
+        air.parmTuple("sigma_a").set([0.01, 0.01, 0.01])
+        air.parm("scale").set(0.1)
+        self.add_medium_shaders(self.cam, exterior=air.path())
+        self.compare_scene()
+
+    def test_exterior_cam_interior_obj(self):
+        # TODO / NOTE:
+        # I don't believe this test is givign the expected results
+        # as there is no mediums attached to the lights.
+        # This is a lack of understanding on how pbrt-v4 works and
+        # will require some experiments
+        air = hou.node("/mat").createNode("pbrt_medium_homogeneous")
+        air.parmTuple("sigma_a").set([0.01, 0.01, 0.01])
+        air.parm("scale").set(0.1)
+        geo_fog = hou.node("/mat").createNode("pbrt_medium_homogeneous")
+        geo_fog.parmTuple("sigma_a").set([0.01, 0.01, 0.01])
+        geo_fog.parmTuple("sigma_s").set([1, 0.1, 0.05])
+        geo_fog.parm("scale").set(10)
+        self.add_medium_shaders(self.cam, exterior=air.path())
+        self.add_medium_shaders(self.lgt, exterior=air.path())
+        self.add_medium_shaders(self.geo, interior=geo_fog.path(), exterior=air.path())
         self.geo.parm("shop_materialpath").set(self.none.path())
         self.compare_scene()
 
