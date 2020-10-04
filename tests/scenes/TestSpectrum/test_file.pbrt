@@ -25,7 +25,7 @@ WorldBegin	# {
 
     #  ==================================================
     #  NamedMaterial Definitions
-    MakeNamedMaterial "/mat/pbrt_material_diffuse1" "string type" "diffuse" "spectrum reflectance" [ "./file.spd" ]
+    MakeNamedMaterial "/mat/pbrt_material_diffuse1" "string type" "diffuse" "spectrum reflectance" [ "../../resources/constant.spd" ]
 
 
     #  ==================================================

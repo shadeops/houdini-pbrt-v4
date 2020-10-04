@@ -25,7 +25,7 @@ WorldBegin	# {
 
     #  ==================================================
     #  NamedMaterial Definitions
-    Texture "/mat/pbrt_texture_imagemap1" "spectrum" "imagemap" "string encoding" [ "gamma 2.1" ] "string filename" [ "test.exr" ]
+    Texture "/mat/pbrt_texture_imagemap1" "spectrum" "imagemap" "string encoding" [ "gamma 2.1" ] "string filename" [ "../../resources/tex.exr" ]
     MakeNamedMaterial "/mat/pbrt_material_diffuse1" "string type" "diffuse" "texture reflectance" [ "/mat/pbrt_texture_imagemap1" ]
 
 

@@ -371,13 +371,13 @@ class TestLights(TestRoot):
         self.light.parm("light_type").set("point")
         self.light.parm("light_intensity").set(5)
         self.light.parm("coneenable").set(True)
-        self.light.parm("projmap").set("../../maps/tex.exr")
+        self.light.parm("projmap").set("../../resources/tex.exr")
         self.compare_scene()
 
     def test_goniometriclight_no_color(self):
         self.light.parm("light_type").set("point")
         self.light.parm("light_intensity").set(5)
-        self.light.parm("areamap").set("../../maps/tex.exr")
+        self.light.parm("areamap").set("../../resources/tex.exr")
         self.compare_scene()
 
     def test_pointlight(self):
@@ -398,14 +398,14 @@ class TestLights(TestRoot):
         self.light.parm("light_intensity").set(5)
         self.light.parmTuple("light_color").set([0.5, 0.75, 1])
         self.light.parm("coneenable").set(True)
-        self.light.parm("projmap").set("../../maps/tex.exr")
+        self.light.parm("projmap").set("../../resources/tex.exr")
         self.compare_scene()
 
     def test_goniometriclight(self):
         self.light.parm("light_type").set("point")
         self.light.parm("light_intensity").set(5)
         self.light.parmTuple("light_color").set([0.5, 0.75, 1])
-        self.light.parm("areamap").set("../../maps/tex.exr")
+        self.light.parm("areamap").set("../../resources/tex.exr")
         self.compare_scene()
 
     def test_distantlight(self):
@@ -443,6 +443,13 @@ class TestLights(TestRoot):
         self.light.parm("light_type").set("grid")
         self.light.parm("light_intensity").set(5)
         self.light.parmTuple("light_color").set([0.5, 0.75, 1])
+        self.compare_scene()
+
+    def test_gridlight_tex(self):
+        self.light.parm("light_type").set("grid")
+        self.light.parm("light_intensity").set(5)
+        self.light.parmTuple("light_color").set([0.5, 0.75, 1])
+        self.light.parm("light_texture").set("../../resources/tex.exr")
         self.compare_scene()
 
     def test_sunlight(self):
@@ -670,7 +677,7 @@ class TestMediums(TestRoot):
     def test_interior_nanovdb(self):
         medium = hou.node("/mat").createNode("pbrt_medium_nanovdb")
         medium.parmTuple("sigma_s").set([0.9, 1.2, 1.5])
-        medium.parm("filename").set("./test.nvdb")
+        medium.parm("filename").set("../../resources/sphere.nvdb")
         self.add_medium_shaders(self.geo, interior=medium.path())
         self.geo.parm("shop_materialpath").set(self.none.path())
         self.compare_scene()
@@ -735,7 +742,7 @@ class TestProperties(TestRoot):
         parm = hou.properties.parmTemplate("pbrt-v4", "pbrt_include")
         ptg.append(parm)
         self.geo.setParmTemplateGroup(ptg)
-        self.geo.parm("pbrt_include").set("test.pbrt")
+        self.geo.parm("pbrt_include").set("../../resources/test_include.pbrt")
         self.compare_scene()
 
 
@@ -786,7 +793,7 @@ class TestMaterials(TestRoot):
     def test_callback_parm_material(self):
         diffuse = hou.node("/mat").createNode("pbrt_material_diffuse")
         tex = hou.node("/mat").createNode("pbrt_texture_imagemap")
-        tex.parm("filename").set("test.exr")
+        tex.parm("filename").set("../../resources/tex.exr")
         tex.parm("signature").set("s")
         tex.parm("auto_gamma").set(False)
         tex.parm("encoding").set("gamma")
@@ -885,7 +892,7 @@ class TestSpectrum(TestRoot):
         self.compare_scene()
 
     def test_file(self):
-        self.spectrum.parm("file").set("./file.spd")
+        self.spectrum.parm("file").set("../../resources/constant.spd")
         self.spectrum.parm("type").set("file")
         self.compare_scene()
 
@@ -1185,6 +1192,38 @@ class TestShapes(TestRoot):
         wrangler.parm("class").set("primitive")
         wrangler.parm("snippet").set("i@faceIndices = @primnum;")
         wrangler.setFirstInput(divide)
+        wrangler.setRenderFlag(True)
+        self.compare_scene()
+
+    def test_bilinear_mesh(self):
+        box = self.geo.createNode("box")
+        box.parm("type").set("mesh")
+        box.parm("vertexnormals").set(True)
+        uv = self.geo.createNode("texture")
+        uv.parm("type").set("rowcol")
+        uv.setFirstInput(box)
+        uv.setRenderFlag(True)
+        self.compare_scene()
+
+    def test_bilinear_mesh_emissionfilename_prop(self):
+        ptg = self.geo.parmTemplateGroup()
+        parm = hou.properties.parmTemplate("pbrt-v4", "pbrt_emissionfilename")
+        ptg.append(parm)
+        self.geo.setParmTemplateGroup(ptg)
+        self.geo.parm("pbrt_emissionfilename").set("../../resources/tex.exr")
+        box = self.geo.createNode("box")
+        box.parmTuple("divrate").set([2, 2, 2])
+        box.parm("type").set("mesh")
+        self.compare_scene()
+
+    def test_bilinear_mesh_emissionfilename_attrib(self):
+        box = self.geo.createNode("box")
+        box.parmTuple("divrate").set([2, 2, 2])
+        box.parm("type").set("mesh")
+        wrangler = self.geo.createNode("attribwrangle")
+        wrangler.parm("class").set("primitive")
+        wrangler.parm("snippet").set('s@emissionfilename = "../../resources/tex.exr";')
+        wrangler.setFirstInput(box)
         wrangler.setRenderFlag(True)
         self.compare_scene()
 

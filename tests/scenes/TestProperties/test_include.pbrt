@@ -38,7 +38,7 @@ WorldBegin	# {
     #  /obj/geo1
     AttributeBegin	# {
 	ConcatTransform [ 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 ]
-	Include "test.pbrt"
+	Include "../../resources/test_include.pbrt"
     AttributeEnd	# }
 
 
