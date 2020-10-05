@@ -840,6 +840,7 @@ def wrangle_light(light, wrangler, now):
             api.Shape("sphere", [PBRTParam("float", "radius", 0.5 * size[0])])
         elif light_type == "tube":
             api.Rotate(90, 0, 1, 0)
+            api.Rotate(90, 0, 0, 1)
             api.Shape(
                 "cylinder",
                 [
