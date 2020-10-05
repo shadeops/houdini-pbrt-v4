@@ -333,6 +333,15 @@ def mesh_wrangler(gdp, paramset=None, properties=None, override_node=None):
 
     gdp = scene_state.tesselate_geo(gdp)
 
+    # Remove any open prims as they are not supported
+    open_prims = [prim for prim in gdp.iterPrims() if not prim.intrinsicValue("closed")]
+    gdp.deletePrims(open_prims)
+
+    # Exit out if there are no prims
+    if not any(gdp.iterPrims()):
+        api.Comment("No primitives found")
+        return None
+
     if shape == "loopsubdiv":
         wrangler_paramset = loopsubdiv_params(gdp)
         if "levels" in properties:
@@ -516,9 +525,24 @@ def loopsubdiv_params(mesh_gdp):
     return mesh_paramset
 
 
+# NOTE: HOUDINI COMPATIBILITY
+#   see comment at patch_vtx_gen()
 def patch_wrangler(gdp, paramset=None, properties=None, override_node=None):
     if properties is None:
         properties = {}
+
+    # Remove any non quad prims as they are not supported
+    non_quad_prims = [
+        prim
+        for prim in gdp.iterPrims()
+        if prim.intrinsicValue("connectivity") != "quads"
+    ]
+    gdp.deletePrims(non_quad_prims)
+
+    # Exit out if there are no prims
+    if not any(gdp.iterPrims()):
+        api.Comment("No primitives found")
+        return None
 
     computeN = True
     if "pbrt_computeN" in properties:

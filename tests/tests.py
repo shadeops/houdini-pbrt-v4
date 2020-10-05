@@ -1117,6 +1117,11 @@ class TestShapes(TestRoot):
         self.geo.createNode("box")
         self.compare_scene()
 
+    def test_trianglemesh_open(self):
+        line = self.geo.createNode("line")
+        line.parm("points").set(4)
+        self.compare_scene()
+
     def test_trianglemesh_polysoup(self):
         box = self.geo.createNode("box")
         soup = self.geo.createNode("polysoup")
@@ -1203,6 +1208,12 @@ class TestShapes(TestRoot):
         uv.parm("type").set("rowcol")
         uv.setFirstInput(box)
         uv.setRenderFlag(True)
+        self.compare_scene()
+
+    def test_bilinear_mesh_notquad(self):
+        box = self.geo.createNode("box")
+        box.parm("type").set("mesh")
+        box.parm("surftype").set("rows")
         self.compare_scene()
 
     def test_bilinear_mesh_emissionfilename_prop(self):
