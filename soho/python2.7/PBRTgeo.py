@@ -28,13 +28,18 @@ def primitive_alpha_texs(properties):
     return paramset
 
 
+# NOTE: HOUDINI COMPATIBILITY
+#   To match Houdini's parametric uvs, we need to do
+#   col,row ; col+1,row ; col,row+1 ; col+1,row+1
+#   However this causes backfaces which breaks Mediums
+#   so we'll need to api.ReverseOrientation
 def patch_vtx_gen(gdp):
     for prim in gdp.iterPrims():
-        for row in range(prim.numRows() - 1):
-            for col in range(prim.numCols() - 1):
+        for col in range(prim.numCols() - 1):
+            for row in range(prim.numRows() - 1):
                 yield prim.vertex(col, row)
-                yield prim.vertex(col, row + 1)
                 yield prim.vertex(col + 1, row)
+                yield prim.vertex(col, row + 1)
                 yield prim.vertex(col + 1, row + 1)
 
 
@@ -122,7 +127,8 @@ def prim_override(prim, override_node):
 #   Update zmin_attrib = gdp.findPrimAttrib("zmin")
 #   as an example
 
-
+# NOTE: HOUDINI COMPATIBILITY
+#   We can match Houdini's Sphere's with a 1,1,-1 Scale.
 def sphere_wrangler(gdp, paramset=None, properties=None, override_node=None):
     """Outputs a "sphere" Shapes for the input geometry
 
@@ -168,6 +174,9 @@ def sphere_wrangler(gdp, paramset=None, properties=None, override_node=None):
     return
 
 
+# NOTE: HOUDINI COMPATIBILITY
+#   The parameteric uvs do not match between the two. The u coordinate is
+#   flipped. This is not resolvable within the export.
 def disk_wrangler(gdp, paramset=None, properties=None, override_node=None):
     """Outputs "disk" Shapes for the input geometry
 
@@ -177,10 +186,6 @@ def disk_wrangler(gdp, paramset=None, properties=None, override_node=None):
         properties (dict): Dictionary of SohoParms (Optional)
     Returns: None
     """
-    # NOTE: PBRT's and Houdini's parameteric UVs are different
-    # so when using textures this will need to be fixed on the
-    # texture/material side as its not resolvable within Soho.
-
     # TODO: Since we don't set a radius due to using a transform
     # we might want to consider clamping innerradius to be < 1
 
@@ -294,6 +299,11 @@ def tube_wrangler(gdp, paramset=None, properties=None, override_node=None):
     return
 
 
+# NOTE: HOUDINI COMPATIBILITY
+#   The parametric uvs for trianglemeshs do NOT match Houdini's. This is acceptable
+#   since the common use case is to supply uvs. I believe it would be possible to
+#   match the parametric uvs with pbrt however that means we'd lose the ability
+#   to dump the various data arrays directly and slow things down.
 def mesh_wrangler(gdp, paramset=None, properties=None, override_node=None):
     """Outputs meshes (trianglemesh or loopsubdiv) depending on properties
 
@@ -558,14 +568,19 @@ def patch_wrangler(gdp, paramset=None, properties=None, override_node=None):
     else:
         patch_gdps = partition_by_attrib(gdp, emission_attrib)
 
-    for emission_file, emission_gdp in patch_gdps.items():
-        prim_paramset = ParamSet(paramset)
-        if emission_file:
-            prim_paramset.add(PBRTParam("string", "emissionfilename", emission_file))
-        wrangler_paramset = mesh_params(gdp, computeN, is_patchmesh=True)
-        prim_paramset.update(wrangler_paramset)
+    with api.AttributeBlock():
+        api.ReverseOrientation()
 
-        api.Shape("bilinearmesh", prim_paramset)
+        for emission_file, emission_gdp in patch_gdps.items():
+            prim_paramset = ParamSet(paramset)
+            if emission_file:
+                prim_paramset.add(
+                    PBRTParam("string", "emissionfilename", emission_file)
+                )
+            wrangler_paramset = mesh_params(gdp, computeN, is_patchmesh=True)
+            prim_paramset.update(wrangler_paramset)
+
+            api.Shape("bilinearmesh", prim_paramset)
 
     return None
 
@@ -1406,6 +1421,8 @@ def _convert_nurbs_to_bezier(gdp):
     return
 
 
+# NOTE: HOUDINI COMPATIBILITY
+#   The parametric uvs on curves do not match Houdini, v is flipped.
 def curve_wrangler(gdp, paramset=None, properties=None, override_node=None):
     """Outputs a "curve" Shape for input geometry
 
