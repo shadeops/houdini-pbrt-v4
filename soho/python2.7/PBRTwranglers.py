@@ -849,10 +849,8 @@ def wrangle_light(light, wrangler, now):
                 ],
             )
         elif light_type == "disk":
-            # After pbrt-v3 commit #2f0852ce api.ReverseOrientation() is needed,
-            # prior that it was a api.Scale(1,1,-1)
-            # (see issue #183 in pbrt-v3)
-            api.ReverseOrientation()
+            # NOTE this should match mantra now, unlike in pbrt-v3
+            api.Scale(-1, 1, -1)
             api.Shape("disk", [PBRTParam("float", "radius", 0.5 * size[0])])
         elif light_type == "grid":
             api.Shape(
@@ -1014,7 +1012,9 @@ def wrangle_geo(obj, wrangler, now):
         "pbrt_splitdepth": SohoPBRT(
             "pbrt_splitdepth", "integer", [3], True, key="splitdepth"
         ),
-        "pbrt_emissionfilename": SohoPBRT("pbrt_emissionfilename", "string", [""], True),
+        "pbrt_emissionfilename": SohoPBRT(
+            "pbrt_emissionfilename", "string", [""], True
+        ),
         "pbrt_curvetype": SohoPBRT("pbrt_curvetype", "string", ["flat"], True),
         "pbrt_include": SohoPBRT("pbrt_include", "string", [""], False),
         "pbrt_alpha_texture": SohoPBRT(
