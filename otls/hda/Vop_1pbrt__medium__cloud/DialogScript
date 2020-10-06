@@ -131,10 +131,10 @@
         parmtag { "script_callback_language" "python" }
     }
     parm {
-        name    "extent"
-        label   "Extent"
+        name    "frequency"
+        label   "Frequency"
         type    float
-        default { "1" }
+        default { "5" }
         range   { 0 10 }
         parmtag { "script_callback_language" "python" }
     }
