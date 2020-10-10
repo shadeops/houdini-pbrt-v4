@@ -854,17 +854,18 @@ def wrangle_light(light, wrangler, now):
             api.Scale(-1, 1, -1)
             api.Shape("disk", [PBRTParam("float", "radius", 0.5 * size[0])])
         elif light_type == "grid":
-            api.Shape(
-                "trianglemesh",
-                [
-                    PBRTParam("integer", "indices", [0, 3, 1, 0, 2, 3]),
-                    PBRTParam(
-                        "point",
-                        "P",
-                        [-0.5, -0.5, 0, 0.5, -0.5, 0, -0.5, 0.5, 0, 0.5, 0.5, 0],
-                    ),
-                ],
-            )
+            with api.AttributeBlock():
+                api.ReverseOrientation()
+                api.Shape(
+                    "bilinearmesh",
+                    [
+                        PBRTParam(
+                            "point",
+                            "P",
+                            [-0.5, -0.5, 0, 0.5, -0.5, 0, -0.5, 0.5, 0, 0.5, 0.5, 0],
+                        ),
+                    ],
+                )
         elif light_type == "geo":
             areageo_parm = hou.node(light.getName()).parm("areageometry")
             if not areageo_parm:
