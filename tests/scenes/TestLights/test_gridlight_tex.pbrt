@@ -21,7 +21,8 @@ WorldBegin	# {
 	AttributeBegin	# {
 	    Scale 1 1 1
 	    Material "none"
-	    Shape "trianglemesh" "integer indices" [ 0 3 1 0 2 3 ] "point3 P" [ -0.5 -0.5 0 0.5 -0.5 0 -0.5 0.5 0 0.5 0.5 0 ]
+	    ReverseOrientation
+	    Shape "bilinearmesh" "point3 P" [ -0.5 -0.5 0 0.5 -0.5 0 -0.5 0.5 0 0.5 0.5 0 ]
 	AttributeEnd	# }
     AttributeEnd	# }
 
