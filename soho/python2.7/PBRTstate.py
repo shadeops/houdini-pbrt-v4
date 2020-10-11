@@ -2,6 +2,8 @@ from __future__ import print_function, division, absolute_import
 
 import os
 import collections
+import contextlib
+import tempfile
 
 import hou
 import soho
@@ -16,6 +18,25 @@ HVER_17_5 = (17, 5, 0)
 #   Changes from a Fuse SOP to a Split Points SOP
 #   Support for getting full vertex lists directly from the gdp
 HVER_18 = (18, 0, 0)
+
+
+@contextlib.contextmanager
+def temporary_file(suffix=None):
+    """Creates a temporary file that is cleaned up on exiting the context
+
+    This wraps NamedTemporaryFile as we need another process to read and write
+    to the file.
+
+  """
+    try:
+        f_handle = tempfile.NamedTemporaryFile(suffix=suffix, delete=False)
+        file_name = f_handle.name
+        # Houdini prefers forward slashes regardless of os
+        file_name = file_name.replace("\\", "/")
+        f_handle.close()
+        yield file_name
+    finally:
+        os.unlink(file_name)
 
 
 class PBRTState(object):

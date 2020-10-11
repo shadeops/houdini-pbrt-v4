@@ -11,7 +11,7 @@ import soho
 
 import PBRTapi as api
 from PBRTnodes import BaseNode, MaterialNode, PBRTParam, ParamSet
-from PBRTstate import scene_state, HVER_17_5, HVER_18
+from PBRTstate import scene_state, temporary_file, HVER_17_5, HVER_18
 
 
 def primitive_alpha_texs(properties):
@@ -184,9 +184,11 @@ def disk_wrangler(gdp, paramset=None, properties=None, override_node=None):
         properties (dict): Dictionary of SohoParms (Optional)
     Returns: None
     """
-    # TODO: Since we don't set a radius due to using a transform
-    # we might want to consider clamping innerradius to be < 1
 
+    # NOTE we could hou.math.clamp our radius and phimax here, but instead will let the
+    # user pass them as is and let pbrt-v4 deal with it. The reasoning for this is that
+    # this is slightly more advanced and we would expect the user to know what they are
+    # doing.
     innerradius_attrib = gdp.findPrimAttrib("innerradius")
     phimax_attrib = gdp.findPrimAttrib("phimax")
 
@@ -719,6 +721,9 @@ def vdb_wrangler(gdp, paramset=None, properties=None, override_node=None):
     # Perform a series of checks to see if we have a valid VDB
     if properties is None:
         properties = {}
+        sop_path = None
+    else:
+        sop_path = properties["object:soppath"].Value[0]
 
     if not scene_state.allow_geofiles:
         return None
@@ -729,8 +734,6 @@ def vdb_wrangler(gdp, paramset=None, properties=None, override_node=None):
     if "pbrt_ignorevolumes" in properties and properties["pbrt_ignorevolumes"].Value[0]:
         api.Comment("Ignoring volumes because pbrt_ignorevolumes is enabled")
         return None
-
-    sop_path = properties["object:soppath"].Value[0]
 
     name_attrib = gdp.findPrimAttrib("name")
     if name_attrib is None:
@@ -769,16 +772,22 @@ def vdb_wrangler(gdp, paramset=None, properties=None, override_node=None):
 
         bbox = medium_gdp.boundingBox()
 
-        # TODO replace vdb_path with tempdir/?
-        # vdb_path, part = scene_state.get_geo_path_and_part(sop_path, "vdb")
-        save_locations = scene_state.get_geo_path_and_part(sop_path, "vdb")
-        vdb_path = save_locations.save_path
-        pathname = os.path.splitext(vdb_path)[0]
-        nvdb_path = "{}.nvdb".format(pathname)
-        nvdb_basename = os.path.basename(nvdb_path)
+        # NOTE: We may want to reevaluate this with user testing and possibly use
+        # tempdirs for the .vdb files instead?
+        # See PBRTstate.get_geo_path_and_part for more details but the gist of this
+        # we have 3 paths, the vdb path Houdini saves to. The nvdb which gain from
+        # converting from the vdb path. Then ultimately the path of the nvdb file
+        # in the pbrt scene file which might be a different relative path to the
+        # one we exported.
+        save_locations = scene_state.get_geo_path_and_part(sop_path, "nvdb")
+
+        nvdb_path = save_locations.save_path
+
         pbrt_geo_dir = os.path.dirname(save_locations.pbrt_path)
-        # Can't use os.path.join due to Houdini's / use on Windows
         pbrt_geo_dir = "." if not pbrt_geo_dir else pbrt_geo_dir
+
+        nvdb_basename = os.path.basename(nvdb_path)
+        # Can't use os.path.join due to Houdini's / use on Windows
         pbrt_nvdb_path = "{}/{}".format(pbrt_geo_dir, nvdb_basename)
 
         if (
@@ -789,38 +798,51 @@ def vdb_wrangler(gdp, paramset=None, properties=None, override_node=None):
             medium_gdp.clear()
             return None
 
-        soho.makeFilePathDirsIfEnabled(vdb_path)
-        convert_str = scene_state.nanovdb_converter.format(
-            vdb=vdb_path, nanovdb=nvdb_path
-        )
-        convert_args = shlex.split(convert_str)
-        medium_gdp.saveToFile(vdb_path)
-        try:
-            proc = subprocess.Popen(
-                convert_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        soho.makeFilePathDirsIfEnabled(nvdb_path)
+
+        with temporary_file(suffix=".vdb") as vdb_path:
+            convert_str = scene_state.nanovdb_converter.format(
+                vdb=vdb_path, nanovdb=nvdb_path
             )
-        except OSError:
-            os.remove(vdb_path)
-            soho.error(
-                "Failed to run {}\nYou can disable VDB conversion by setting the"
-                "'OpenVDB->NanoVDB Tool' to be empty on the PBRT ROP".format(
-                    convert_args[0]
+
+            # We could pass the full string, but I prefer to use a list
+            convert_args = shlex.split(convert_str)
+
+            medium_gdp.saveToFile(vdb_path)
+            try:
+                proc = subprocess.Popen(
+                    convert_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE
                 )
-            )
-            medium_gdp.clear()
-            return None
+            except OSError:
+                soho.error(
+                    "Failed to run {}\n"
+                    "Convert String: {}\n"
+                    "You can disable VDB conversion by setting the"
+                    "'OpenVDB->NanoVDB Tool' to be empty on the PBRT ROP".format(
+                        convert_args[0], convert_str
+                    )
+                )
+                medium_gdp.clear()
+                return None
 
-        stdout, stderr = proc.communicate()
+            stdout, stderr = proc.communicate()
 
-        if proc.returncode:
-            os.remove(vdb_path)
-            soho.warning("Unable to convert VDB file: {}".format(vdb_path))
-            medium_gdp.clear()
-            return None
+            if proc.returncode:
+                soho.error(
+                    "Failed to run {}\n"
+                    "Convert String: {}\n"
+                    "Convert Error: {}\n"
+                    "You can disable VDB conversion by setting the"
+                    "'OpenVDB->NanoVDB Tool' to be empty on the PBRT ROP".format(
+                        convert_args[0], convert_str, stderr
+                    )
+                )
+                medium_gdp.clear()
+                return None
 
         vdb_paramset = ParamSet()
 
-        # TODO Full Point instancing might be an issue when using VDBs.
+        # NOTE Full Point instancing might be an issue when using VDBs.
         #       conversion might take forever, might need to cache based on
         #       parameters and reuse?
         vdb_paramset |= medium_paramset
@@ -1045,6 +1067,9 @@ def volume_wrangler(gdp, paramset=None, properties=None, override_node=None):
 
     if properties is None:
         properties = {}
+        sop_path = None
+    else:
+        sop_path = properties["object:soppath"].Value[0]
 
     if "pbrt_ignorevolumes" in properties and properties["pbrt_ignorevolumes"].Value[0]:
         api.Comment("Ignoring volumes because pbrt_ignorevolumes is enabled")
@@ -1079,8 +1104,6 @@ def volume_wrangler(gdp, paramset=None, properties=None, override_node=None):
     # The approach we will take is to require a medium_name attribute to group
     # prims together that form a medium. We'll derive some of the base mappings
     # automatically if the medium_name attribute does not exist.
-
-    sop_path = properties["object:soppath"].Value[0]
 
     grids = build_uniform_grid_list(sop_path, gdp)
     smoke_prim_wrangler(grids, paramset, properties)
@@ -1196,8 +1219,6 @@ def medium_prim_paramset(prim, paramset=None, extra_attribs=()):
     except hou.OperationFailed:
         interior = None
 
-    # TODO We should check the directive type too? From the prim?
-    #      or passed in by the wrangler?
     if interior and interior.directive == "medium":
         medium_paramset |= interior.paramset
 
@@ -1220,9 +1241,7 @@ def medium_prim_paramset(prim, paramset=None, extra_attribs=()):
     except hou.OperationFailed:
         pass
 
-    # TODO: What happens when we have a preset defined in pbrt_interior and
-    #       a sigma_a or sigma_s supplied?
-    if not preset_value:
+    if medium_paramset.find_param("string", "preset") is None:
         try:
             sigma_a_value = prim.floatListAttribValue("sigma_a")
             if len(sigma_a_value) == 3:
@@ -1284,6 +1303,9 @@ def smoke_prim_wrangler(grids, paramset=None, properties=None, override_node=Non
 
     if properties is None:
         properties = {}
+        sop_path = None
+    else:
+        sop_path = properties["object:soppath"].Value[0]
 
     medium_paramset = ParamSet()
     if "pbrt_interior" in properties:
@@ -1309,8 +1331,6 @@ def smoke_prim_wrangler(grids, paramset=None, properties=None, override_node=Non
     if "pbrt_exterior" in properties:
         exterior = properties["pbrt_exterior"].Value[0]
     exterior = "" if exterior is None else exterior
-
-    sop_path = properties["object:soppath"].Value[0]
 
     for grid in grids:
         smoke_paramset = ParamSet()
@@ -1356,7 +1376,6 @@ def smoke_prim_wrangler(grids, paramset=None, properties=None, override_node=Non
             smoke_paramset.add(PBRTParam("float", "Lescale", lescale_voxeldata))
 
         resolution = ref_prim.resolution()
-        # TODO: Benchmark this vs other methods like fetching volumeSlices
 
         smoke_paramset.add(PBRTParam("integer", "nx", resolution[0]))
         smoke_paramset.add(PBRTParam("integer", "ny", resolution[1]))
@@ -1440,6 +1459,9 @@ def curve_wrangler(gdp, paramset=None, properties=None, override_node=None):
 
     if properties is None:
         properties = {}
+        sop_path = None
+    else:
+        sop_path = properties["object:soppath"].Value[0]
 
     shape_paramset = ParamSet(paramset)
 
@@ -1479,7 +1501,7 @@ def curve_wrangler(gdp, paramset=None, properties=None, override_node=None):
         order = prim.intrinsicValue("order")
         degree = order - 1
         # PBRT only supports degree 2 or 3 curves
-        # TODO: We could possibly convert the curves to a format that
+        # NOTE: We could possibly convert the curves to a format that
         #       pbrt supports but for now we'll expect the user to have
         #       a curve basis which is supported
         # https://www.codeproject.com/Articles/996281/NURBS-crve-made-easy
@@ -1512,7 +1534,12 @@ def curve_wrangler(gdp, paramset=None, properties=None, override_node=None):
                 N = (prim.attribValueAt("N", u) for u in prim.intrinsicValue("knots"))
             else:
                 # If ribbon, normals must exist
-                # TODO: Let pbrt error? Or put default values?
+                # NOTE: pbrt-v4 requires normals when rendering ribbon curves. If the
+                # user didn't supply them we'll set them here
+                soho.warning(
+                    "{} has ribbon curves without normals, "
+                    "defaulting to [0,0,1]".format(sop_path)
+                )
                 N = [(0, 0, 1)] * len(prim.intrinsicValue("knots"))
 
             if N is not None:

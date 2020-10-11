@@ -703,19 +703,6 @@ def wrangle_camera(obj, wrangler, now):
 
 def _to_light_scale(parms):
     """Converts light_intensity, light_exposure to a single scale value"""
-    # TODO
-    # There is a potential issue with using "rgb" types for
-    # both L and scale as noted here -
-    # https://groups.google.com/d/msg/pbrt/EyT6F-zfBkE/M23oQwGNCAAJ
-    # To summarize, when using SpectralSamples instead of RGBSamples,
-    # using an "rgb" type for both L and scale can result in a double
-    # application of the D65 illuminate.
-    #
-    # Since Houdini's scale (intensity) parameter is a float this issue should
-    # be avoidable.
-    #
-    # Proper tests are required however.
-
     intensity = parms["light_intensity"].Value[0]
     exposure = parms["light_exposure"].Value[0]
     scale = intensity * (2.0 ** exposure)
@@ -1029,7 +1016,6 @@ def wrangle_geo(obj, wrangler, now):
         "pbrt_alpha_texture": SohoPBRT(
             "pbrt_alpha_texture", "string", [""], skipdefault=False, key="alpha"
         ),
-        # TODO, Tesselation options?
     }
     properties = obj.evaluate(parm_selection, now)
 
