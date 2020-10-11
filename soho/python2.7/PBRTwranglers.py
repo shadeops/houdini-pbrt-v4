@@ -841,6 +841,8 @@ def wrangle_light(light, wrangler, now):
 
         if light_type == "sphere":
             # We apply the scale to the radius instead of using a api.Scale
+            api.ReverseOrientation()
+            api.Scale(1,1, -1)
             api.Shape("sphere", [PBRTParam("float", "radius", 0.5 * size[0])])
         elif light_type == "tube":
             api.Rotate(90, 0, 1, 0)
