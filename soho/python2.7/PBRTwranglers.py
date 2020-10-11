@@ -806,6 +806,7 @@ def wrangle_light(light, wrangler, now):
     if light_type in ("sphere", "disk", "grid", "tube", "geo"):
 
         single_sided = light.wrangleInt(wrangler, "singlesided", now, [0])[0]
+        reverse = light.wrangleInt(wrangler, "reverse", now, [0])[0]
         visible = light.wrangleInt(wrangler, "light_contribprimary", now, [0])[0]
         size = light.wrangleFloat(wrangler, "areasize", now, [1, 1])
         paramset.add(PBRTParam("bool", "twosided", [not single_sided]))
@@ -824,6 +825,9 @@ def wrangle_light(light, wrangler, now):
         _light_api_wrapper("diffuse", paramset, node)
 
         api.AttributeBegin()
+
+        if single_sided and reverse:
+            api.ReverseOrientation()
 
         # PBRT only supports uniform scales for non-mesh area lights
         # this is in part due to explicit light's area scaling factor.
