@@ -38,12 +38,14 @@ WorldBegin	# {
     #  /obj/test_sphere
     AttributeBegin	# {
 	ConcatTransform [ 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 ]
-	TransformBegin	# {
-	    ConcatTransform [ 1 0 0 0 0 0 -1 0 0 1 0 0 0 0 0 1 ]
-	    Scale 1 1 -1
+	AttributeBegin	# {
 	    ReverseOrientation
-	    Shape "sphere"
-	TransformEnd	# }
+	    TransformBegin	# {
+		ConcatTransform [ 1 0 0 0 0 0 -1 0 0 1 0 0 0 0 0 1 ]
+		Scale 1 1 -1
+		Shape "sphere"
+	    TransformEnd	# }
+	AttributeEnd	# }
     AttributeEnd	# }
 
 

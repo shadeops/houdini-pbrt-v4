@@ -38,12 +38,14 @@ WorldBegin	# {
     #  /obj/test_sphere_attribs
     AttributeBegin	# {
 	ConcatTransform [ 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 ]
-	TransformBegin	# {
-	    ConcatTransform [ 1 0 0 0 0 0 -1 0 0 1 0 0 0 0 0 1 ]
-	    Scale 1 1 -1
+	AttributeBegin	# {
 	    ReverseOrientation
-	    Shape "sphere" "float phimax" [ 180 ] "float zmin" [ -0.2 ] "float zmax" [ 0.2 ]
-	TransformEnd	# }
+	    TransformBegin	# {
+		ConcatTransform [ 1 0 0 0 0 0 -1 0 0 1 0 0 0 0 0 1 ]
+		Scale 1 1 -1
+		Shape "sphere" "float phimax" [ 180 ] "float zmin" [ -0.2 ] "float zmax" [ 0.2 ]
+	    TransformEnd	# }
+	AttributeEnd	# }
     AttributeEnd	# }
 
 
