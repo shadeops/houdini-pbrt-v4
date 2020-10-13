@@ -242,7 +242,7 @@ def process_full_pt_instance_material(instance_info):
     wrangle_shading_network(
         shop,
         use_named=False,
-        saved_nodes=set(),
+        exported_nodes=set(),
         name_suffix=suffix,
         overrides=overrides,
     )
@@ -983,7 +983,7 @@ def wrangle_geo(obj, wrangler, now):
             and alpha_node.output_type == "float"
         ):
             if alpha_node.path not in scene_state.shading_nodes:
-                wrangle_shading_network(alpha_node.path, saved_nodes=set())
+                wrangle_shading_network(alpha_node.path, exported_nodes=set())
         else:
             # If the passed in alpha_texture wasn't valid, clear it so we don't add
             # it to the geometry

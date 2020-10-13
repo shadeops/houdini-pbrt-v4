@@ -13,7 +13,7 @@ def wrangle_shading_network(
     name_prefix="",
     name_suffix="",
     use_named=True,
-    saved_nodes=None,
+    exported_nodes=None,
     overrides=None,
 ):
 
@@ -24,11 +24,11 @@ def wrangle_shading_network(
     # defined before they are referenced
 
     # Use this to track if a node has been output or not.
-    # if the saved_nodes is None, we use the global scene_state
+    # if the exported_nodes is None, we use the global scene_state
     # otherwise we use the one passed in. This is useful for outputing
     # named materials within a nested Attribute Block.
-    if saved_nodes is None:
-        saved_nodes = scene_state.shading_nodes
+    if exported_nodes is None:
+        exported_nodes = scene_state.shading_nodes
 
     # NOTE: We prefix and suffix names here so that there are not collisions when
     #       using full point instancing. There is some possible redundancy as the same
@@ -37,7 +37,7 @@ def wrangle_shading_network(
     #       do a prepass and build the networks before and keep a map to the pre-built
     #       networks. For now we'll brute force it.
     presufed_node_path = name_prefix + node_path + name_suffix
-    if presufed_node_path in saved_nodes:
+    if presufed_node_path in exported_nodes:
         return
 
     hnode = hou.node(node_path)
@@ -49,7 +49,7 @@ def wrangle_shading_network(
         scene_state.invalid_shading_nodes.add(node_path)
         return
     else:
-        saved_nodes.add(presufed_node_path)
+        exported_nodes.add(presufed_node_path)
 
     node.path_suffix = name_suffix
     node.path_prefix = name_prefix
@@ -69,7 +69,7 @@ def wrangle_shading_network(
             name_prefix=name_prefix,
             name_suffix=name_suffix,
             use_named=use_named,
-            saved_nodes=saved_nodes,
+            exported_nodes=exported_nodes,
             overrides=overrides,
         )
 

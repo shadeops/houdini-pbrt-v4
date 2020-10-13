@@ -1778,7 +1778,7 @@ def output_geo(soppath, now, properties=None):
                     wrangle_shading_network(
                         material,
                         use_named=False,
-                        saved_nodes=set(),
+                        exported_nodes=set(),
                         name_suffix=suffix,
                         overrides=overrides,
                     )
