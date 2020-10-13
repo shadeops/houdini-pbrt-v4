@@ -424,12 +424,12 @@ class BaseNode(object):
         tags = parm.parmTemplate().tags()
         return tags.get("pbrt.alias", parm.name())
 
-    def paramset_with_overrides(self, override_str):
+    def paramset_with_overrides(self, overrides):
         paramset = ParamSet(self.paramset)
-        paramset.update(self.override_paramset(override_str))
+        paramset.update(self.override_paramset(overrides))
         return paramset
 
-    def override_paramset(self, override_str):
+    def override_paramset(self, overrides):
         """Get a paramset with overrides applied
 
         Args:
@@ -440,14 +440,10 @@ class BaseNode(object):
         """
 
         paramset = ParamSet()
-        if not override_str:
+        if not overrides:
             return paramset
 
-        override = eval(override_str, {}, {})
-        if not override:
-            return paramset
-
-        for override_name in override:
+        for override_name, override in overrides.iteritems():
             # The override can have a node_name/parm format which allows for point
             # instance overrides to override parms in a network.
 
@@ -462,9 +458,9 @@ class BaseNode(object):
                     continue
                 pbrt_name, pbrt_type, tuple_names = cached_override
                 if tuple_names:
-                    value = [override[x] for x in tuple_names]
+                    value = [overrides[x] for x in tuple_names]
                 else:
-                    value = override[override_name]
+                    value = override
                 pbrt_param = PBRTParam(pbrt_type, pbrt_name, value)
                 paramset.add(pbrt_param)
                 continue
@@ -521,16 +517,14 @@ class BaseNode(object):
 
             if spectrum_type is None and tuple_names:
                 # This is a "traditional" override, no spectrum or node name prefix
-                value = [override[x] for x in tuple_names]
+                value = [overrides[x] for x in tuple_names]
                 pbrt_param = self._hou_parm_to_pbrt_param(parm_tuple, pbrt_name, value)
             elif spectrum_type is None and not tuple_names:
                 pbrt_param = self._hou_parm_to_pbrt_param(
-                    parm_tuple, pbrt_name, override[override_name]
+                    parm_tuple, pbrt_name, override
                 )
             elif spectrum_type in PBRTParam.spectrum_types:
-                pbrt_param = PBRTParam(
-                    spectrum_type, pbrt_name, override[override_name]
-                )
+                pbrt_param = PBRTParam(spectrum_type, pbrt_name, override)
             else:
                 raise ValueError("Unable to wrangle override name: %s" % override_name)
 

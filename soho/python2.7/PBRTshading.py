@@ -15,7 +15,6 @@ def wrangle_shading_network(
     use_named=True,
     saved_nodes=None,
     overrides=None,
-    root=True,
 ):
 
     if node_path in scene_state.invalid_shading_nodes:
@@ -72,7 +71,6 @@ def wrangle_shading_network(
             use_named=use_named,
             saved_nodes=saved_nodes,
             overrides=overrides,
-            root=False,
         )
 
     colorspace = node.colorspace

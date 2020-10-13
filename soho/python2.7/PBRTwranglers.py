@@ -234,6 +234,8 @@ def process_full_pt_instance_material(instance_info):
             raise ValueError("Could not find shop in scene state")
         return True
 
+    overrides = eval(override_str, {}, {})
+
     # override and shop should exist beyond this point
     # Fully expand shading network since there will be uniqueness
     suffix = ":%s[%i]" % (instance_info.source, instance_info.number)
@@ -242,7 +244,7 @@ def process_full_pt_instance_material(instance_info):
         use_named=False,
         saved_nodes=set(),
         name_suffix=suffix,
-        overrides=override_str,
+        overrides=overrides,
     )
     return True
 

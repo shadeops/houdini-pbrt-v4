@@ -1764,22 +1764,23 @@ def output_geo(soppath, now, properties=None):
                 override_gdps = {default_override: shape_gdp}
 
             override_count = 0
-            for override, override_gdp in override_gdps.iteritems():
+            for override_str, override_gdp in override_gdps.iteritems():
 
                 base_paramset = ParamSet()
                 base_paramset |= primitive_alpha_texs(properties)
 
-                # We can just reference a NamedMaterial since there are no overrides
-                if override:
+                if override_str:
                     suffix = ":{}-{}".format(soppath, override_count)
                     api.AttributeBegin()
                     override_count += 1
+                    overrides = eval(override_str, {}, {})
+
                     wrangle_shading_network(
                         material,
                         use_named=False,
                         saved_nodes=set(),
                         name_suffix=suffix,
-                        overrides=override,
+                        overrides=overrides,
                     )
 
                 # At this point the gdps are partitioned
@@ -1795,7 +1796,7 @@ def output_geo(soppath, now, properties=None):
                 if shape_wrangler:
                     shape_wrangler(override_gdp, base_paramset, properties)
                 override_gdp.clear()
-                if override:
+                if override_str:
                     api.AttributeEnd()
 
         if material_node is not None:
