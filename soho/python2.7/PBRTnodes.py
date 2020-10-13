@@ -268,7 +268,7 @@ class BaseNode(object):
     """
 
     override_pat = re.compile(
-        "((?P<node>\w+)/)?" "(?P<parm>\w+)" "(:(?P<spectrum>\w+))?"  # noqa: W605
+        r"^((?P<node>\w+)/)?(?P<parm>\w+)(:(?P<spectrum>spectrum|blackbody|rgb))?$"
     )
 
     @staticmethod
@@ -470,6 +470,9 @@ class BaseNode(object):
                 continue
 
             override_match = self.override_pat.match(override_name)
+            if override_match is None:
+                soho.error("{} is not a valid override parm".format(override_name))
+
             spectrum_type = override_match.group("spectrum")
             parm_name = override_match.group("parm")
             override_node = override_match.group("node")
@@ -520,13 +523,13 @@ class BaseNode(object):
                 # This is a "traditional" override, no spectrum or node name prefix
                 value = [override[x] for x in tuple_names]
                 pbrt_param = self._hou_parm_to_pbrt_param(parm_tuple, pbrt_name, value)
-            elif spectrum_type in ("spectrum", "blackbody"):
-                pbrt_param = PBRTParam(
-                    spectrum_type, pbrt_name, override[override_name]
-                )
-            elif not tuple_names:
+            elif spectrum_type is None and not tuple_names:
                 pbrt_param = self._hou_parm_to_pbrt_param(
                     parm_tuple, pbrt_name, override[override_name]
+                )
+            elif spectrum_type in PBRTParam.spectrum_types:
+                pbrt_param = PBRTParam(
+                    spectrum_type, pbrt_name, override[override_name]
                 )
             else:
                 raise ValueError("Unable to wrangle override name: %s" % override_name)

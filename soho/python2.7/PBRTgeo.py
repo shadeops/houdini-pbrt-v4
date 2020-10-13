@@ -11,6 +11,7 @@ import soho
 
 import PBRTapi as api
 from PBRTnodes import BaseNode, MaterialNode, PBRTParam, ParamSet
+from PBRTshading import wrangle_shading_network
 from PBRTstate import scene_state, temporary_file, HVER_17_5, HVER_18
 
 
@@ -108,19 +109,6 @@ def prim_transform(prim):
     return (hou.Matrix4(rot_mat) * xlate).asTuple()
 
 
-def prim_override(prim, override_node):
-    # TODO pbrt-v4 does not support this
-    paramset = ParamSet()
-    return paramset
-
-    if override_node is None:
-        return paramset
-    override = prim.attribValue("material_override")
-    if not override:
-        return paramset
-    return override_node.override_paramset(override)
-
-
 # TODO: Write a find_attrib_value(name, type, size)
 #   this way we can scope the exact attribute we want
 #   instead of getting a string when we want a float.
@@ -129,7 +117,7 @@ def prim_override(prim, override_node):
 
 # NOTE: HOUDINI COMPATIBILITY
 #   We can match Houdini's Sphere's with a 1,1,-1 Scale.
-def sphere_wrangler(gdp, paramset=None, properties=None, override_node=None):
+def sphere_wrangler(gdp, paramset=None, properties=None):
     """Outputs a "sphere" Shapes for the input geometry
 
     Args:
@@ -148,7 +136,6 @@ def sphere_wrangler(gdp, paramset=None, properties=None, override_node=None):
         api.ReverseOrientation()
         for prim in gdp.prims():
             shape_paramset = ParamSet(paramset)
-            shape_paramset |= prim_override(prim, override_node)
 
             if zmin_attrib is not None:
                 shape_paramset.add(
@@ -175,7 +162,7 @@ def sphere_wrangler(gdp, paramset=None, properties=None, override_node=None):
 # NOTE: HOUDINI COMPATIBILITY
 #   The parameteric uvs do not match between the two. The u coordinate is
 #   flipped. This is not resolvable within the export.
-def disk_wrangler(gdp, paramset=None, properties=None, override_node=None):
+def disk_wrangler(gdp, paramset=None, properties=None):
     """Outputs "disk" Shapes for the input geometry
 
     Args:
@@ -194,7 +181,6 @@ def disk_wrangler(gdp, paramset=None, properties=None, override_node=None):
 
     for prim in gdp.prims():
         shape_paramset = ParamSet(paramset)
-        shape_paramset |= prim_override(prim, override_node)
 
         if innerradius_attrib is not None:
             shape_paramset.add(
@@ -212,7 +198,7 @@ def disk_wrangler(gdp, paramset=None, properties=None, override_node=None):
     return
 
 
-def packeddisk_wrangler(gdp, paramset=None, properties=None, override_node=None):
+def packeddisk_wrangler(gdp, paramset=None, properties=None):
     """Outputs "ply" Shapes for the input geometry
 
     Args:
@@ -223,7 +209,6 @@ def packeddisk_wrangler(gdp, paramset=None, properties=None, override_node=None)
     """
     for prim in gdp.prims():
         shape_paramset = ParamSet(paramset)
-        shape_paramset |= prim_override(prim, override_node)
         filename = prim.intrinsicValue("filename")
         if not filename:
             continue
@@ -237,7 +222,7 @@ def packeddisk_wrangler(gdp, paramset=None, properties=None, override_node=None)
     return
 
 
-def tube_wrangler(gdp, paramset=None, properties=None, override_node=None):
+def tube_wrangler(gdp, paramset=None, properties=None):
     """Handles "cylinder" Shapes for the input geometry
 
     Args:
@@ -250,7 +235,6 @@ def tube_wrangler(gdp, paramset=None, properties=None, override_node=None):
     for prim in gdp.prims():
 
         shape_paramset = ParamSet(paramset)
-        shape_paramset |= prim_override(prim, override_node)
 
         phimax_attrib = gdp.findPrimAttrib("phimax")
         if phimax_attrib is not None:
@@ -304,7 +288,7 @@ def tube_wrangler(gdp, paramset=None, properties=None, override_node=None):
 #   since the common use case is to supply uvs. I believe it would be possible to
 #   match the parametric uvs with pbrt however that means we'd lose the ability
 #   to dump the various data arrays directly and slow things down.
-def mesh_wrangler(gdp, paramset=None, properties=None, override_node=None):
+def mesh_wrangler(gdp, paramset=None, properties=None):
     """Outputs meshes (trianglemesh or loopsubdiv) depending on properties
 
     If the pbrt_rendersubd property is set and true, a loopsubdiv shape will
@@ -537,7 +521,7 @@ def loopsubdiv_params(mesh_gdp):
 
 # NOTE: HOUDINI COMPATIBILITY
 #   see comment at patch_vtx_gen()
-def patch_wrangler(gdp, paramset=None, properties=None, override_node=None):
+def patch_wrangler(gdp, paramset=None, properties=None):
     if properties is None:
         properties = {}
 
@@ -714,7 +698,7 @@ def build_vdb_grid_list(sop_path, gdp):
     return grids
 
 
-def vdb_wrangler(gdp, paramset=None, properties=None, override_node=None):
+def vdb_wrangler(gdp, paramset=None, properties=None):
 
     medium_paramset = ParamSet(paramset)
 
@@ -1057,7 +1041,7 @@ def build_uniform_grid_list(sop_path, gdp):
     return grids
 
 
-def volume_wrangler(gdp, paramset=None, properties=None, override_node=None):
+def volume_wrangler(gdp, paramset=None, properties=None):
 
     # Houdini only supports one type of Volume primitive to be in a geometry network.
     # So if both a heightfield and a fog volume exists, the heightfield takes priority
@@ -1282,7 +1266,7 @@ def medium_prim_paramset(prim, paramset=None, extra_attribs=()):
     return medium_paramset
 
 
-def smoke_prim_wrangler(grids, paramset=None, properties=None, override_node=None):
+def smoke_prim_wrangler(grids, paramset=None, properties=None):
     """Outputs a "uniformgrid" Medium and bounding Shape for the input geometry
 
     The following attributes are checked for via medium_prim_paramset() -
@@ -1440,7 +1424,7 @@ def _convert_nurbs_to_bezier(gdp):
 
 # NOTE: HOUDINI COMPATIBILITY
 #   The parametric uvs on curves do not match Houdini, v is flipped.
-def curve_wrangler(gdp, paramset=None, properties=None, override_node=None):
+def curve_wrangler(gdp, paramset=None, properties=None):
     """Outputs a "curve" Shape for input geometry
 
     The following attributes are checked for -
@@ -1573,12 +1557,11 @@ def curve_wrangler(gdp, paramset=None, properties=None, override_node=None):
             curve_paramset.add(PBRTParam("float", "width", 0.05))
 
         curve_paramset |= shape_paramset
-        curve_paramset |= prim_override(prim, override_node)
         api.Shape("curve", curve_paramset)
     return
 
 
-def tesselated_wrangler(gdp, paramset=None, properties=None, override_node=None):
+def tesselated_wrangler(gdp, paramset=None, properties=None):
     """Wrangler for any geo that needs to be tesselated"""
     prim_name = gdp.iterPrims()[0].intrinsicValue("typename")
     api.Comment(
@@ -1588,7 +1571,7 @@ def tesselated_wrangler(gdp, paramset=None, properties=None, override_node=None)
     return
 
 
-def not_supported(gdp, paramset=None, properties=None, override_node=None):
+def not_supported(gdp, paramset=None, properties=None):
     """Wrangler for unsupported prim types"""
     num_prims = len(gdp.iterPrims())
     prim_name = gdp.iterPrims()[0].intrinsicValue("typename")
@@ -1618,14 +1601,6 @@ shape_wranglers = {
     "MetaSQuad": tesselated_wrangler,
     "Tetrahedron": tesselated_wrangler,
 }
-
-
-# These are the types that the primtives form an aggregate.
-# For example you can have a single polygon or combine multiple into
-# a poly mesh. We'll want to combine the same overrides into a single
-# mesh to save on creating a mesh per poly face.
-def requires_override_partition(shape_type):
-    return shape_wranglers[shape_type] in set([mesh_wrangler, tesselated_wrangler])
 
 
 def partition_by_attrib(input_gdp, attrib, intrinsic=False):
@@ -1759,7 +1734,6 @@ def output_geo(soppath, now, properties=None):
         if material not in scene_state.shading_nodes:
             if material in scene_state.invalid_shading_nodes:
                 api.Comment("Did not apply %s as it was not a PBRT material" % material)
-            material = ""
             material_node = None
         else:
             api.AttributeBegin()
@@ -1772,68 +1746,49 @@ def output_geo(soppath, now, properties=None):
         for shape, shape_gdp in shape_gdps.iteritems():
 
             # Aggregate overrides, instead of per prim
-            if has_prim_overrides and requires_override_partition(shape):
+            if has_prim_overrides:
                 override_attrib_h = shape_gdp.findPrimAttrib("material_override")
                 override_gdps = partition_by_attrib(shape_gdp, override_attrib_h)
                 shape_gdp.clear()
                 del override_attrib_h
-
-                # We don't want the wranglers to handle the overrides since we are doing
-                # it here. So we'll set this to false, which will mean the override_node
-                # is None and not trigger per prim overrides
-                has_prim_overrides = False
             else:
                 override_gdps = {default_override: shape_gdp}
 
+            override_count = 0
             for override, override_gdp in override_gdps.iteritems():
 
                 base_paramset = ParamSet()
-                # TODO pbrt-v4 material overrides are no longer suppored
-                #      redo the aggreate vs prim sections with this in mind
-                #      Adding the False to the conditional below until this
-                #      is done.
-                if override and material_node is not None and False:
-                    # material parm overrides are only valid for MaterialNodes
-                    base_paramset |= material_node.override_paramset(override)
-
                 base_paramset |= primitive_alpha_texs(properties)
 
-                if has_prim_overrides:
-                    override_node = material_node
-                else:
-                    override_node = None
+                # We can just reference a NamedMaterial since there are no overrides
+                if override:
+                    suffix = ":{}-{}".format(soppath, override_count)
+                    api.AttributeBegin()
+                    override_count += 1
+                    wrangle_shading_network(
+                        material,
+                        use_named=False,
+                        saved_nodes=set(),
+                        name_suffix=suffix,
+                        overrides=override,
+                    )
 
-                # At this point the gdps are partitioned first by material
-                # then by type. And then if its in requires_override_partition
-                # it has been further partitioned.
-                # The implies that we will NOT have varying types or materials
-                # past this point. The wranglers will need to know the following-
-                #   * is there a prim override?
-                #   * is the material valid?
-                #   * the material_node itself to apply overrides if they exist
+                # At this point the gdps are partitioned
+                # * First by material
+                # * Then by primitive type
+                # * Lastly, for each different material override there is additional
+                #   partitioning
                 #
-                #   The only case where we *need* to pass down the override info is if
-                #   * the material_node is valid
-                #   * material_overrides exists
-                #
-                #   We don't want to reconstruct a new material_node for every prim
-                #   as it will be constant.
-                #
-                #   Option 1: <selected>
-                #   We can pass a material_node only if we need to apply overrides
-                #   but that gives variable dual meaning.
-                #   Option 2:
-                #   Alternatively we can pass the material_node and also a
-                #   prim_overrides flag either in the properties or as its own function
-                #   arg.
+                # At this point we will NOT have varying types or materials within the
+                # shape_wrangler.
 
                 shape_wrangler = shape_wranglers.get(shape, not_supported)
                 if shape_wrangler:
-                    shape_wrangler(
-                        override_gdp, base_paramset, properties, override_node
-                    )
+                    shape_wrangler(override_gdp, base_paramset, properties)
                 override_gdp.clear()
+                if override:
+                    api.AttributeEnd()
 
-        if material:
+        if material_node is not None:
             api.AttributeEnd()
     return

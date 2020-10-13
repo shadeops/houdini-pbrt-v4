@@ -25,6 +25,9 @@ if "SOHO_PBRT_DEV" in os.environ:  # noqa # pragma: no coverage
     import PBRTinstancing
 
     reload(PBRTinstancing)
+    import PBRTshading
+
+    reload(PBRTshading)
     import PBRTgeo
 
     reload(PBRTgeo)

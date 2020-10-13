@@ -9,6 +9,7 @@ from sohog import SohoGeometry
 import PBRTapi as api
 from PBRTwranglers import *  # noqa: F403
 from PBRTinstancing import find_referenced_instances, get_full_instance_info
+from PBRTshading import wrangle_shading_network
 from PBRTstate import scene_state
 
 # Ignore the various linting errors due to the import *
