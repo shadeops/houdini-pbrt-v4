@@ -1614,25 +1614,34 @@ def partition_by_attrib(input_gdp, attrib, intrinsic=False):
     Returns:
         Dictionary of hou.Geometry with keys of the attrib value.
     """
-    # Not sure about a set operation on prims
+
+    # NOTE: The following can be a bit confusing as we are creating
+    # a set of prims, which are then used to delete prims in a *new*
+    # gdp. As far as I can tell, and the fact this doesn't crash horribly,
+    # is that the prim numbers are all that are technically used internally.
+    # By using the prims directly instead of fetching their numbers
+    # we can significantly speed up this function.
+    # In the case of 1000 spheres with different attributes values
+    # using the prims directly vs fetching prim.numbers() and using
+    # integers we reduced the run time for this function from
+    # 23.3s to 3.4s. The remaining time is the merge and delete.
+
     prim_values = collections.defaultdict(set)
-    prims = input_gdp.prims()
+    prims = input_gdp.iterPrims()
     if intrinsic:
         for prim in prims:
-            prim_values[prim.intrinsicValue(attrib)].add(prim.number())
+            prim_values[prim.intrinsicValue(attrib)].add(prim)
     else:
         for prim in prims:
-            prim_values[prim.attribValue(attrib)].add(prim.number())
+            prim_values[prim.attribValue(attrib)].add(prim)
 
     split_gdps = {}
-    all_prims = set(range(len(prims)))
-    for prim_value in prim_values:
+    all_prims = set(prims)
+    for prim_value, prims in prim_values.iteritems():
         gdp = hou.Geometry()
         gdp.merge(input_gdp)
-        keep_prims = prim_values[prim_value]
-        remove_prims = all_prims - keep_prims
-        cull_list = [gdp.iterPrims()[p] for p in remove_prims]
-        gdp.deletePrims(cull_list)
+        remove_prims = all_prims - prims
+        gdp.deletePrims(list(remove_prims))
         split_gdps[prim_value] = gdp
     return split_gdps
 
