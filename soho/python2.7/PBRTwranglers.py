@@ -15,6 +15,7 @@ import PBRTapi as api
 from PBRTstate import scene_state
 from PBRTsoho import SohoPBRT
 from PBRTnodes import PBRTParam, ParamSet, BaseNode
+from PBRTshading import wrangle_shading_network
 
 __all__ = [
     "wrangle_film",
@@ -26,9 +27,7 @@ __all__ = [
     "wrangle_camera",
     "wrangle_light",
     "wrangle_medium",
-    "wrangle_geo",
     "wrangle_obj",
-    "wrangle_shading_network",
 ]
 
 ShutterRange = collections.namedtuple("ShutterRange", ["open", "close"])
@@ -235,111 +234,21 @@ def process_full_pt_instance_material(instance_info):
             raise ValueError("Could not find shop in scene state")
         return True
 
+    overrides = eval(override_str, {}, {})
+
     # override and shop should exist beyond this point
     # Fully expand shading network since there will be uniqueness
     suffix = ":%s[%i]" % (instance_info.source, instance_info.number)
+    # NOTE: If this becomes a bottleneck we could potentially cache nodes and params
+    # similar to what we do in the PBRTgeo
     wrangle_shading_network(
         shop,
         use_named=False,
-        saved_nodes=set(),
+        exported_nodes=set(),
         name_suffix=suffix,
-        overrides=override_str,
+        overrides=overrides,
     )
     return True
-
-
-def wrangle_shading_network(
-    node_path,
-    name_prefix="",
-    name_suffix="",
-    use_named=True,
-    saved_nodes=None,
-    overrides=None,
-    root=True,
-):
-
-    if node_path in scene_state.invalid_shading_nodes:
-        return
-
-    # Depth first, as textures/materials need to be
-    # defined before they are referenced
-
-    # Use this to track if a node has been output or not.
-    # if the saved_nodes is None, we use the global scene_state
-    # otherwise we use the one passed in. This is useful for outputing
-    # named materials within a nested Attribute Block.
-    if saved_nodes is None:
-        saved_nodes = scene_state.shading_nodes
-
-    # NOTE: We prefix and suffix names here so that there are not collisions when
-    #       using full point instancing. There is some possible redundancy as the same
-    #       network maybe recreated multiple times under different names if the
-    #       overrides are the same. A possible optimization for export and PBRT is to
-    #       do a prepass and build the networks before and keep a map to the pre-built
-    #       networks. For now we'll brute force it.
-    presufed_node_path = name_prefix + node_path + name_suffix
-    if presufed_node_path in saved_nodes:
-        return
-
-    hnode = hou.node(node_path)
-
-    # Material or Texture?
-    node = BaseNode.from_node(hnode)
-    if node is None:
-        api.Comment("Skipping %s since its not a Material or Texture node" % node_path)
-        scene_state.invalid_shading_nodes.add(node_path)
-        return
-    else:
-        saved_nodes.add(presufed_node_path)
-
-    node.path_suffix = name_suffix
-    node.path_prefix = name_prefix
-
-    if node.directive == "material":
-        api_call = api.MakeNamedMaterial if use_named else api.Material
-    elif node.directive == "texture":
-        api_call = api.Texture
-    else:
-        return
-
-    paramset = node.paramset_with_overrides(overrides)
-
-    for node_input in node.inputs():
-        wrangle_shading_network(
-            node_input,
-            name_prefix=name_prefix,
-            name_suffix=name_suffix,
-            use_named=use_named,
-            saved_nodes=saved_nodes,
-            overrides=overrides,
-            root=False,
-        )
-
-    colorspace = node.colorspace
-    if colorspace is not None:
-        api.AttributeBegin()
-        api.ColorSpace(colorspace)
-
-    coord_sys = node.coord_sys
-    if coord_sys:
-        api.TransformBegin()
-        api.Transform(coord_sys)
-
-    if api_call == api.Material:
-        api_call(node.directive_type, paramset)
-    else:
-        api_call(node.full_name, node.output_type, node.directive_type, paramset)
-
-    if coord_sys:
-        api.TransformEnd()
-
-    if colorspace is not None:
-        api.AttributeEnd()
-
-    if api_call == api.MakeNamedMaterial:
-        print()
-
-    return
 
 
 def wrangle_motionblur(obj, now):
@@ -1076,7 +985,7 @@ def wrangle_geo(obj, wrangler, now):
             and alpha_node.output_type == "float"
         ):
             if alpha_node.path not in scene_state.shading_nodes:
-                wrangle_shading_network(alpha_node.path, saved_nodes=set())
+                wrangle_shading_network(alpha_node.path, exported_nodes=set())
         else:
             # If the passed in alpha_texture wasn't valid, clear it so we don't add
             # it to the geometry
