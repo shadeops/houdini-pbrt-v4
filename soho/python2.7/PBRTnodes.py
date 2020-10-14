@@ -14,6 +14,9 @@ class HouParmException(Exception):
     pass
 
 
+PBRTNodeType = collections.namedtuple("PBRTNodeType", ("directive", "dtype"))
+
+
 class PBRTParam(object):
     """Representation of a param in PBRT
 
@@ -214,8 +217,8 @@ def get_dtype_from_nodetype(node_type):
     return function_definition.contents().strip()
 
 
-def get_directive_from_nodetype(node_type):
-    """Get the 'directive' of a Houdini PBRT VOP
+def get_pbrttype_from_nodetype(node_type):
+    """Get the 'directive' and 'type' of a Houdini PBRT VOP
 
     The directive will typically be something like 'texture', 'material', etc.
     These coorespond to the api calls. The type of directive the not represents
@@ -228,8 +231,6 @@ def get_directive_from_nodetype(node_type):
     '{"dtype": "plastic", "directive": "material"}'
     """
 
-    directive = None
-
     node_definition = node_type.definition()
     if node_definition is None:
         # PBRT nodes will always have a definition since they are HDAs.
@@ -237,26 +238,32 @@ def get_directive_from_nodetype(node_type):
 
     user_data_str = node_definition.userInfo()
     if user_data_str:
-        user_data = json.loads(user_data_str)
+        try:
+            user_data = json.loads(user_data_str)
+        except ValueError:
+            return None
         directive = user_data.get("directive")
+        dtype = user_data.get("dtype")
 
-    if directive:
-        return directive.lower()
+    # If we are missing directive type try to pull from FunctionName
+    if not dtype:
+        dtype = get_dtype_from_nodetype(node_type)
 
-    typename_tokens = node_type.nameComponents()[2].lower().split("_")
+    if not dtype or not directive:
+        typename_tokens = node_type.nameComponents()[2].lower().split("_")
 
-    if typename_tokens[0] != "pbrt":
-        return None
+        if typename_tokens[0] == "pbrt":
+            if len(typename_tokens) == 2:
+                directive = "soho_helper"
+                dtype = typename_tokens[1]
+            elif len(typename_tokens) == 3:
+                directive = typename_tokens[1]
+                dtype = typename_tokens[2]
 
-    try:
-        if len(typename_tokens) == 2:
-            directive = "soho_helper"
-        elif len(typename_tokens) == 3:
-            directive = typename_tokens[1]
-    except IndexError:
-        return None
+    if directive and dtype:
+        return PBRTNodeType(directive.lower(), dtype.lower())
 
-    return directive
+    return None
 
 
 class BaseNode(object):
@@ -282,23 +289,20 @@ class BaseNode(object):
         else:
             return None
 
-        directive = get_directive_from_nodetype(node.type())
-
-        if directive is None:
+        pbrt_type = get_pbrttype_from_nodetype(node.type())
+        if pbrt_type is None:
             return None
 
-        dtype = get_dtype_from_nodetype(node.type())
-
-        if directive == "material":
-            if dtype == "mix":
+        if pbrt_type.directive == "material":
+            if pbrt_type.dtype == "mix":
                 # This is incredibly annoying as the Mix material is a special case
                 # in pbrt-v4, see MixMaterialNode below
                 return MixMaterialNode(node, ignore_defaults)
             else:
                 return MaterialNode(node, ignore_defaults)
-        elif directive == "texture":
+        elif pbrt_type.directive == "texture":
             return TextureNode(node, ignore_defaults)
-        elif dtype == "pbrt_spectrum":
+        elif pbrt_type.dtype == "pbrt_spectrum":
             return SpectrumNode(node)
         return BaseNode(node, ignore_defaults)
 
@@ -316,23 +320,19 @@ class BaseNode(object):
         # to export, we need to ensure these are set
         self.node.updateParmStates()
 
+        pbrt_type = get_pbrttype_from_nodetype(node.type())
+        if pbrt_type is None:
+            raise TypeError(
+                "{} is unknown VOP node, "
+                "missing PBRT node directive or type info".format(node)
+            )
+
         self.ignore_defaults = ignore_defaults
-        self.directive = get_directive_from_nodetype(node.type())
+        self.directive = pbrt_type.directive
+        self.directive_type = pbrt_type.dtype
         self.path_prefix = ""
         self.path_suffix = ""
         self.override_cache = {}
-
-    @property
-    def directive_type(self):
-        # NOTE
-        # return self.node.shaderName()
-        #
-        # The above returns op:_auto_/{node.path()}
-        # when the node has inputs. The PxrNodes do not have this issue
-        # I'm not sure why that is the case but I suspect its due to the
-        # shopclerk althought further experiments are needed.
-        # For now we'll brute force it
-        return get_dtype_from_nodetype(self.node.type())
 
     @property
     def path(self):
@@ -749,8 +749,10 @@ class MaterialNode(BaseNode):
         for input_node in self.node.inputs():
             if input_node is None:
                 continue
-            directive = get_directive_from_nodetype(input_node.type())
-            if directive not in ("material", "texture"):
+            pbrt_type = get_pbrttype_from_nodetype(input_node.type())
+            if pbrt_type is None:
+                continue
+            if pbrt_type.directive not in ("material", "texture"):
                 continue
             yield input_node.path()
 

@@ -1763,6 +1763,8 @@ def output_geo(soppath, now, properties=None):
             else:
                 override_gdps = {default_override: shape_gdp}
 
+            node_cache = {}
+            param_cache = {}
             override_count = 0
             for override_str, override_gdp in override_gdps.iteritems():
 
@@ -1781,6 +1783,8 @@ def output_geo(soppath, now, properties=None):
                         exported_nodes=set(),
                         name_suffix=suffix,
                         overrides=overrides,
+                        node_cache=node_cache,
+                        param_cache=param_cache,
                     )
 
                 # At this point the gdps are partitioned

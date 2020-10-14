@@ -239,6 +239,8 @@ def process_full_pt_instance_material(instance_info):
     # override and shop should exist beyond this point
     # Fully expand shading network since there will be uniqueness
     suffix = ":%s[%i]" % (instance_info.source, instance_info.number)
+    # NOTE: If this becomes a bottleneck we could potentially cache nodes and params
+    # similar to what we do in the PBRTgeo
     wrangle_shading_network(
         shop,
         use_named=False,

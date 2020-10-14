@@ -5,7 +5,7 @@ import hou
 import PBRTapi as api
 
 from PBRTstate import scene_state
-from PBRTnodes import BaseNode
+from PBRTnodes import BaseNode, ParamSet
 
 
 def wrangle_shading_network(
@@ -15,6 +15,8 @@ def wrangle_shading_network(
     use_named=True,
     exported_nodes=None,
     overrides=None,
+    node_cache=None,
+    param_cache=None,
 ):
 
     if node_path in scene_state.invalid_shading_nodes:
@@ -40,10 +42,15 @@ def wrangle_shading_network(
     if presufed_node_path in exported_nodes:
         return
 
-    hnode = hou.node(node_path)
+    if isinstance(node_cache, dict):
+        if node_path not in node_cache:
+            hnode = hou.node(node_path)
+            node_cache[node_path] = BaseNode.from_node(hnode)
+        node = node_cache[node_path]
+    else:
+        hnode = hou.node(node_path)
+        node = BaseNode.from_node(hnode)
 
-    # Material or Texture?
-    node = BaseNode.from_node(hnode)
     if node is None:
         api.Comment("Skipping %s since its not a Material or Texture node" % node_path)
         scene_state.invalid_shading_nodes.add(node_path)
@@ -54,6 +61,7 @@ def wrangle_shading_network(
     node.path_suffix = name_suffix
     node.path_prefix = name_prefix
 
+    # Material or Texture?
     if node.directive == "material":
         api_call = api.MakeNamedMaterial if use_named else api.Material
     elif node.directive == "texture":
@@ -61,7 +69,13 @@ def wrangle_shading_network(
     else:
         return
 
-    paramset = node.paramset_with_overrides(overrides)
+    if isinstance(param_cache, dict):
+        if node_path not in param_cache:
+            param_cache[node_path] = node.paramset
+        paramset = ParamSet(param_cache[node_path])
+        paramset.update(node.override_paramset(overrides))
+    else:
+        paramset = node.paramset_with_overrides(overrides)
 
     for node_input in node.inputs():
         wrangle_shading_network(
@@ -71,6 +85,7 @@ def wrangle_shading_network(
             use_named=use_named,
             exported_nodes=exported_nodes,
             overrides=overrides,
+            param_cache=param_cache,
         )
 
     colorspace = node.colorspace
