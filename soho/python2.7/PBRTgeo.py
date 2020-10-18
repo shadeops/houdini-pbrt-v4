@@ -150,7 +150,7 @@ def sphere_wrangler(gdp, paramset=None, properties=None):
                     PBRTParam("float", "phimax", prim.attribValue(phimax_attrib))
                 )
 
-            with api.TransformBlock():
+            with api.AttributeBlock():
                 xform = prim_transform(prim)
                 api.ConcatTransform(xform)
                 # Scale required to match Houdini's uvs
@@ -191,7 +191,7 @@ def disk_wrangler(gdp, paramset=None, properties=None):
                 PBRTParam("float", "phimax", prim.attribValue(phimax_attrib))
             )
 
-        with api.TransformBlock():
+        with api.AttributeBlock():
             xform = prim_transform(prim)
             api.ConcatTransform(xform)
             api.Shape("disk", shape_paramset)
@@ -215,7 +215,7 @@ def packeddisk_wrangler(gdp, paramset=None, properties=None):
         if os.path.splitext(filename)[1].lower() != ".ply":
             continue
         shape_paramset.replace(PBRTParam("string", "filename", filename))
-        with api.TransformBlock():
+        with api.AttributeBlock():
             xform = prim_transform(prim)
             api.ConcatTransform(xform)
             api.Shape("plymesh", shape_paramset)
@@ -242,7 +242,7 @@ def tube_wrangler(gdp, paramset=None, properties=None):
                 PBRTParam("float", "phimax", prim.attribValue(phimax_attrib))
             )
 
-        with api.TransformBlock():
+        with api.AttributeBlock():
 
             side_paramset = ParamSet(shape_paramset)
 
@@ -885,12 +885,9 @@ def vdb_wrangler(gdp, paramset=None, properties=None):
 
         vdb_paramset.replace(PBRTParam("string", "filename", pbrt_nvdb_path))
         with api.AttributeBlock():
-            with api.TransformBlock():
-                # xform = prim_transform(medium_grid.density)
-                # api.ConcatTransform(xform)
-                api.MakeNamedMedium(medium_name, "nanovdb", vdb_paramset)
-                api.Material("none")
-                api.MediumInterface(medium_name, exterior)
+            api.MakeNamedMedium(medium_name, "nanovdb", vdb_paramset)
+            api.Material("none")
+            api.MediumInterface(medium_name, exterior)
             vals = [x for pair in zip(bbox.minvec(), bbox.maxvec()) for x in pair]
             bounds_to_api_box(vals)
 

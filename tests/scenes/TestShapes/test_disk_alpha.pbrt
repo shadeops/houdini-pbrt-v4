@@ -39,10 +39,10 @@ WorldBegin	# {
     AttributeBegin	# {
 	ConcatTransform [ 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 ]
 	Texture "/mat/pbrt_texture_dots1" "float" "dots" "float uscale" [ 10 ] "float vscale" [ 10 ]
-	TransformBegin	# {
+	AttributeBegin	# {
 	    ConcatTransform [ 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 ]
 	    Shape "disk" "texture alpha" [ "/mat/pbrt_texture_dots1" ]
-	TransformEnd	# }
+	AttributeEnd	# }
     AttributeEnd	# }
 
 

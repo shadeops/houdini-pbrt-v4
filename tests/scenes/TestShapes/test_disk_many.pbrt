@@ -38,26 +38,26 @@ WorldBegin	# {
     #  /obj/test_disk_many
     AttributeBegin	# {
 	ConcatTransform [ 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 ]
-	TransformBegin	# {
+	AttributeBegin	# {
 	    ConcatTransform [ 0.1 0 0 0 0 0.1 0 0 0 0 1 0 0 0 0 1 ]
 	    Shape "disk"
-	TransformEnd	# }
-	TransformBegin	# {
+	AttributeEnd	# }
+	AttributeBegin	# {
 	    ConcatTransform [ 0.1 0 0 0 0 0.1 0 0 0 0 1 0 0 0 -0.5 1 ]
 	    Shape "disk"
-	TransformEnd	# }
-	TransformBegin	# {
+	AttributeEnd	# }
+	AttributeBegin	# {
 	    ConcatTransform [ 0.1 0 0 0 0 0.1 0 0 0 0 1 0 0 0 -1 1 ]
 	    Shape "disk"
-	TransformEnd	# }
-	TransformBegin	# {
+	AttributeEnd	# }
+	AttributeBegin	# {
 	    ConcatTransform [ 0.1 0 0 0 0 0.1 0 0 0 0 1 0 0 0 -1.5 1 ]
 	    Shape "disk"
-	TransformEnd	# }
-	TransformBegin	# {
+	AttributeEnd	# }
+	AttributeBegin	# {
 	    ConcatTransform [ 0.1 0 0 0 0 0.1 0 0 0 0 1 0 0 0 -2 1 ]
 	    Shape "disk"
-	TransformEnd	# }
+	AttributeEnd	# }
     AttributeEnd	# }
 
 

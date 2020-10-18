@@ -38,10 +38,10 @@ WorldBegin	# {
     #  /obj/test_disk
     AttributeBegin	# {
 	ConcatTransform [ 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 ]
-	TransformBegin	# {
+	AttributeBegin	# {
 	    ConcatTransform [ 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 ]
 	    Shape "disk"
-	TransformEnd	# }
+	AttributeEnd	# }
     AttributeEnd	# }
 
 

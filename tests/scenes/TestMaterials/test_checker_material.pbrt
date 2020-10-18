@@ -25,10 +25,10 @@ WorldBegin	# {
 
     #  ==================================================
     #  NamedMaterial Definitions
-    TransformBegin	# {
+    AttributeBegin	# {
 	Transform [ 5 0 0 0 0 10 0 0 0 0 20 0 1 2 3 1 ]
 	Texture "/mat/pbrt_texture_checkerboard1" "spectrum" "checkerboard" "integer dimension" [ 3 ]
-    TransformEnd	# }
+    AttributeEnd	# }
     MakeNamedMaterial "/mat/pbrt_material_diffuse1" "string type" "diffuse" "texture reflectance" [ "/mat/pbrt_texture_checkerboard1" ]
 
 

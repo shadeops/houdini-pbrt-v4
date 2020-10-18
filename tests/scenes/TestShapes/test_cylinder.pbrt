@@ -38,13 +38,13 @@ WorldBegin	# {
     #  /obj/test_cylinder
     AttributeBegin	# {
 	ConcatTransform [ 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 ]
-	TransformBegin	# {
+	AttributeBegin	# {
 	    ConcatTransform [ 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 ]
 	    Rotate -90 1 0 0
 	    AttributeBegin	# {
 		Shape "cylinder" "float zmin" [ -0.5 ] "float zmax" [ 0.5 ]
 	    AttributeEnd	# }
-	TransformEnd	# }
+	AttributeEnd	# }
     AttributeEnd	# }
 
 

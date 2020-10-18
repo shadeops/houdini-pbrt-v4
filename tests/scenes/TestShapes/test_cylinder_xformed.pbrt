@@ -38,7 +38,7 @@ WorldBegin	# {
     #  /obj/test_cylinder_xformed
     AttributeBegin	# {
 	ConcatTransform [ 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 ]
-	TransformBegin	# {
+	AttributeBegin	# {
 	    ConcatTransform [ 1.25 0 0 0 0 0.7071 0.7071 0 0 -0.8839 0.8839 0 1 2 3 1 ]
 	    Rotate -90 1 0 0
 	    AttributeBegin	# {
@@ -49,7 +49,7 @@ WorldBegin	# {
 		ReverseOrientation
 		Shape "disk" "float height" [ -0.5 ]
 	    AttributeEnd	# }
-	TransformEnd	# }
+	AttributeEnd	# }
     AttributeEnd	# }
 
 

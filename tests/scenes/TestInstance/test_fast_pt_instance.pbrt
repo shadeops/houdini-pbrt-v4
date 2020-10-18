@@ -40,11 +40,11 @@ WorldBegin	# {
 	    NamedMaterial "/mat/pbrt_material_diffuse1"
 	    AttributeBegin	# {
 		ReverseOrientation
-		TransformBegin	# {
+		AttributeBegin	# {
 		    ConcatTransform [ 1 0 0 0 0 0 -1 0 0 1 0 0 0 0 0 1 ]
 		    Scale 1 1 -1
 		    Shape "sphere"
-		TransformEnd	# }
+		AttributeEnd	# }
 	    AttributeEnd	# }
 	AttributeEnd	# }
     ObjectEnd	# }
@@ -55,11 +55,11 @@ WorldBegin	# {
 	    NamedMaterial "/mat/pbrt_material_diffuse1"
 	    AttributeBegin	# {
 		ReverseOrientation
-		TransformBegin	# {
+		AttributeBegin	# {
 		    ConcatTransform [ 1 0 0 0 0 0 -1 0 0 1 0 0 0 0 0 1 ]
 		    Scale 1 1 -1
 		    Shape "sphere"
-		TransformEnd	# }
+		AttributeEnd	# }
 	    AttributeEnd	# }
 	AttributeEnd	# }
     ObjectEnd	# }

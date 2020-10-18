@@ -38,10 +38,10 @@ WorldBegin	# {
     #  /obj/test_disk_attribs
     AttributeBegin	# {
 	ConcatTransform [ 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 ]
-	TransformBegin	# {
+	AttributeBegin	# {
 	    ConcatTransform [ 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 ]
 	    Shape "disk" "float phimax" [ 180 ] "float innerradius" [ 0.25 ]
-	TransformEnd	# }
+	AttributeEnd	# }
     AttributeEnd	# }
 
 

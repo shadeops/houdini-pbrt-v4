@@ -95,7 +95,7 @@ def wrangle_shading_network(
 
     coord_sys = node.coord_sys
     if coord_sys:
-        api.TransformBegin()
+        api.AttributeBegin()
         api.Transform(coord_sys)
 
     if api_call == api.Material:
@@ -104,7 +104,7 @@ def wrangle_shading_network(
         api_call(node.full_name, node.output_type, node.directive_type, paramset)
 
     if coord_sys:
-        api.TransformEnd()
+        api.AttributeEnd()
 
     if colorspace is not None:
         api.AttributeEnd()

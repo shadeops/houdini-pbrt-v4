@@ -40,31 +40,31 @@ WorldBegin	# {
 	ConcatTransform [ 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 ]
 	AttributeBegin	# {
 	    ReverseOrientation
-	    TransformBegin	# {
+	    AttributeBegin	# {
 		ConcatTransform [ 0.1 0 0 0 0 0 -0.1 0 0 0.1 0 0 0 0 0 1 ]
 		Scale 1 1 -1
 		Shape "sphere"
-	    TransformEnd	# }
-	    TransformBegin	# {
+	    AttributeEnd	# }
+	    AttributeBegin	# {
 		ConcatTransform [ 0.1 0 0 0 0 0 -0.1 0 0 0.1 0 0 -0.5 0 0 1 ]
 		Scale 1 1 -1
 		Shape "sphere"
-	    TransformEnd	# }
-	    TransformBegin	# {
+	    AttributeEnd	# }
+	    AttributeBegin	# {
 		ConcatTransform [ 0.1 0 0 0 0 0 -0.1 0 0 0.1 0 0 -1 0 0 1 ]
 		Scale 1 1 -1
 		Shape "sphere"
-	    TransformEnd	# }
-	    TransformBegin	# {
+	    AttributeEnd	# }
+	    AttributeBegin	# {
 		ConcatTransform [ 0.1 0 0 0 0 0 -0.1 0 0 0.1 0 0 -1.5 0 0 1 ]
 		Scale 1 1 -1
 		Shape "sphere"
-	    TransformEnd	# }
-	    TransformBegin	# {
+	    AttributeEnd	# }
+	    AttributeBegin	# {
 		ConcatTransform [ 0.1 0 0 0 0 0 -0.1 0 0 0.1 0 0 -2 0 0 1 ]
 		Scale 1 1 -1
 		Shape "sphere"
-	    TransformEnd	# }
+	    AttributeEnd	# }
 	AttributeEnd	# }
     AttributeEnd	# }
 

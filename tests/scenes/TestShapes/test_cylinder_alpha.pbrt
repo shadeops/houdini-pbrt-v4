@@ -39,7 +39,7 @@ WorldBegin	# {
     AttributeBegin	# {
 	ConcatTransform [ 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 ]
 	Texture "/mat/pbrt_texture_dots1" "float" "dots" "float uscale" [ 10 ] "float vscale" [ 10 ]
-	TransformBegin	# {
+	AttributeBegin	# {
 	    ConcatTransform [ 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 ]
 	    Rotate -90 1 0 0
 	    AttributeBegin	# {
@@ -50,7 +50,7 @@ WorldBegin	# {
 		ReverseOrientation
 		Shape "disk" "float height" [ -0.5 ] "texture alpha" [ "/mat/pbrt_texture_dots1" ]
 	    AttributeEnd	# }
-	TransformEnd	# }
+	AttributeEnd	# }
     AttributeEnd	# }
 
 

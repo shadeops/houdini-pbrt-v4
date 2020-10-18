@@ -144,14 +144,6 @@ def ActiveTransform(xform_time):
     _api_call_with_cmds("ActiveTransform", xform_time)
 
 
-def TransformBegin():
-    soho.indent(1, "TransformBegin", PBRT_COMMENT)
-
-
-def TransformEnd():
-    soho.indent(-1, "TransformEnd", PBRT_COMMENT)
-
-
 def AttributeBegin():
     soho.indent(1, "AttributeBegin", PBRT_COMMENT)
 
@@ -230,13 +222,6 @@ def AttributeBlock():
     AttributeBegin()
     yield
     AttributeEnd()
-
-
-@contextmanager
-def TransformBlock():
-    TransformBegin()
-    yield
-    TransformEnd()
 
 
 @contextmanager

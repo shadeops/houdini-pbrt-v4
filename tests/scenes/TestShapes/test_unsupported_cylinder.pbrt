@@ -38,9 +38,9 @@ WorldBegin	# {
     #  /obj/test_unsupported_cylinder
     AttributeBegin	# {
 	ConcatTransform [ 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 ]
-	TransformBegin	# {
+	AttributeBegin	# {
 	    #  Skipping cylinder, prim #0taper values other than 1 not supported
-	TransformEnd	# }
+	AttributeEnd	# }
     AttributeEnd	# }
 
 
