@@ -784,15 +784,6 @@
                 help    ""
             }
             parm {
-                name    "rrthreshold"
-                label   "R.R. Threshold"
-                type    float
-                default { "1" }
-                help    "Determines when Russian roulette is applied to paths: when the maximum spectral component of the path contribution falls beneath this value, Russian roulette starts to be used."
-                hidewhen "{ integrator != path integrator != volpath }"
-                range   { 0 10 }
-            }
-            parm {
                 name    "lightsampler"
                 label   "Light Sampler"
                 type    ordinal

@@ -419,17 +419,16 @@ def wrangle_integrator(obj, wrangler, now):
         "integrator": SohoPBRT("integrator", "string", ["path"], False),
         "maxdepth": SohoPBRT("maxdepth", "integer", [5], False),
         "regularize": SohoPBRT("regularize", "bool", [False], True),
-        "rrthreshold": SohoPBRT("rrthreshold", "float", [1], True),
         "lightsampler": SohoPBRT("lightsampler", "string", ["bvh"], True),
         "visualizestrategies": SohoPBRT("visualizestrategies", "bool", [False], True),
         "visualizeweights": SohoPBRT("visualizeweights", "bool", [False], True),
         "iterations": SohoPBRT("iterations", "integer", [64], True),
-        "photonsperiterations": SohoPBRT("photonsperiterations", "integer", [-1], True),
+        "photonsperiteration": SohoPBRT("photonsperiteration", "integer", [-1], True),
         "sppm_seed": SohoPBRT("sppm_seed", "integer", [0], True, key="seed"),
         "radius": SohoPBRT("radius", "float", [1], True),
         "bootstrapsamples": SohoPBRT("bootstrapsamples", "integer", [100000], True),
         "chains": SohoPBRT("chains", "integer", [1000], True),
-        "mutationsperpixel": SohoPBRT("mutataionsperpixel", "integer", [100], True),
+        "mutationsperpixel": SohoPBRT("mutationsperpixel", "integer", [100], True),
         "largestepprobability": SohoPBRT("largestepprobability", "float", [0.3], True),
         "sigma": SohoPBRT("sigma", "float", [0.01], True),
         "maxdistance": SohoPBRT("maxdistance", "float", ["1e38"], True),
@@ -440,10 +439,9 @@ def wrangle_integrator(obj, wrangler, now):
 
     integrator_parms = {
         "ambientocclusion": ["maxdistance", "cossample"],
-        "path": ["maxdepth", "rrthreshold", "regularize", "lightsampler"],
+        "path": ["maxdepth", "regularize", "lightsampler"],
         "bdpt": [
             "maxdepth",
-            "rrthreshold",
             "lightsampler",
             "regularize",
             "visualizestrategies",
@@ -470,7 +468,7 @@ def wrangle_integrator(obj, wrangler, now):
         "randomwalk": ["maxdepth"],
         "simplepath": ["maxdepth", "samplelights", "samplebsdf"],
         "simplevolpath": ["maxdepth"],
-        "volpath": ["maxdepth", "rrthreshold", "lightsampler", "regularize"],
+        "volpath": ["maxdepth", "lightsampler", "regularize"],
     }
     parms = obj.evaluate(parm_selection, now)
 
