@@ -632,15 +632,18 @@ def _light_api_wrapper(wrangler_light_type, wrangler_paramset, node):
         api.LightSource(ltype, paramset)
 
 
-def _portal_helper(portal):
-    gdp = sohog.SohoGeometry(portal)
-    pt_count = gdp.globalAttrib("geo:pointcount")
+def _portal_helper(now, portal):
+    gdp = sohog.SohoGeometry(portal, now)
+    if gdp.Handle < 0:
+        api.Comment("No geometry available, skipping")
+        return None
+    pt_count = gdp.globalValue("geo:pointcount")
     if pt_count < 4:
         return None
-    P = gdp.attribute("geo:point", "P")
+    P_h = gdp.attribute("geo:point", "P")
     portal_pts = []
     for i in range(4):
-        portal_pts.append(gdp.Value(P, i))
+        portal_pts.append(gdp.value(P_h, i))
     return portal_pts
 
 
@@ -676,9 +679,10 @@ def wrangle_light(light, wrangler, now):
             paramset.add(PBRTParam("rgb", "L", parms["light_color"].Value))
 
         # Portal lights are only supported when supplying an env_map
-        portal = []
-        if env_map and light.evalString("portal", now, portal):
-            portal_pts = _portal_helper(portal)
+        portal = light.wrangleString(wrangler, "env_portal", now, [""])[0]
+        portal_enabled = light.wrangleInt(wrangler, "env_portalenable", now, [0])[0]
+        if env_map and portal_enabled and portal:
+            portal_pts = _portal_helper(now, portal)
             if portal_pts is not None:
                 # TODO pbrt-v4 we may need to invert the Houdini -> PBRT xform
                 paramset.add(PBRTParam("point", "portal", portal_pts))

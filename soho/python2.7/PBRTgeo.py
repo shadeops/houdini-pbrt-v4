@@ -410,9 +410,7 @@ def mesh_params(mesh_gdp, computeN=True, is_patchmesh=False):
         if attrib.type() == hou.attribType.Vertex:
             to_promote.append(attrib.name())
 
-    unique_points = False
-    if to_promote:
-        unique_points = True
+    unique_points = True if to_promote else False
 
     if is_patchmesh:
         vertices = patch_vtx_gen(mesh_gdp)
