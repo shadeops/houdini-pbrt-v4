@@ -780,7 +780,7 @@
                 label   "Regularize"
                 type    toggle
                 default { "0" }
-                hidewhen "{ integrator == ambientocclusion } { integrator == simplepath } { integrator == simplevolpath } { integrator == lightpath } { integrator == randomwalk }"
+                hidewhen "{ integrator != mlt integrator != bdpt integrator != volpath }"
                 help    ""
             }
             parm {
@@ -812,15 +812,6 @@
                 default { "off" }
                 help    "If true, an image is saved with the multiple importance sampling weights for each (s,t) bidirectional path generation strategy. These images can be helpful for understanding which sampling strategies are effective for sampling various types of light transport paths."
                 hidewhen "{ integrator != bdpt }"
-            }
-            parm {
-                name    "iterations"
-                label   "Iterations"
-                type    integer
-                default { "64" }
-                help    "Total number of iterations of photon shooting from light sources. (After each iteration, photon statistics are updated.) "
-                hidewhen "{ integrator != sppm }"
-                range   { 0 10 }
             }
             parm {
                 name    "photonsperiteration"

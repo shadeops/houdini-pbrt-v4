@@ -26,14 +26,6 @@
         range   { 0 10 }
     }
     parm {
-        name    "iterations"
-        label   "Iterations"
-        type    integer
-        default { "64" }
-        help    "Total number of iterations of photon shooting from light sources. (After each iteration, photon statistics are updated.) "
-        range   { 0 10 }
-    }
-    parm {
         name    "photonsperiteration"
         label   "Photons Per Iteration"
         type    integer
@@ -48,13 +40,6 @@
         default { "1" }
         help    "Initial photon search radius. (This value will be reduced as photons are accumulated at each pixel.) "
         range   { 0 10 }
-    }
-    parm {
-        name    "regularize"
-        label   "Regularize"
-        type    toggle
-        default { "0" }
-        help    ""
     }
     parm {
         name    "seed"
