@@ -442,7 +442,6 @@ def wrangle_integrator(obj, wrangler, now):
         "path": ["maxdepth", "regularize", "lightsampler"],
         "bdpt": [
             "maxdepth",
-            "lightsampler",
             "regularize",
             "visualizestrategies",
             "visualizeweights",
