@@ -131,9 +131,19 @@ def sphere_wrangler(gdp, paramset=None, properties=None):
     zmax_attrib = gdp.findPrimAttrib("zmax")
     phimax_attrib = gdp.findPrimAttrib("phimax")
 
+    match_uvs = True
+    if (
+        properties
+        and "pbrt_matchhoudiniuv" in properties
+        and not properties["pbrt_matchhoudiniuv"].Value[0]
+    ):
+        match_uvs = False
+
     with api.AttributeBlock():
         # Because we are inverting z-axis per sphere, we need to reverse orientation
-        api.ReverseOrientation()
+
+        if match_uvs:
+            api.ReverseOrientation()
         for prim in gdp.prims():
             shape_paramset = ParamSet(paramset)
 
@@ -153,8 +163,9 @@ def sphere_wrangler(gdp, paramset=None, properties=None):
             with api.AttributeBlock():
                 xform = prim_transform(prim)
                 api.ConcatTransform(xform)
-                # Scale required to match Houdini's uvs
-                api.Scale(1, 1, -1)
+                if match_uvs:
+                    # Scale required to match Houdini's uvs
+                    api.Scale(1, 1, -1)
                 api.Shape("sphere", shape_paramset)
     return
 
@@ -265,9 +276,10 @@ def tube_wrangler(gdp, paramset=None, properties=None):
             side_paramset.add(PBRTParam("float", "zmax", 0.5))
 
             with api.AttributeBlock():
-                # Flip in Y so parameteric UV's match Houdini's
-                # Note: We are disabling this so that phimax will line up
-                #       between the disks and the cylinder
+                # NOTE: We are disabling this so that phimax will line up
+                #       between the disks and the cylinder. This means Houdini's UV's
+                #       will not match, but that is preferred over non-aligned
+                #       disks and cylinders
                 # api.ReverseOrientation()
                 # api.Scale(1, -1, 1)
                 api.Shape(shape, side_paramset)

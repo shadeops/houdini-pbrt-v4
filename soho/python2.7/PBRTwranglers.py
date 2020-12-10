@@ -440,12 +440,7 @@ def wrangle_integrator(obj, wrangler, now):
     integrator_parms = {
         "ambientocclusion": ["maxdistance", "cossample"],
         "path": ["maxdepth", "regularize", "lightsampler"],
-        "bdpt": [
-            "maxdepth",
-            "regularize",
-            "visualizestrategies",
-            "visualizeweights",
-        ],
+        "bdpt": ["maxdepth", "regularize", "visualizestrategies", "visualizeweights"],
         "mlt": [
             "maxdepth",
             "bootstrapsamples",
@@ -737,15 +732,21 @@ def wrangle_light(light, wrangler, now):
             api.Material("none")
 
         if light_type == "sphere":
-            api.ReverseOrientation()
-            api.Scale(1, 1, -1)
+            # NOTE:
+            # To match the UVs we need a api.Scale(1, 1, -1)
+            # However doing this screws up the direction of emission.
+            # When rendering as one sided, the emissive side will be the opposite
+            # side from which is used to illuminate. Unfortunately an
+            # api.ReverseOrientation() does not fix this.
+
             # We apply the scale to the radius instead of using a api.Scale
             api.Shape("sphere", [PBRTParam("float", "radius", 0.5 * size[0])])
         elif light_type == "tube":
-            api.ReverseOrientation()
             api.Rotate(90, 0, 1, 0)
             api.Rotate(90, 0, 0, 1)
-            api.Scale(1, 1, -1)
+            # NOTE:
+            # To match UVs we need a api.Scale(1, 1, -1)
+            # see note above about spheres.
             api.Shape(
                 "cylinder",
                 [
@@ -906,6 +907,7 @@ def wrangle_geo(obj, wrangler, now):
         "pbrt_reverseorientation": SohoPBRT(
             "pbrt_reverseorientation", "bool", [False], True
         ),
+        "pbrt_matchhoudiniuv": SohoPBRT("pbrt_matchhoudiniuv", "bool", [True], False),
         # The combination of None as a default as well as ignore defaults being False
         # is important. 'None' implying the parm is missing and not available,
         # and '' meaning a vacuum medium.

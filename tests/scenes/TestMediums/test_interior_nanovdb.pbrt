@@ -19,8 +19,6 @@ WorldBegin	# {
 	AreaLightSource "diffuse" "bool twosided" [ true ] "float scale" [ 10 ]
 	AttributeBegin	# {
 	    Material "none"
-	    ReverseOrientation
-	    Scale 1 1 -1
 	    Shape "sphere" "float radius" [ 1 ]
 	AttributeEnd	# }
     AttributeEnd	# }
