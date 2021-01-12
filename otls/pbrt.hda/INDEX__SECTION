@@ -10,7 +10,7 @@ Inputs:       0 to 9999
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Wed Jun 13 23:33:16 2018
+Modified:     Thu Jun 14 01:33:16 2018
 
 Operator:     pbrtarchive
 Label:        PBRT Archive
@@ -38,7 +38,7 @@ Inputs:       0 to 0
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Tue May 15 23:03:30 2018
+Modified:     Wed May 16 01:03:30 2018
 
 Operator:     pbrt_camera_spherical
 Label:        PBRT SphericalCamera
@@ -52,7 +52,7 @@ Inputs:       0 to 0
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Tue May 15 00:01:03 2018
+Modified:     Tue May 15 02:01:03 2018
 
 Operator:     pbrt_camera_perspective
 Label:        PBRT PerspectiveCamera
@@ -66,7 +66,7 @@ Inputs:       0 to 0
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Tue May 15 00:01:03 2018
+Modified:     Tue May 15 02:01:03 2018
 
 Operator:     pbrt_camera_orthographic
 Label:        PBRT OrthographicCamera
@@ -80,7 +80,7 @@ Inputs:       0 to 0
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Tue May 15 00:01:03 2018
+Modified:     Tue May 15 02:01:03 2018
 
 Operator:     pbrt_camera_realistic
 Label:        PBRT RealisticCamera
@@ -94,7 +94,7 @@ Inputs:       0 to 0
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Tue May 15 00:01:03 2018
+Modified:     Tue May 15 02:01:03 2018
 
 Operator:     pbrt_sampler_halton
 Label:        PBRT HaltonSampler
@@ -108,7 +108,7 @@ Inputs:       0 to 0
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Tue May 15 00:01:03 2018
+Modified:     Tue May 15 02:01:03 2018
 
 Operator:     pbrt_sampler_random
 Label:        PBRT RandomSampler
@@ -122,7 +122,7 @@ Inputs:       0 to 0
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Tue May 15 00:01:04 2018
+Modified:     Tue May 15 02:01:04 2018
 
 Operator:     pbrt_sampler_pmj02bn
 Label:        PBRT PMJ02BNSampler
@@ -136,7 +136,7 @@ Inputs:       0 to 0
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Tue May 15 00:01:04 2018
+Modified:     Tue May 15 02:01:04 2018
 
 Operator:     pbrt_sampler_sobol
 Label:        PBRT SobolSampler
@@ -150,7 +150,7 @@ Inputs:       0 to 0
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Tue May 15 00:01:04 2018
+Modified:     Tue May 15 02:01:04 2018
 
 Operator:     pbrt_sampler_paddedsobol
 Label:        PBRT PaddedSobolSampler
@@ -164,7 +164,21 @@ Inputs:       0 to 0
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Tue May 15 00:01:04 2018
+Modified:     Tue May 15 02:01:04 2018
+
+Operator:     pbrt_sampler_zsobol
+Label:        PBRT ZSobolSampler
+Path:         oplib:/Vop/pbrt_sampler_zsobol?Vop/pbrt_sampler_zsobol
+Icon:         opdef:/Vop/pbrt_sampler_zsobol?IconImage
+Table:        Vop
+License:      
+Extra:        
+User:         {"dtype": "zsobol", "directive": "sampler"}
+Inputs:       0 to 0
+Subnet:       false
+Python:       false
+Empty:        false
+Modified:     Tue May 15 02:01:04 2018
 
 Operator:     pbrt_sampler_stratified
 Label:        PBRT StratifiedSampler
@@ -178,7 +192,7 @@ Inputs:       0 to 0
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Tue May 15 00:01:04 2018
+Modified:     Tue May 15 02:01:04 2018
 
 Operator:     pbrt_film_rgb
 Label:        PBRT RGBFilm
@@ -192,7 +206,7 @@ Inputs:       0 to 0
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Tue May 15 00:01:04 2018
+Modified:     Tue May 15 02:01:04 2018
 
 Operator:     pbrt_film_gbuffer
 Label:        PBRT GBufferFilm
@@ -206,7 +220,7 @@ Inputs:       0 to 0
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Tue May 15 00:01:04 2018
+Modified:     Tue May 15 02:01:04 2018
 
 Operator:     pbrt_filter_box
 Label:        PBRT BoxFilter
@@ -220,7 +234,7 @@ Inputs:       0 to 0
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Tue May 15 00:01:04 2018
+Modified:     Tue May 15 02:01:04 2018
 
 Operator:     pbrt_filter_gaussian
 Label:        PBRT GaussianFilter
@@ -234,7 +248,7 @@ Inputs:       0 to 0
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Tue May 15 00:01:04 2018
+Modified:     Tue May 15 02:01:04 2018
 
 Operator:     pbrt_filter_triangle
 Label:        PBRT TriangleFilter
@@ -248,7 +262,7 @@ Inputs:       0 to 0
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Tue May 15 00:01:04 2018
+Modified:     Tue May 15 02:01:04 2018
 
 Operator:     pbrt_filter_mitchell
 Label:        PBRT MitchellFilter
@@ -262,7 +276,7 @@ Inputs:       0 to 0
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Tue May 15 00:01:04 2018
+Modified:     Tue May 15 02:01:04 2018
 
 Operator:     pbrt_filter_sinc
 Label:        PBRT LanczosSincFilter
@@ -276,7 +290,7 @@ Inputs:       0 to 0
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Tue May 15 00:01:04 2018
+Modified:     Tue May 15 02:01:04 2018
 
 Operator:     pbrt_integrator_path
 Label:        PBRT PathIntegrator
@@ -290,7 +304,7 @@ Inputs:       0 to 0
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Tue May 15 00:01:04 2018
+Modified:     Tue May 15 02:01:04 2018
 
 Operator:     pbrt_integrator_simplepath
 Label:        PBRT SimplePathIntegrator
@@ -304,7 +318,7 @@ Inputs:       0 to 0
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Tue May 15 00:01:04 2018
+Modified:     Tue May 15 02:01:04 2018
 
 Operator:     pbrt_integrator_lightpath
 Label:        PBRT LightPathIntegrator
@@ -318,7 +332,7 @@ Inputs:       0 to 0
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Tue May 15 00:01:04 2018
+Modified:     Tue May 15 02:01:04 2018
 
 Operator:     pbrt_integrator_simplevolpath
 Label:        PBRT SimpleVolPathIntegrator
@@ -332,7 +346,7 @@ Inputs:       0 to 0
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Tue May 15 00:01:04 2018
+Modified:     Tue May 15 02:01:04 2018
 
 Operator:     pbrt_integrator_bdpt
 Label:        PBRT BDPTIntegrator
@@ -346,7 +360,7 @@ Inputs:       0 to 0
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Tue May 15 00:01:04 2018
+Modified:     Tue May 15 02:01:04 2018
 
 Operator:     pbrt_integrator_mlt
 Label:        PBRT MLTIntegrator
@@ -360,7 +374,7 @@ Inputs:       0 to 0
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Tue May 15 00:01:04 2018
+Modified:     Tue May 15 02:01:04 2018
 
 Operator:     pbrt_integrator_sppm
 Label:        PBRT SPPMIntegrator
@@ -374,7 +388,7 @@ Inputs:       0 to 0
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Tue May 15 00:01:04 2018
+Modified:     Tue May 15 02:01:04 2018
 
 Operator:     pbrt_integrator_randomwalk
 Label:        PBRT RandomWalkIntegrator
@@ -388,7 +402,7 @@ Inputs:       0 to 0
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Tue May 15 00:01:04 2018
+Modified:     Tue May 15 02:01:04 2018
 
 Operator:     pbrt_integrator_ambientocclusion
 Label:        PBRT AOIntegrator
@@ -402,7 +416,7 @@ Inputs:       0 to 0
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Tue May 15 00:01:05 2018
+Modified:     Tue May 15 02:01:05 2018
 
 Operator:     pbrt_integrator_volpath
 Label:        PBRT VolPathIntegrator
@@ -416,7 +430,7 @@ Inputs:       0 to 0
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Tue May 15 00:01:05 2018
+Modified:     Tue May 15 02:01:05 2018
 
 Operator:     pbrt_accelerator_bvh
 Label:        PBRT BVHAccel
@@ -430,7 +444,7 @@ Inputs:       0 to 0
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Tue May 15 00:01:05 2018
+Modified:     Tue May 15 02:01:05 2018
 
 Operator:     pbrt_accelerator_kdtree
 Label:        PBRT KdTreeAccel
@@ -444,7 +458,7 @@ Inputs:       0 to 0
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Tue May 15 00:01:05 2018
+Modified:     Tue May 15 02:01:05 2018
 
 Operator:     pbrt_light_distant
 Label:        PBRT DistantLight
@@ -458,7 +472,7 @@ Inputs:       0 to 2
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Tue May 15 00:01:05 2018
+Modified:     Tue May 15 02:01:05 2018
 
 Operator:     pbrt_light_goniometric
 Label:        PBRT GonioPhotometricLight
@@ -472,7 +486,7 @@ Inputs:       0 to 2
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Tue May 15 00:01:05 2018
+Modified:     Tue May 15 02:01:05 2018
 
 Operator:     pbrt_light_infinite
 Label:        PBRT InfiniteAreaLight
@@ -486,7 +500,7 @@ Inputs:       0 to 2
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Tue May 15 00:01:05 2018
+Modified:     Tue May 15 02:01:05 2018
 
 Operator:     pbrt_light_point
 Label:        PBRT PointLight
@@ -500,7 +514,7 @@ Inputs:       0 to 2
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Sun Jun 10 23:40:25 2018
+Modified:     Mon Jun 11 01:40:25 2018
 
 Operator:     pbrt_light_projection
 Label:        PBRT ProjectionLight
@@ -514,7 +528,7 @@ Inputs:       0 to 2
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Tue May 15 00:01:05 2018
+Modified:     Tue May 15 02:01:05 2018
 
 Operator:     pbrt_light_spot
 Label:        PBRT SpotLight
@@ -528,7 +542,7 @@ Inputs:       0 to 2
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Mon Jun 11 19:25:22 2018
+Modified:     Mon Jun 11 21:25:22 2018
 
 Operator:     pbrt_arealight_diffuse
 Label:        PBRT DiffuseAreaLight
@@ -542,8 +556,7 @@ Inputs:       0 to 2
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Tue May 15 00:01:05 2018
-
+Modified:     Tue May 15 02:01:05 2018
 
 Operator:     pbrt_material_mix
 Label:        PBRT MixMaterial
@@ -557,7 +570,7 @@ Inputs:       0 to 3
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Tue May 15 00:01:06 2018
+Modified:     Tue May 15 02:01:06 2018
 
 Operator:     pbrt_material_hair
 Label:        PBRT HairMaterial
@@ -571,7 +584,7 @@ Inputs:       0 to 9
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Tue May 15 00:01:05 2018
+Modified:     Tue May 15 02:01:05 2018
 
 Operator:     pbrt_material_diffuse
 Label:        PBRT DiffuseMaterial
@@ -585,7 +598,7 @@ Inputs:       0 to 3
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Tue May 15 00:01:06 2018
+Modified:     Tue May 15 02:01:06 2018
 
 Operator:     pbrt_material_subsurface
 Label:        PBRT SubsurfaceMaterial
@@ -599,7 +612,7 @@ Inputs:       0 to 8
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Sun Aug 23 00:53:11 2020
+Modified:     Sun Aug 23 02:53:11 2020
 
 Operator:     pbrt_texture_constant
 Label:        PBRT ConstantTexture
@@ -613,7 +626,7 @@ Inputs:       0 to 1
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Sat Jun 23 00:22:12 2018
+Modified:     Sat Jun 23 02:22:12 2018
 
 Operator:     pbrt_texture_scale
 Label:        PBRT ScaleTexture
@@ -627,7 +640,7 @@ Inputs:       0 to 2
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Tue May 15 00:01:06 2018
+Modified:     Tue May 15 02:01:06 2018
 
 Operator:     pbrt_texture_mix
 Label:        PBRT MixTexture
@@ -641,7 +654,7 @@ Inputs:       0 to 3
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Tue May 15 00:01:06 2018
+Modified:     Tue May 15 02:01:06 2018
 
 Operator:     pbrt_texture_bilerp
 Label:        PBRT BilerpTexture
@@ -655,7 +668,7 @@ Inputs:       0 to 4
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Tue May 15 00:01:06 2018
+Modified:     Tue May 15 02:01:06 2018
 
 Operator:     pbrt_texture_imagemap
 Label:        PBRT ImageTexture
@@ -669,7 +682,7 @@ Inputs:       0 to 0
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Tue May 15 00:01:06 2018
+Modified:     Tue May 15 02:01:06 2018
 
 Operator:     pbrt_texture_dots
 Label:        PBRT DotsTexture
@@ -683,7 +696,7 @@ Inputs:       0 to 2
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Tue May 15 00:01:06 2018
+Modified:     Tue May 15 02:01:06 2018
 
 Operator:     pbrt_texture_checkerboard
 Label:        PBRT CheckerboardTexture
@@ -697,7 +710,7 @@ Inputs:       0 to 2
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Tue May 15 00:01:07 2018
+Modified:     Tue May 15 02:01:07 2018
 
 Operator:     pbrt_texture_fbm
 Label:        PBRT FBmTexture
@@ -711,7 +724,7 @@ Inputs:       0 to 0
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Tue May 15 00:01:07 2018
+Modified:     Tue May 15 02:01:07 2018
 
 Operator:     pbrt_texture_wrinkled
 Label:        PBRT WrinkledTexture
@@ -725,7 +738,7 @@ Inputs:       0 to 0
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Tue May 15 00:01:07 2018
+Modified:     Tue May 15 02:01:07 2018
 
 Operator:     pbrt_texture_windy
 Label:        PBRT WindyTexture
@@ -739,7 +752,7 @@ Inputs:       0 to 0
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Tue May 15 00:01:07 2018
+Modified:     Tue May 15 02:01:07 2018
 
 Operator:     pbrt_texture_marble
 Label:        PBRT MarbleTexture
@@ -753,7 +766,7 @@ Inputs:       0 to 0
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Tue May 15 00:01:07 2018
+Modified:     Tue May 15 02:01:07 2018
 
 Operator:     pbrt_texture_ptex
 Label:        PBRT PtexTexture
@@ -767,7 +780,7 @@ Inputs:       0 to 0
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Tue May 15 00:01:07 2018
+Modified:     Tue May 15 02:01:07 2018
 
 Operator:     pbrt_material_none
 Label:        PBRT NoneMaterial
@@ -781,7 +794,7 @@ Inputs:       0 to 3
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Wed May 16 22:27:42 2018
+Modified:     Thu May 17 00:27:42 2018
 
 Operator:     pbrt_material_coateddiffuse
 Label:        PBRT CoatedDiffuseMaterial
@@ -795,7 +808,7 @@ Inputs:       0 to 8
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Sat Aug 22 18:53:45 2020
+Modified:     Sat Aug 22 20:53:45 2020
 
 Operator:     pbrt_material_coatedconductor
 Label:        PBRT CoatedConductorMaterial
@@ -805,11 +818,11 @@ Table:        Vop
 License:      
 Extra:        
 User:         {"dtype": "coatedconductor", "directive": "material"}
-Inputs:       0 to 12
+Inputs:       0 to 13
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Sun Aug 23 00:15:24 2020
+Modified:     Mon Jan 11 19:38:00 2021
 
 Operator:     pbrt_material_diffusetransmission
 Label:        PBRT DiffuseTransmissionMaterial
@@ -823,7 +836,7 @@ Inputs:       0 to 4
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Sun Aug 23 00:14:48 2020
+Modified:     Sun Aug 23 02:14:48 2020
 
 Operator:     pbrt_material_dieletric
 Label:        PBRT DielectricMaterial
@@ -837,7 +850,7 @@ Inputs:       0 to 5
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Sun Aug 23 00:14:39 2020
+Modified:     Sun Aug 23 02:14:39 2020
 
 Operator:     pbrt_material_thindieletric
 Label:        PBRT ThinDielectricMaterial
@@ -851,7 +864,7 @@ Inputs:       0 to 5
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Sun Aug 23 00:14:30 2020
+Modified:     Sun Aug 23 02:14:30 2020
 
 Operator:     pbrt_material_conductor
 Label:        PBRT ConductorMaterial
@@ -865,7 +878,7 @@ Inputs:       0 to 6
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Sun Aug 23 00:23:05 2020
+Modified:     Sun Aug 23 02:23:05 2020
 
 Operator:     pbrt_material_measured
 Label:        PBRT MeasuredMaterial
@@ -879,7 +892,7 @@ Inputs:       0 to 1
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Sun Aug 23 00:24:37 2020
+Modified:     Sun Aug 23 02:24:37 2020
 
 Operator:     pbrt_medium_homogeneous
 Label:        PBRT HomogeneousMedium
@@ -894,7 +907,7 @@ Outputs:      0
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Sun Sep 13 10:10:06 2020
+Modified:     Sun Sep 13 12:10:06 2020
 
 Operator:     pbrt_medium_uniformgrid
 Label:        PBRT UniformGridMedium
@@ -909,7 +922,7 @@ Outputs:      0
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Sun Sep 13 10:18:09 2020
+Modified:     Sun Sep 13 12:18:09 2020
 
 Operator:     pbrt_medium_cloud
 Label:        PBRT CloudMedium
@@ -924,7 +937,7 @@ Outputs:      0
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Sun Sep 13 10:10:24 2020
+Modified:     Sun Sep 13 12:10:24 2020
 
 Operator:     pbrt_medium_nanovdb
 Label:        PBRT NanoVDBMedium
@@ -939,5 +952,5 @@ Outputs:      0
 Subnet:       false
 Python:       false
 Empty:        false
-Modified:     Sun Sep 13 14:21:56 2020
+Modified:     Sun Sep 13 16:21:56 2020
 

@@ -699,6 +699,7 @@
                     "paddedsobol"   "Padded Sobol"
                     "halton"        "Halton"
                     "sobol"         "Sobol"
+                    "zsobol"        "ZSobol"
                     "random"        "Random"
                     "stratified"    "Stratified"
                 }
@@ -719,11 +720,12 @@
                 default { "fastowen" }
                 menu {
                     "none"              "None"
+					"owen"              "Owen"
                     "fastowen"          "Fast Owen"
                     "cranleypatterson"  "Cranley-Patterson"
-                    "xor"               "Xor"
+					"premutedigits"     "Premute Digits"
                 }
-                hidewhen "{ sampler != sobol sampler != paddedsobol }"
+                hidewhen "{ sampler != sobol sampler != paddedsobol sampler != zsobol sampler != halton}"
             }
             parm {
                 name    "jitter"

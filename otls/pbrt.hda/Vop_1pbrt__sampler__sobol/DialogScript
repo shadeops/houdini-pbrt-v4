@@ -32,9 +32,10 @@
         default { "fastowen" }
         menu {
             "none"              "None"
+            "owen"              "Owen"
             "fastowen"          "Fast Owen"
             "cranleypatterson"  "Cranley-Patterson"
-            "xor"               "Xor"
+            "premutedigits"     "Premute Digits"
         }
     }
 
