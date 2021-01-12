@@ -5,6 +5,7 @@
 *.stats
 */tmp/
 
+__pycache__
 backup/
 ifds/
 render/

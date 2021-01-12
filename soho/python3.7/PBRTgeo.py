@@ -1,5 +1,3 @@
-from __future__ import print_function, division, absolute_import
-
 import os
 import array
 import shlex
@@ -565,7 +563,7 @@ def patch_wrangler(gdp, paramset=None, properties=None):
     with api.AttributeBlock():
         api.ReverseOrientation()
 
-        for emission_file, emission_gdp in patch_gdps.iteritems():
+        for emission_file, emission_gdp in patch_gdps.items():
             prim_paramset = ParamSet(paramset)
             if emission_file:
                 prim_paramset.add(
@@ -668,7 +666,7 @@ def build_vdb_grid_list(sop_path, gdp):
         return []
 
     grids = []
-    for medium, medium_prims in mediums_map.iteritems():
+    for medium, medium_prims in mediums_map.items():
         medium_counts = collections.Counter(
             prim.attribValue(name_attrib) for prim in medium_prims
         )
@@ -997,7 +995,7 @@ def build_uniform_grid_list(sop_path, gdp):
         return []
 
     grids = []
-    for medium, medium_prims in mediums_map.iteritems():
+    for medium, medium_prims in mediums_map.items():
 
         medium_counts = collections.defaultdict(int)
         for prim in medium_prims:
@@ -1644,7 +1642,7 @@ def partition_by_attrib(input_gdp, attrib, intrinsic=False):
 
     split_gdps = {}
     all_prims = set(prims)
-    for prim_value, prims in prim_values.iteritems():
+    for prim_value, prims in prim_values.items():
         gdp = hou.Geometry()
         gdp.merge(input_gdp)
         remove_prims = all_prims - prims
@@ -1745,7 +1743,7 @@ def output_geo(soppath, now, properties=None):
     del prim_override_h
     del prim_material_h
 
-    for material, material_gdp in material_gdps.iteritems():
+    for material, material_gdp in material_gdps.items():
 
         if material not in scene_state.shading_nodes:
             if material in scene_state.invalid_shading_nodes:
@@ -1759,7 +1757,7 @@ def output_geo(soppath, now, properties=None):
         shape_gdps = partition_by_attrib(material_gdp, "typename", intrinsic=True)
         material_gdp.clear()
 
-        for shape, shape_gdp in shape_gdps.iteritems():
+        for shape, shape_gdp in shape_gdps.items():
 
             # Aggregate overrides, instead of per prim
             if has_prim_overrides:
@@ -1773,7 +1771,7 @@ def output_geo(soppath, now, properties=None):
             node_cache = {}
             param_cache = {}
             override_count = 0
-            for override_str, override_gdp in override_gdps.iteritems():
+            for override_str, override_gdp in override_gdps.items():
 
                 base_paramset = ParamSet()
                 base_paramset |= primitive_alpha_texs(properties)

@@ -1,5 +1,3 @@
-from __future__ import print_function, division, absolute_import
-
 import math
 import collections
 
@@ -181,7 +179,7 @@ def process_full_pt_instance_medium(instance_info, medium_type):
         "scale": "float",
     }
 
-    for parm, ptype in parms.iteritems():
+    for parm, ptype in parms.items():
         attrib_name = "%s_%s" % (medium_type, parm)
         attrib_h = gdp.attribute("geo:point", attrib_name)
         if attrib_h < 0:
