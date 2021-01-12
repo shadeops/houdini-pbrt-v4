@@ -138,5 +138,6 @@ def soho_render():
             PBRTscene.render(cam, now)
     return
 
+
 if __name__ in ("__main__", "builtins"):
     soho_render()
