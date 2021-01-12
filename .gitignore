@@ -1,7 +1,6 @@
 *.pyc
 *.bak
 *.hip
-*.hda
 *.exr
 *.stats
 */tmp/

@@ -76,6 +76,8 @@
             [ "        \"metal-Au-k\"," ]
             [ "        \"metal-Cu-eta\"," ]
             [ "        \"metal-Cu-k\"," ]
+            [ "        \"metal-CuZn-eta\"," ]
+            [ "        \"metal-CuZn-k\"," ]
             [ "        \"metal-MgO-eta\"," ]
             [ "        \"metal-MgO-k\"," ]
             [ "        \"metal-TiO2-eta\"," ]
