@@ -22,6 +22,15 @@
     help {
 	""
     }
+    
+	parm {
+        name    "normalmap"
+        label   "Normal Map"
+        type    image
+        default { "" }
+        help    "RGB image"
+        parmtag { "filechooser_mode" "read" }
+    }
 
     parm {
         name    "filename"
