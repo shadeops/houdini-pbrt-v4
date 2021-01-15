@@ -48,6 +48,13 @@
         help    "Scale factor to apply to value looked up in texture. "
         range   { 0 10 }
     }
+	parm {
+		name	"invert"
+		label	"Invert"
+		type	toggle
+		default { "0" }
+		help	"Invert the texture values."
+	}
     parm {
         name    "wrap"
         label   "Wrap"
