@@ -29,6 +29,7 @@ coverage:
 .PHONY: lint
 lint:
 	$(BLACK) soho/python2.7/*.py
+	$(BLACK) soho/python3.7/*.py
 	$(BLACK) tests/tests.py
 	$(LINTER) --max-line-length=88 soho/python2.7/*.py
 	$(LINTER) --max-line-length=88 tests/tests.py
