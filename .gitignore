@@ -11,6 +11,7 @@ ifds/
 render/
 issues/
 htmlcov/
+tests/geometry
 
 scene*.pbrt
 .coverage
