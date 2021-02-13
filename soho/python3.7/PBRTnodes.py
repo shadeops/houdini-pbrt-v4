@@ -149,7 +149,7 @@ class PBRTParam(object):
         )
 
 
-class ParamSet(collections.MutableSet):
+class ParamSet(collections.abc.MutableSet):
     """Represents a collection of PBRTParams
 
     The behaviour is much like a set allowing for updating, removal and adding

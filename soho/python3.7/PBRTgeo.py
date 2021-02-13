@@ -1,4 +1,5 @@
 import os
+import re
 import array
 import shlex
 import subprocess
@@ -337,10 +338,6 @@ def mesh_wrangler(gdp, paramset=None, properties=None):
 
     gdp = scene_state.tesselate_geo(gdp)
 
-    # Remove any open prims as they are not supported
-    open_prims = [prim for prim in gdp.iterPrims() if not prim.intrinsicValue("closed")]
-    gdp.deletePrims(open_prims)
-
     # Exit out if there are no prims
     if not any(gdp.iterPrims()):
         api.Comment("No primitives found")
@@ -465,27 +462,27 @@ def mesh_params(mesh_gdp, computeN=True, is_patchmesh=False):
     #       and issue we can change it.
 
     P = array.array("f")
-    P.fromstring(mesh_gdp.pointFloatAttribValuesAsString("P"))
+    P.frombytes(mesh_gdp.pointFloatAttribValuesAsString("P"))
     mesh_paramset.add(PBRTParam("point", "P", P))
 
     if N_attrib is not None:
         N = array.array("f")
-        N.fromstring(mesh_gdp.pointFloatAttribValuesAsString("N"))
+        N.frombytes(mesh_gdp.pointFloatAttribValuesAsString("N"))
         mesh_paramset.add(PBRTParam("normal", "N", N))
 
     if S_attrib is not None:
         S = array.array("f")
-        S.fromstring(mesh_gdp.pointFloatAttribValuesAsString("S"))
+        S.frombytes(mesh_gdp.pointFloatAttribValuesAsString("S"))
         mesh_paramset.add(PBRTParam("vector", "S", S))
 
     if faceIndices_attrib is not None:
         faceIndices = array.array("i")
-        faceIndices.fromstring(mesh_gdp.primIntAttribValuesAsString("faceIndices"))
+        faceIndices.frombytes(mesh_gdp.primIntAttribValuesAsString("faceIndices"))
         mesh_paramset.add(PBRTParam("integer", "faceIndices", faceIndices))
 
     if uv_attrib is not None:
         uv = array.array("f")
-        uv.fromstring(mesh_gdp.pointFloatAttribValuesAsString("uv"))
+        uv.frombytes(mesh_gdp.pointFloatAttribValuesAsString("uv"))
         # Houdini's uvs are stored as 3 floats, but pbrt only needs two
         # We'll use some array slicing of continous memory to avoid
         # costly iteration
@@ -516,7 +513,7 @@ def loopsubdiv_params(mesh_gdp):
     mesh_paramset = ParamSet()
 
     P = array.array("f")
-    P.fromstring(mesh_gdp.pointFloatAttribValuesAsString("P"))
+    P.frombytes(mesh_gdp.pointFloatAttribValuesAsString("P"))
 
     vertices = mesh_vtx_gen(mesh_gdp)
     indices = vtx_attrib_gen(vertices, None)
@@ -1336,7 +1333,7 @@ def smoke_prim_wrangler(grids, paramset=None, properties=None):
             prim_num_str = str(grid.density.number())
             ref_prim = grid.density
             voxeldata = array.array("f")
-            voxeldata.fromstring(grid.density.allVoxelsAsString())
+            voxeldata.frombytes(grid.density.allVoxelsAsString())
             smoke_paramset.add(PBRTParam("float", "density", voxeldata))
         else:
             prim_num_str = "{},{},{}".format(
@@ -1348,9 +1345,9 @@ def smoke_prim_wrangler(grids, paramset=None, properties=None):
             r_voxeldata = array.array("f")
             g_voxeldata = array.array("f")
             b_voxeldata = array.array("f")
-            r_voxeldata.fromstring(grid.r.allVoxelsAsString())
-            g_voxeldata.fromstring(grid.g.allVoxelsAsString())
-            b_voxeldata.fromstring(grid.b.allVoxelsAsString())
+            r_voxeldata.frombytes(grid.r.allVoxelsAsString())
+            g_voxeldata.frombytes(grid.g.allVoxelsAsString())
+            b_voxeldata.frombytes(grid.b.allVoxelsAsString())
             voxeldata = array.array("f", r_voxeldata + g_voxeldata + b_voxeldata)
             voxeldata[0::3] = r_voxeldata
             voxeldata[1::3] = g_voxeldata
@@ -1361,7 +1358,7 @@ def smoke_prim_wrangler(grids, paramset=None, properties=None):
 
         if grid.lescale is not None:
             lescale_voxeldata = array.array("f")
-            lescale_voxeldata.fromstring(grid.lescale.allVoxelsAsString())
+            lescale_voxeldata.frombytes(grid.lescale.allVoxelsAsString())
             smoke_paramset.add(PBRTParam("float", "Lescale", lescale_voxeldata))
 
         resolution = ref_prim.resolution()
@@ -1620,34 +1617,51 @@ def partition_by_attrib(input_gdp, attrib, intrinsic=False):
         Dictionary of hou.Geometry with keys of the attrib value.
     """
 
-    # NOTE: The following can be a bit confusing as we are creating
-    # a set of prims, which are then used to delete prims in a *new*
-    # gdp. As far as I can tell, and the fact this doesn't crash horribly,
-    # is that the prim numbers are all that are technically used internally.
-    # By using the prims directly instead of fetching their numbers
-    # we can significantly speed up this function.
-    # In the case of 1000 spheres with different attributes values
-    # using the prims directly vs fetching prim.numbers() and using
-    # integers we reduced the run time for this function from
-    # 23.3s to 3.4s. The remaining time is the merge and delete.
+    attrib_name = attrib
 
-    prim_values = collections.defaultdict(set)
-    prims = input_gdp.iterPrims()
-    if intrinsic:
-        for prim in prims:
-            prim_values[prim.intrinsicValue(attrib)].add(prim)
+    if not intrinsic:
+        if isinstance(attrib, hou.Attrib):
+            attrib_name = attrib.name()
+        else:
+            attrib = input_gdp.findPrimAttrib(attrib)
+
+        if attrib.size() > 1:
+            raise ValueError("Primitive attribute must be size 1")
+
+        if attrib.dataType() == hou.attribData.String:
+            prim_values = attrib.strings()
+        elif attrib.dataType() == hou.attribData.Int:
+            prim_values = set(input_gdb.primIntAttribValues(attrib_name))
+        elif attrib.dataType() == hou.attribData.Float:
+            prim_values = set(input_gdb.primFloatAttribValues(attrib_name))
+        else:
+            raise ValueError("Invalid attribute type")
     else:
-        for prim in prims:
-            prim_values[prim.attribValue(attrib)].add(prim)
+        prim_values = set()
+        for prim in input_gdp.iterPrims():
+            prim_values.add(prim.intrinsicValue(attrib))
 
     split_gdps = {}
-    all_prims = set(prims)
-    for prim_value, prims in prim_values.items():
+
+    blast_verb = hou.sopNodeTypeCategory().nodeVerbs()["blast"]
+    intrinsic_str = "intrinsic:" if intrinsic else ""
+
+    needs_escape_pat = re.compile('([]["*?])')
+
+    for prim_value in prim_values:
+        escaped_value = needs_escape_pat.sub(r"\\\1", prim_value)
+        blast_verb.setParms(
+            {
+                "negate": 1,
+                "grouptype": 4,
+                "group": '@{}{}="{}"'.format(intrinsic_str, attrib_name, escaped_value),
+            }
+        )
+
         gdp = hou.Geometry()
-        gdp.merge(input_gdp)
-        remove_prims = all_prims - prims
-        gdp.deletePrims(list(remove_prims))
+        blast_verb.execute(gdp, [input_gdp])
         split_gdps[prim_value] = gdp
+
     return split_gdps
 
 
@@ -1736,6 +1750,7 @@ def output_geo(soppath, now, properties=None):
     if prim_material_h is not None and not ignore_materials:
         material_gdps = partition_by_attrib(gdp, prim_material_h)
         gdp.clear()
+        del gdp
     else:
         material_gdps = {default_material: gdp}
 
@@ -1756,6 +1771,7 @@ def output_geo(soppath, now, properties=None):
 
         shape_gdps = partition_by_attrib(material_gdp, "typename", intrinsic=True)
         material_gdp.clear()
+        del material_gdp
 
         for shape, shape_gdp in shape_gdps.items():
 
@@ -1764,6 +1780,7 @@ def output_geo(soppath, now, properties=None):
                 override_attrib_h = shape_gdp.findPrimAttrib("material_override")
                 override_gdps = partition_by_attrib(shape_gdp, override_attrib_h)
                 shape_gdp.clear()
+                del shape_gdp
                 del override_attrib_h
             else:
                 override_gdps = {default_override: shape_gdp}

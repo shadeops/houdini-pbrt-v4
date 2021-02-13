@@ -1,6 +1,7 @@
 from __future__ import print_function, division, absolute_import
 
 import os
+import re
 import array
 import shlex
 import subprocess
@@ -338,10 +339,6 @@ def mesh_wrangler(gdp, paramset=None, properties=None):
             shape = "loopsubdiv"
 
     gdp = scene_state.tesselate_geo(gdp)
-
-    # Remove any open prims as they are not supported
-    open_prims = [prim for prim in gdp.iterPrims() if not prim.intrinsicValue("closed")]
-    gdp.deletePrims(open_prims)
 
     # Exit out if there are no prims
     if not any(gdp.iterPrims()):
@@ -1622,34 +1619,51 @@ def partition_by_attrib(input_gdp, attrib, intrinsic=False):
         Dictionary of hou.Geometry with keys of the attrib value.
     """
 
-    # NOTE: The following can be a bit confusing as we are creating
-    # a set of prims, which are then used to delete prims in a *new*
-    # gdp. As far as I can tell, and the fact this doesn't crash horribly,
-    # is that the prim numbers are all that are technically used internally.
-    # By using the prims directly instead of fetching their numbers
-    # we can significantly speed up this function.
-    # In the case of 1000 spheres with different attributes values
-    # using the prims directly vs fetching prim.numbers() and using
-    # integers we reduced the run time for this function from
-    # 23.3s to 3.4s. The remaining time is the merge and delete.
+    attrib_name = attrib
 
-    prim_values = collections.defaultdict(set)
-    prims = input_gdp.iterPrims()
-    if intrinsic:
-        for prim in prims:
-            prim_values[prim.intrinsicValue(attrib)].add(prim)
+    if not intrinsic:
+        if isinstance(attrib, hou.Attrib):
+            attrib_name = attrib.name()
+        else:
+            attrib = input_gdp.findPrimAttrib(attrib)
+
+        if attrib.size() > 1:
+            raise ValueError("Primitive attribute must be size 1")
+
+        if attrib.dataType() == hou.attribData.String:
+            prim_values = attrib.strings()
+        elif attrib.dataType() == hou.attribData.Int:
+            prim_values = set(input_gdb.primIntAttribValues(attrib_name))
+        elif attrib.dataType() == hou.attribData.Float:
+            prim_values = set(input_gdb.primFloatAttribValues(attrib_name))
+        else:
+            raise ValueError("Invalid attribute type")
     else:
-        for prim in prims:
-            prim_values[prim.attribValue(attrib)].add(prim)
+        prim_values = set()
+        for prim in input_gdp.iterPrims():
+            prim_values.add(prim.intrinsicValue(attrib))
 
     split_gdps = {}
-    all_prims = set(prims)
-    for prim_value, prims in prim_values.iteritems():
+
+    blast_verb = hou.sopNodeTypeCategory().nodeVerbs()["blast"]
+    intrinsic_str = "intrinsic:" if intrinsic else ""
+
+    needs_escape_pat = re.compile('([]["*?])')
+
+    for prim_value in prim_values:
+        escaped_value = needs_escape_pat.sub(r"\\\1", prim_value)
+        blast_verb.setParms(
+            {
+                "negate": 1,
+                "grouptype": 4,
+                "group": '@{}{}="{}"'.format(intrinsic_str, attrib_name, escaped_value),
+            }
+        )
+
         gdp = hou.Geometry()
-        gdp.merge(input_gdp)
-        remove_prims = all_prims - prims
-        gdp.deletePrims(list(remove_prims))
+        blast_verb.execute(gdp, [input_gdp])
         split_gdps[prim_value] = gdp
+
     return split_gdps
 
 
@@ -1738,6 +1752,7 @@ def output_geo(soppath, now, properties=None):
     if prim_material_h is not None and not ignore_materials:
         material_gdps = partition_by_attrib(gdp, prim_material_h)
         gdp.clear()
+        del gdp
     else:
         material_gdps = {default_material: gdp}
 
@@ -1758,6 +1773,7 @@ def output_geo(soppath, now, properties=None):
 
         shape_gdps = partition_by_attrib(material_gdp, "typename", intrinsic=True)
         material_gdp.clear()
+        del material_gdp
 
         for shape, shape_gdp in shape_gdps.iteritems():
 
@@ -1766,6 +1782,7 @@ def output_geo(soppath, now, properties=None):
                 override_attrib_h = shape_gdp.findPrimAttrib("material_override")
                 override_gdps = partition_by_attrib(shape_gdp, override_attrib_h)
                 shape_gdp.clear()
+                del shape_gdp
                 del override_attrib_h
             else:
                 override_gdps = {default_override: shape_gdp}
