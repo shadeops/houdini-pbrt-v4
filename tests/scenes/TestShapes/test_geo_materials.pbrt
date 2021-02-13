@@ -25,7 +25,7 @@ WorldBegin	# {
 
     #  ==================================================
     #  NamedMaterial Definitions
-    MakeNamedMaterial "/mat/pbrt_material_diffuse6" "string type" "diffuse" "rgb reflectance" [ 0.0625 0.0625 0.75 ]
+    MakeNamedMaterial "/mat/pbrt_material_diffuse1" "string type" "diffuse" "rgb reflectance" [ 0.0625 0.0625 0.75 ]
 
 
     #  ==================================================
@@ -41,7 +41,7 @@ WorldBegin	# {
     AttributeBegin	# {
 	ConcatTransform [ 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 ]
 	AttributeBegin	# {
-	    NamedMaterial "/mat/pbrt_material_diffuse6"
+	    NamedMaterial "/mat/pbrt_material_diffuse1"
 	    Shape "trianglemesh" "integer indices" [ 1 5 4 2 6 5 3 7 6 0 4 7 2 1 0 5 6 7 7 4 5 0 3 2 7 3 0 6 2 3 5 1 2 4 0 1 ] "point3 P" [ -0.5 -0.5 -0.5 0.5 -0.5 -0.5 0.5 -0.5 0.5 -0.5 -0.5 0.5 -0.5 0.5 -0.5 0.5 0.5 -0.5 0.5 0.5 0.5 -0.5 0.5 0.5 ] "normal N" [ -0.5774 -0.5774 -0.5774 0.5774 -0.5774 -0.5774 0.5774 -0.5774 0.5774 -0.5774 -0.5774 0.5774 -0.5774 0.5774 -0.5774 0.5774 0.5774 -0.5774 0.5774 0.5774 0.5774 -0.5774 0.5774 0.5774 ]
 	AttributeEnd	# }
     AttributeEnd	# }
