@@ -240,8 +240,9 @@ if gdp is not None:
         divide_verb = hou.sopNodeTypeCategory().nodeVerb("divide")
         divide_verb.execute(gdp, [gdp])
 
-        open_prims = [prim for prim in gdp.iterPrims() if not prim.isClosed()]
-        gdp.deletePrims(open_prims)
+        blast_verb = hou.sopNodeTypeCategory().nodeVerb("blast")
+        blast_verb.setParms({"group": "@intrinsic:closed=0", "grouptype": 4})
+        blast_verb.execute(gdp, [gdp])
 
         return gdp
 
