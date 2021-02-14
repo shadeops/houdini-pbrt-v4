@@ -18,6 +18,7 @@
     input	float	interface_vroughness	"Roughness V"
     input	struct_PBRTSpectrum	conductor_eta	Eta
     input	struct_PBRTSpectrum	conductor_k	K
+    input	struct_PBRTSpectrum	reflectance	Reflectance
     input	float	conductor_roughness	Roughness
     input	float	conductor_uroughness	"Roughness U"
     input	float	conductor_vroughness	"Roughness V"
@@ -32,10 +33,11 @@
     inputflags	interface_vroughness	0
     inputflags	conductor_eta	0
     inputflags	conductor_k	0
+    inputflags	reflectance	0
     inputflags	conductor_roughness	0
     inputflags	conductor_uroughness	0
     inputflags	conductor_vroughness	0
-    signature	"Default Inputs"	default	{ float struct_PBRTSpectrum float float float float float float struct_PBRTSpectrum struct_PBRTSpectrum float float float struct_PBRTMaterial }
+    signature	"Default Inputs"	default	{ float struct_PBRTSpectrum float float float float float float struct_PBRTSpectrum struct_PBRTSpectrum struct_PBRTSpectrum float float float struct_PBRTMaterial }
 
     outputoverrides	default
     {
@@ -140,6 +142,7 @@
             default { "1" "1" "1" }
             range   { 0 1 }
             parmtag { "pbrt.alias" "conductor.eta" }
+            disablewhen "{ do_reflectance == 1 }"
         }
         parm {
             name    "conductor_k"
@@ -149,6 +152,24 @@
             default { "1" "1" "1" }
             range   { 0 1 }
             parmtag { "pbrt.alias" "conductor.k" }
+            disablewhen "{ do_reflectance == 1 }"
+        }
+        parm {
+            name    "do_reflectance"
+            label   "Use Reflectance"
+            type    toggle
+            default { "0" }
+            parmtag { "pbrt.meta" "1" }
+        }
+        parm {
+            name    "reflectance"
+            label   "Reflectance"
+            type    color
+            size    3
+            default { "1" "1" "1" }
+            help    " The reflectivity of the surface."
+            disablewhen "{ do_reflectance == 0 }"
+            range   { 0 1 }
         }
         parm {
             name    "conductor_anisotropic_roughness"

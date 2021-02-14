@@ -312,9 +312,7 @@ def wrangle_film(obj, wrangler, now):
         paramset.add(PBRTParam("float", "cropwindow", crop_region))
 
     parm_selection = {
-        "fnumber": SohoPBRT("fnumber", "float", [1], True),
         "iso": SohoPBRT("iso", "float", [100], True),
-        "c": SohoPBRT("c", "float", [314.159], True),
         "whitebalance": SohoPBRT("whitebalance", "float", [0], True),
         "sensor": SohoPBRT("sensor", "string", ["cie1931"], True),
     }

@@ -110,26 +110,10 @@
         default { "1" }
     }
     parm {
-        name    "fnumber"
-        label   "F Number"
-        type    float
-        default { "1" }
-        help    ""
-        range   { 0 10 }
-    }
-    parm {
         name    "iso"
         label   "Iso"
         type    float
         default { "100" }
-        help    ""
-        range   { 50 1600 }
-    }
-    parm {
-        name    "c"
-        label   "C"
-        type    float
-        default { "100*$PI" }
         help    ""
         range   { 50 1600 }
     }

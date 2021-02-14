@@ -11,6 +11,7 @@
     input	float	displacement	displacement
     input	struct_PBRTSpectrum	eta	Eta
     input	struct_PBRTSpectrum	k	K
+    input	struct_PBRTSpectrum	reflectance	Reflectance
     input	float	roughness	Roughness
     input	float	uroughness	"Roughness U"
     input	float	vroughness	"Roughness V"
@@ -18,10 +19,11 @@
     inputflags	displacement	0
     inputflags	eta	0
     inputflags	k	0
+    inputflags	reflectance	0
     inputflags	roughness	0
     inputflags	uroughness	0
     inputflags	vroughness	0
-    signature	"Default Inputs"	default	{ float struct_PBRTSpectrum struct_PBRTSpectrum float float float struct_PBRTMaterial }
+    signature	"Default Inputs"	default	{ float struct_PBRTSpectrum struct_PBRTSpectrum struct_PBRTSpectrum float float float struct_PBRTMaterial }
 
     outputoverrides	default
     {
@@ -49,6 +51,7 @@
         size    3
         default { "1" "1" "1" }
         range   { 0 1 }
+        disablewhen "{ do_reflectance == 1 }"
     }
     parm {
         name    "k"
@@ -56,6 +59,24 @@
         type    color
         size    3
         default { "1" "1" "1" }
+        range   { 0 1 }
+        disablewhen "{ do_reflectance == 1 }"
+    }
+    parm {
+        name    "do_reflectance"
+        label   "Use Reflectance"
+        type    toggle
+        default { "0" }
+        parmtag { "pbrt.meta" "1" }
+    }
+    parm {
+        name    "reflectance"
+        label   "Reflectance"
+        type    color
+        size    3
+        default { "1" "1" "1" }
+        help    " The reflectivity of the surface."
+        disablewhen "{ do_reflectance == 0 }"
         range   { 0 1 }
     }
     parm {
