@@ -532,13 +532,9 @@ def patch_wrangler(gdp, paramset=None, properties=None):
     if properties is None:
         properties = {}
 
-    # Remove any non quad prims as they are not supported
-    non_quad_prims = [
-        prim
-        for prim in gdp.iterPrims()
-        if prim.intrinsicValue("connectivity") != "quads"
-    ]
-    gdp.deletePrims(non_quad_prims)
+    blast_verb = hou.sopNodeTypeCategory().nodeVerb("blast")
+    blast_verb.setParms({"group": '@intrinsic:connectivity!="quads"', "grouptype": 4})
+    blast_verb.execute(gdp, [gdp])
 
     # Exit out if there are no prims
     if not any(gdp.iterPrims()):
