@@ -1602,47 +1602,23 @@ shape_wranglers = {
     "Tetrahedron": tesselated_wrangler,
 }
 
-
-def partition_by_attrib(input_gdp, attrib, intrinsic=False):
-    """Partition the input geo based on a attribute
+def partition_by_intrinsic(input_gdp, intrinsic):
+    """Partition the input geo based on a prim intrinsic
 
     Args:
         input_gdp (hou.Geometry): Incoming geometry, not modified
-        attrib (str, hou.Attrib): Attribute to partition by
-        intrinsic (bool): Whether to an attribute or intrinsic attrib
-                          (Optional, defaults to False)
+        intrinsic (str): Intrinsic name
     Returns:
-        Dictionary of hou.Geometry with keys of the attrib value.
+        Dictionary of hou.Geometry with keys of the intrinsic value.
     """
 
-    attrib_name = attrib
-
-    if not intrinsic:
-        if isinstance(attrib, hou.Attrib):
-            attrib_name = attrib.name()
-        else:
-            attrib = input_gdp.findPrimAttrib(attrib)
-
-        if attrib.size() > 1:
-            raise ValueError("Primitive attribute must be size 1")
-
-        if attrib.dataType() == hou.attribData.String:
-            prim_values = attrib.strings()
-        elif attrib.dataType() == hou.attribData.Int:
-            prim_values = set(input_gdb.primIntAttribValues(attrib_name))
-        elif attrib.dataType() == hou.attribData.Float:
-            prim_values = set(input_gdb.primFloatAttribValues(attrib_name))
-        else:
-            raise ValueError("Invalid attribute type")
-    else:
-        prim_values = set()
-        for prim in input_gdp.iterPrims():
-            prim_values.add(prim.intrinsicValue(attrib))
+    prim_values = set()
+    for prim in input_gdp.iterPrims():
+        prim_values.add(prim.intrinsicValue(intrinsic))
 
     split_gdps = {}
 
     blast_verb = hou.sopNodeTypeCategory().nodeVerbs()["blast"]
-    intrinsic_str = "intrinsic:" if intrinsic else ""
 
     needs_escape_pat = re.compile('([]["*?])')
 
@@ -1652,7 +1628,71 @@ def partition_by_attrib(input_gdp, attrib, intrinsic=False):
             {
                 "negate": 1,
                 "grouptype": 4,
-                "group": '@{}{}="{}"'.format(intrinsic_str, attrib_name, escaped_value),
+                "group": '@intrinsic:{}="{}"'.format(intrinsic, escaped_value),
+            }
+        )
+
+        gdp = hou.Geometry()
+        blast_verb.execute(gdp, [input_gdp])
+        split_gdps[prim_value] = gdp
+
+    return split_gdps
+
+def partition_by_attrib(input_gdp, attrib):
+    """Partition the input geo based on a attribute
+
+    Args:
+        input_gdp (hou.Geometry): Incoming geometry, not modified
+        attrib (str, hou.Attrib): Attribute to partition by
+    Returns:
+        Dictionary of hou.Geometry with keys of the attrib value.
+    """
+
+    attrib_name = attrib
+
+    if isinstance(attrib, hou.Attrib):
+        attrib_name = attrib.name()
+    else:
+        attrib = input_gdp.findPrimAttrib(attrib)
+
+    if attrib.size() > 1:
+        raise ValueError("Primitive attribute must be size 1")
+
+    sort_verb = hou.sopNodeTypeCategory().nodeVerbs()["sort"]
+    sort_verb.setParms( {"primsort":11, "primattrib":attrib_name} )
+    sort_verb.execute(input_gdp, [input_gdp])
+
+    if attrib.dataType() == hou.attribData.String:
+        prim_values = input_gdp.primStringAttribValues(attrib_name)
+    elif attrib.dataType() == hou.attribData.Int:
+        prim_values = input_gdp.primIntAttribValues(attrib_name)
+    elif attrib.dataType() == hou.attribData.Float:
+        prim_values = input_gdp.primFloatAttribValues(attrib_name)
+    else:
+        raise ValueError("Invalid attribute type")
+
+    split_gdps = {}
+
+    def _put_in_cache(v, cache):
+        if v in cache:
+            return False
+        cache.add(v)
+        return True
+
+    cache = set()
+    run_lengths = [ (v,i) for i,v in enumerate(prim_values) if _put_in_cache(v,cache) ]
+    run_lengths.append( (prim_values[-1], len(prim_values)) )
+
+    blast_verb = hou.sopNodeTypeCategory().nodeVerbs()["blast"]
+
+    for i,encoded_v in enumerate(run_lengths[:-1]):
+        prim_value, start = encoded_v
+        end = run_lengths[i+1][1]-1
+        blast_verb.setParms(
+            {
+                "negate": 1,
+                "grouptype": 4,
+                "group": '{}-{}'.format(start, end),
             }
         )
 
@@ -1767,7 +1807,7 @@ def output_geo(soppath, now, properties=None):
             api.NamedMaterial(material)
             material_node = MaterialNode(material)
 
-        shape_gdps = partition_by_attrib(material_gdp, "typename", intrinsic=True)
+        shape_gdps = partition_by_intrinsic(material_gdp, "typename")
         material_gdp.clear()
         del material_gdp
 
