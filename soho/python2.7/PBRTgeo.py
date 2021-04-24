@@ -889,7 +889,7 @@ def vdb_wrangler(gdp, paramset=None, properties=None):
         vdb_paramset.replace(PBRTParam("string", "filename", pbrt_nvdb_path))
         with api.AttributeBlock():
             api.MakeNamedMedium(medium_name, "nanovdb", vdb_paramset)
-            api.Material("none")
+            api.Material("interface")
             api.MediumInterface(medium_name, exterior)
             vals = [x for pair in zip(bbox.minvec(), bbox.maxvec()) for x in pair]
             bounds_to_api_box(vals)
@@ -1392,7 +1392,7 @@ def smoke_prim_wrangler(grids, paramset=None, properties=None):
             xform = prim_transform(ref_prim)
             api.ConcatTransform(xform)
             api.MakeNamedMedium(medium_name, "uniformgrid", smoke_paramset)
-            api.Material("none")
+            api.Material("interface")
             api.MediumInterface(medium_name, exterior)
             # Pad this slightly?
             bounds_to_api_box([-1, 1, -1, 1, -1, 1])

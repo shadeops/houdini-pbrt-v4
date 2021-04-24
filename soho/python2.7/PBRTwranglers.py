@@ -699,7 +699,6 @@ def wrangle_light(light, wrangler, now):
 
         single_sided = light.wrangleInt(wrangler, "singlesided", now, [0])[0]
         reverse = light.wrangleInt(wrangler, "reverse", now, [0])[0]
-        visible = light.wrangleInt(wrangler, "light_contribprimary", now, [0])[0]
         size = light.wrangleFloat(wrangler, "areasize", now, [1, 1])
         paramset.add(PBRTParam("bool", "twosided", [not single_sided]))
 
@@ -725,11 +724,6 @@ def wrangle_light(light, wrangler, now):
         # this is in part due to explicit light's area scaling factor.
         if light_type in ("grid", "geo"):
             api.Scale(size[0], size[1], size[0])
-
-        # The visibility only applies to hits on the non-emissive side of the light.
-        # the emissive side will still be rendered
-        if not visible:
-            api.Material("none")
 
         if light_type == "sphere":
             # NOTE:
