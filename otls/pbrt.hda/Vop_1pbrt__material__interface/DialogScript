@@ -1,9 +1,9 @@
-# Dialog script for pbrt_material_none automatically generated
+# Dialog script for pbrt_material_interface automatically generated
 
 {
-    name	pbrt_material_none
-    script	none
-    label	"PBRT NoneMaterial"
+    name	pbrt_material_interface
+    script	interface
+    label	"PBRT InterfaceMaterial"
 
     rendermask	PBRT
     externalshader 1
