@@ -693,14 +693,14 @@
                 name    "sampler"
                 label   "Sampler"
                 type    ordinal
-                default { "pmj02bn" }
+                default { "zsobol" }
                 menu {
                     "pmj02bn"       "PMJ02BN"
                     "paddedsobol"   "Padded Sobol"
                     "halton"        "Halton"
                     "sobol"         "Sobol"
                     "zsobol"        "ZSobol"
-                    "random"        "Random"
+                    "independent"   "Independent"
                     "stratified"    "Stratified"
                 }
             }
@@ -722,7 +722,6 @@
                     "none"              "None"
 					"owen"              "Owen"
                     "fastowen"          "Fast Owen"
-                    "cranleypatterson"  "Cranley-Patterson"
 					"premutedigits"     "Premute Digits"
                 }
                 hidewhen "{ sampler != sobol sampler != paddedsobol sampler != zsobol sampler != halton}"
@@ -825,12 +824,13 @@
                 range   { 0 10 }
             }
             parm {
-                name    "seed"
+                name    "sppm_seed"
                 label   "Seed"
                 type    integer
-                default { "0" }
+                default { "6502" }
                 help    ""
                 hidewhen "{ integrator != sppm }"
+                parmtag { "pbrt.alias" "seed" }
                 range   { 0 10 }
             }
             parm {

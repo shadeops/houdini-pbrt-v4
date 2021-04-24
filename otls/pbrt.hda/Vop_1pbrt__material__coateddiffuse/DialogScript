@@ -12,7 +12,7 @@
     input	struct_PBRTSpectrum	reflectance	Reflectance
 	input	struct_PBRTSpectrum	albedo	"Albedo"
 	input	float	g	"g"
-    input	float	eta	eta
+    input	struct_PBRTSpectrum eta	eta
     input	float	thickness	Thickness
     input	float	roughness	Roughness
     input	float	uroughness	"Roughness U"
@@ -27,7 +27,7 @@
     inputflags	roughness	0
     inputflags	uroughness	0
     inputflags	vroughness	0
-    signature	"Default Inputs"	default	{ float struct_PBRTSpectrum struct_PBRTSpectrum float float float float float float struct_PBRTMaterial }
+    signature	"Default Inputs"	default	{ float struct_PBRTSpectrum struct_PBRTSpectrum float struct_PBRTSpectrum float float float float struct_PBRTMaterial }
 
     outputoverrides	default
     {
@@ -74,8 +74,8 @@
     parm {
         name    "eta"
         label   "Eta"
-        type    float
-        default { "1.5" }
+        type    color
+        default { "1.5" "1.5" "1.5" }
         range   { 0 1 }
     }
     parm {

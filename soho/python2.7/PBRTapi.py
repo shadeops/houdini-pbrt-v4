@@ -67,6 +67,10 @@ def Include(path):
     _api_call_with_args("Include", path)
 
 
+def Import(path):
+    _api_call_with_args("Import", path)
+
+
 def Comment(msg):
     soho.indent()
     print("# ", msg)

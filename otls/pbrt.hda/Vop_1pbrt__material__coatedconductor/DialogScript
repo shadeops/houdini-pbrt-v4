@@ -12,7 +12,7 @@
     input	struct_PBRTSpectrum	albedo	Albedo
     input	float	g	g
     input	float	thickness	Thickness
-    input	float	interface_eta	Eta
+    input	struct_PBRTSpectrum interface_eta	Eta
     input	float	interface_roughness	Roughness
     input	float	interface_uroughness	"Roughness U"
     input	float	interface_vroughness	"Roughness V"
@@ -37,7 +37,7 @@
     inputflags	conductor_roughness	0
     inputflags	conductor_uroughness	0
     inputflags	conductor_vroughness	0
-    signature	"Default Inputs"	default	{ float struct_PBRTSpectrum float float float float float float struct_PBRTSpectrum struct_PBRTSpectrum struct_PBRTSpectrum float float float struct_PBRTMaterial }
+    signature	"Default Inputs"	default	{ float struct_PBRTSpectrum float float struct_PBRTSpectrum float float float struct_PBRTSpectrum struct_PBRTSpectrum struct_PBRTSpectrum float float float struct_PBRTMaterial }
 
     outputoverrides	default
     {
@@ -80,8 +80,8 @@
         parm {
             name    "interface_eta"
             label   "Eta"
-            type    float
-            default { "1.5" }
+            type    color
+            default { "1.5" "1.5" "1.5" }
             range   { 0 5 }
             parmtag { "pbrt.alias" "interface.eta" }
         }

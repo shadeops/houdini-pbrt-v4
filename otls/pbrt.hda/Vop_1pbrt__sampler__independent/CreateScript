@@ -1,7 +1,7 @@
 # Automatically generated script
 \set noalias = 1
 #
-#  Creation script for pbrt_sampler_random operator
+#  Creation script for pbrt_sampler_independent operator
 #
 
 if ( "$arg1" == "" ) then
@@ -9,6 +9,6 @@ if ( "$arg1" == "" ) then
     exit
 endif
 
-# Node $arg1 (Vop/pbrt_sampler_random)
+# Node $arg1 (Vop/pbrt_sampler_independent)
 opexprlanguage -s hscript $arg1
 opuserdata -n '___Version___' -v '' $arg1

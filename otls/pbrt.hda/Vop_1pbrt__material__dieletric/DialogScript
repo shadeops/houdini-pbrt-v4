@@ -10,7 +10,7 @@
     shadertype	generic
     input	float	displacement	displacement
     input	struct_PBRTSpectrum tint Tint
-    input	float	eta	eta
+    input	struct_PBRTSpectrum eta	eta
     input	float	roughness	Roughness
     input	float	uroughness	"Roughness U"
     input	float	vroughness	"Roughness V"
@@ -21,31 +21,18 @@
     inputflags	roughness	0
     inputflags	uroughness	0
     inputflags	vroughness	0
-    signature	Float	default	{ float struct_PBRTSpectrum float float float float struct_PBRTMaterial }
-    signature	Spectrum	s	{ float struct_PBRTSpectrum struct_PBRTSpectrum float float float struct_PBRTMaterial }
+    signature	"Default Inputs"	default	{ float struct_PBRTSpectrum float float float float struct_PBRTMaterial }
 
     outputoverrides	default
     {
 	___begin	auto
 			(0)
     }
-    outputoverrides	s
-    {
-	___begin	auto
-			(0)
-    }
-
-    help {
+    
+	help {
 	""
     }
 
-    parm {
-        name    "signature"
-        baseparm
-        label   "Signature"
-        export  none
-    }
-	
 	parm {
         name    "normalmap"
         label   "Normal Map"
@@ -65,15 +52,7 @@
     parm {
         name    "eta"
         label   "Eta"
-        type    float
-        default { "1.5" }
-        range   { 0 1 }
-    }
-    parm {
-        name    "eta_s"
-        label   "Eta"
-        type    color
-        size    3
+        type	color 
         default { "1.5" "1.5" "1.5" }
         range   { 0 1 }
     }

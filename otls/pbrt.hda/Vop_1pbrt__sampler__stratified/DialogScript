@@ -40,4 +40,22 @@
         help    " The number of samples per pixel to take in the y direction. In general, \"xsamples\" and \"ysamples\" should be set to the same value for best results."
         range   { 1! 1024 }
     }
+    parm {
+        name    "do_seed"
+        label   "Seed"
+        type    toggle
+        nolabel
+        joinnext
+        default { "0" }
+        parmtag { "pbrt.meta" "1" }
+    }
+    parm {
+        name    "seed"
+        label   "Seed"
+        type    integer
+        size    1
+        default { "0" }
+        disablewhen "{ do_seed == 0 }"
+        range   { 0 1000 }
+    }
 }

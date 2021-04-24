@@ -13,6 +13,27 @@
 #include "$HFS/houdini/soho/parameters/Instance.ds"
 
     parm {
+        SOHO_TOGGLE(disablepixeljitter, "Disable Pixel Jitter", "Options", 0)
+    }
+    parm {
+        SOHO_TOGGLE(disablewavelengthjitter, "Disable Wavelength Jitter", "Options", 0)
+    }
+    parm {
+        SOHO_TOGGLE(forcediffuse, "Force Diffuse", "Options", 0)
+    }
+    parm {
+        SOHO_TOGGLE(pixelstats, "Pixel Stats", "Options", 0)
+    }
+    parm {
+        SOHO_INT(seed, "Seed", "Options", 0)
+    }
+    parm {
+        SOHO_STRING(msereferenceimage, "MSE Reference Image", "Options", "")
+    }
+    parm {
+        SOHO_STRING(msereferenceout, "MSE Reference Out", "Options", "")
+    }
+    parm {
         SOHO_TOGGLE(pbrt_dof, "Allow Depth of Field", "Camera", 0)
     }
     parm {
@@ -93,6 +114,10 @@
     }
     parm {
         SOHO_FILE(pbrt_include, "Include PBRT File", "Geometry", "")
+        parmtag     { filechooser_mode  "read" }
+    }
+    parm {
+        SOHO_FILE(pbrt_import, "Import PBRT File", "Geometry", "")
         parmtag     { filechooser_mode  "read" }
     }
     parm {

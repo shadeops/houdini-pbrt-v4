@@ -110,14 +110,14 @@ Python:       false
 Empty:        false
 Modified:     Tue May 15 02:01:03 2018
 
-Operator:     pbrt_sampler_random
-Label:        PBRT RandomSampler
-Path:         oplib:/Vop/pbrt_sampler_random?Vop/pbrt_sampler_random
-Icon:         opdef:/Vop/pbrt_sampler_random?IconImage
+Operator:     pbrt_sampler_independent
+Label:        PBRT IndependentSampler
+Path:         oplib:/Vop/pbrt_sampler_independent?Vop/pbrt_sampler_independent
+Icon:         opdef:/Vop/pbrt_sampler_independent?IconImage
 Table:        Vop
 License:      
 Extra:        
-User:         {"dtype": "random", "directive": "sampler"}
+User:         {"dtype": "independent", "directive": "sampler"}
 Inputs:       0 to 0
 Subnet:       false
 Python:       false

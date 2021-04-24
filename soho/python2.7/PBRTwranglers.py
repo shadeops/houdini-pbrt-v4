@@ -424,7 +424,7 @@ def wrangle_integrator(obj, wrangler, now):
         "visualizeweights": SohoPBRT("visualizeweights", "bool", [False], True),
         "iterations": SohoPBRT("iterations", "integer", [64], True),
         "photonsperiteration": SohoPBRT("photonsperiteration", "integer", [-1], True),
-        "sppm_seed": SohoPBRT("sppm_seed", "integer", [0], True, key="seed"),
+        "seed": SohoPBRT("sppm_seed", "integer", [6502], True, key="seed"),
         "radius": SohoPBRT("radius", "float", [1], True),
         "bootstrapsamples": SohoPBRT("bootstrapsamples", "integer", [100000], True),
         "chains": SohoPBRT("chains", "integer", [1000], True),
@@ -454,7 +454,7 @@ def wrangle_integrator(obj, wrangler, now):
             "maxdepth",
             "iterations",
             "photonsperiteration",
-            "sppm_seed",
+            "seed",
             "radius",
             "regularize",
         ],
@@ -925,6 +925,7 @@ def wrangle_geo(obj, wrangler, now):
         ),
         "pbrt_curvetype": SohoPBRT("pbrt_curvetype", "string", ["flat"], True),
         "pbrt_include": SohoPBRT("pbrt_include", "string", [""], False),
+        "pbrt_import": SohoPBRT("pbrt_import", "string", [""], False),
         "pbrt_alpha_texture": SohoPBRT(
             "pbrt_alpha_texture", "string", [""], skipdefault=False, key="alpha"
         ),
@@ -995,6 +996,11 @@ def wrangle_geo(obj, wrangler, now):
             if alpha_tex:
                 api.Comment("%s is an invalid float texture" % alpha_tex)
             properties[prop].Value[0] = ""
+
+    if properties["pbrt_import"].Value[0]:
+        # If we have included a file, skip output any geo.
+        api.Import(properties["pbrt_import"].Value[0])
+        return
 
     if properties["pbrt_include"].Value[0]:
         # If we have included a file, skip output any geo.

@@ -1602,6 +1602,7 @@ shape_wranglers = {
     "Tetrahedron": tesselated_wrangler,
 }
 
+
 def partition_by_intrinsic(input_gdp, intrinsic):
     """Partition the input geo based on a prim intrinsic
 
@@ -1638,6 +1639,7 @@ def partition_by_intrinsic(input_gdp, intrinsic):
 
     return split_gdps
 
+
 def partition_by_attrib(input_gdp, attrib):
     """Partition the input geo based on a attribute
 
@@ -1659,7 +1661,7 @@ def partition_by_attrib(input_gdp, attrib):
         raise ValueError("Primitive attribute must be size 1")
 
     sort_verb = hou.sopNodeTypeCategory().nodeVerbs()["sort"]
-    sort_verb.setParms( {"primsort":11, "primattrib":attrib_name} )
+    sort_verb.setParms({"primsort": 11, "primattrib": attrib_name})
     sort_verb.execute(input_gdp, [input_gdp])
 
     if attrib.dataType() == hou.attribData.String:
@@ -1680,20 +1682,16 @@ def partition_by_attrib(input_gdp, attrib):
         return True
 
     cache = set()
-    run_lengths = [ (v,i) for i,v in enumerate(prim_values) if _put_in_cache(v,cache) ]
-    run_lengths.append( (prim_values[-1], len(prim_values)) )
+    run_lengths = [(v, i) for i, v in enumerate(prim_values) if _put_in_cache(v, cache)]
+    run_lengths.append((prim_values[-1], len(prim_values)))
 
     blast_verb = hou.sopNodeTypeCategory().nodeVerbs()["blast"]
 
-    for i,encoded_v in enumerate(run_lengths[:-1]):
+    for i, encoded_v in enumerate(run_lengths[:-1]):
         prim_value, start = encoded_v
-        end = run_lengths[i+1][1]-1
+        end = run_lengths[i + 1][1] - 1
         blast_verb.setParms(
-            {
-                "negate": 1,
-                "grouptype": 4,
-                "group": '{}-{}'.format(start, end),
-            }
+            {"negate": 1, "grouptype": 4, "group": "{}-{}".format(start, end)}
         )
 
         gdp = hou.Geometry()

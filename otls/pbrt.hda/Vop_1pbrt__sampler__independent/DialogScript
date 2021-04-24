@@ -1,9 +1,9 @@
-# Dialog script for pbrt_sampler_random automatically generated
+# Dialog script for pbrt_sampler_independent automatically generated
 
 {
-    name	pbrt_sampler_random
-    script	random
-    label	"PBRT RandomSampler"
+    name	pbrt_sampler_independent
+    script	independent
+    label	"PBRT IndependentSampler"
 
     rendermask	PBRT
     externalshader 1
@@ -24,5 +24,23 @@
         default { "4" }
         help    "The number of samples to take, per pixel. Note that the number of samples is taken per pixel on average; depending on the actual sampling algorithm being used, individual pixel areas may have slightly more or slightly fewer."
         range   { 1! 1024 }
+    }
+    parm {
+        name    "do_seed"
+        label   "Seed"
+        type    toggle
+        nolabel
+        joinnext
+        default { "0" }
+        parmtag { "pbrt.meta" "1" }
+    }
+    parm {
+        name    "seed"
+        label   "Seed"
+        type    integer
+        size    1
+        default { "0" }
+        disablewhen "{ do_seed == 0 }"
+        range   { 0 1000 }
     }
 }

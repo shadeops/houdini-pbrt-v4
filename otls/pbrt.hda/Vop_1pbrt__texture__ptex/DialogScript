@@ -48,4 +48,12 @@
         help    "Gamma of input texture"
         range   { 1 3 }
     }
+    parm {
+        name    "scale"
+        label   "Scale"
+        type    float
+        default { "1.0" }
+        help    "Scale texture values"
+        range   { 0 10 }
+    }
 }
