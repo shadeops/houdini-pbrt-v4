@@ -25,13 +25,6 @@
 	""
     }
 
-    parm {
-        name    "signature"
-        baseparm
-        label   "Signature"
-        export  none
-    }
-	
 	parm {
         name    "normalmap"
         label   "Normal Map"

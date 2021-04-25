@@ -1,7 +1,7 @@
 
 Film "rgb" "integer xresolution" [ 320 ] "integer yresolution" [ 240 ] "string filename" [ "test_vdb_one_density_many_temperature.exr" ]
 PixelFilter "gaussian" "float yradius" [ 2 ] "float xradius" [ 2 ]
-Sampler "pmj02bn" "integer pixelsamples" [ 16 ]
+Sampler "zsobol" "integer pixelsamples" [ 16 ]
 Integrator "volpath" "integer maxdepth" [ 5 ]
 Accelerator "bvh"
 

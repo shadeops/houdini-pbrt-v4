@@ -366,8 +366,8 @@ def wrangle_sampler(obj, wrangler, now):
     parm_selection = {
         "sampler": SohoPBRT("sampler", "string", ["pmj02bn"], False),
         "pixelsamples": SohoPBRT("pixelsamples", "integer", [16], False),
-        "randomization": SohoPBRT("randomization", "string", ["fastowen"], False),
-        "jitter": SohoPBRT("jitter", "bool", [1], False),
+        "randomization": SohoPBRT("randomization", "string", ["fastowen"], True),
+        "jitter": SohoPBRT("jitter", "bool", [1], True),
         "samples": SohoPBRT("samples", "integer", [4, 4], False),
     }
     parms = obj.evaluate(parm_selection, now)
@@ -380,9 +380,11 @@ def wrangle_sampler(obj, wrangler, now):
         ysamples = parms["samples"].Value[1]
         paramset.add(PBRTParam("integer", "xsamples", xsamples))
         paramset.add(PBRTParam("integer", "ysamples", ysamples))
-        paramset.add(parms["jitter"].to_pbrt())
+        if "jitter" in parms:
+            paramset.add(parms["jitter"].to_pbrt())
     else:
-        if sampler_name in ("sobol", "paddedsobol", "zsobol", "halton"):
+        if ( sampler_name in ("sobol", "paddedsobol", "zsobol", "halton") and
+            "randomization" in parms ):
             # NOTE: If the halton sampler is picked, it is not compatible with the
             # randomization "fastowen".
             paramset.add(parms["randomization"].to_pbrt())

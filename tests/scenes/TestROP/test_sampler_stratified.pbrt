@@ -1,7 +1,7 @@
 
 Film "rgb" "integer xresolution" [ 320 ] "integer yresolution" [ 240 ] "string filename" [ "test_sampler_stratified.exr" ]
 PixelFilter "gaussian" "float yradius" [ 2 ] "float xradius" [ 2 ]
-Sampler "stratified" "integer ysamples" [ 4 ] "bool jitter" [ true ] "integer xsamples" [ 4 ]
+Sampler "stratified" "integer ysamples" [ 4 ] "integer xsamples" [ 4 ]
 Integrator "volpath" "integer maxdepth" [ 5 ]
 Accelerator "bvh"
 

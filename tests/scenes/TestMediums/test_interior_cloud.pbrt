@@ -1,7 +1,7 @@
 
 Film "rgb" "integer xresolution" [ 320 ] "integer yresolution" [ 240 ] "string filename" [ "test_interior_cloud.exr" ]
 PixelFilter "gaussian" "float yradius" [ 2 ] "float xradius" [ 2 ]
-Sampler "pmj02bn" "integer pixelsamples" [ 16 ]
+Sampler "zsobol" "integer pixelsamples" [ 16 ]
 Integrator "volpath" "integer maxdepth" [ 5 ]
 Accelerator "bvh"
 
@@ -18,7 +18,6 @@ WorldBegin	# {
 	Translate 0 10 0
 	AreaLightSource "diffuse" "bool twosided" [ true ] "float scale" [ 10 ]
 	AttributeBegin	# {
-	    Material "none"
 	    Shape "sphere" "float radius" [ 1 ]
 	AttributeEnd	# }
     AttributeEnd	# }
@@ -26,7 +25,7 @@ WorldBegin	# {
 
     #  ==================================================
     #  NamedMaterial Definitions
-    MakeNamedMaterial "/mat/pbrt_material_none1" "string type" "none"
+    MakeNamedMaterial "/mat/pbrt_material_interface1" "string type" "interface"
 
 
     #  ==================================================
@@ -42,7 +41,7 @@ WorldBegin	# {
     #  /obj/geo1
     AttributeBegin	# {
 	ConcatTransform [ 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 ]
-	NamedMaterial "/mat/pbrt_material_none1"
+	NamedMaterial "/mat/pbrt_material_interface1"
 	MediumInterface "/mat/pbrt_medium_cloud1" ""
 	AttributeBegin	# {
 	    ReverseOrientation

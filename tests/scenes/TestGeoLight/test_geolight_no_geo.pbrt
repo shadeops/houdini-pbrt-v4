@@ -1,7 +1,7 @@
 
 Film "rgb" "integer xresolution" [ 320 ] "integer yresolution" [ 240 ] "string filename" [ "test_geolight_no_geo.exr" ]
 PixelFilter "gaussian" "float yradius" [ 2 ] "float xradius" [ 2 ]
-Sampler "pmj02bn" "integer pixelsamples" [ 16 ]
+Sampler "zsobol" "integer pixelsamples" [ 16 ]
 Integrator "volpath" "integer maxdepth" [ 5 ]
 Accelerator "bvh"
 
@@ -20,7 +20,6 @@ WorldBegin	# {
 	AreaLightSource "diffuse" "bool twosided" [ true ] "float scale" [ 5 ]
 	AttributeBegin	# {
 	    Scale 1 1 1
-	    Material "none"
 	    #  Skipping, no geometry object specified
 	AttributeEnd	# }
 

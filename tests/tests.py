@@ -650,7 +650,7 @@ class TestMediums(TestRoot):
         self.cam = build_cam()
         self.lgt = build_spherelight()
         self.geo.createNode("sphere")
-        self.none = hou.node("/mat").createNode("pbrt_material_none")
+        self.none = hou.node("/mat").createNode("pbrt_material_interface")
 
         exr = "%s.exr" % self.name
         self.rop = build_rop(filename=exr, diskfile=self.testfile)
@@ -846,28 +846,6 @@ class TestMaterials(TestRoot):
         checks.parm("texture_space").set(space.path())
         matte.setNamedInput("reflectance", checks, "output")
         self.geo.parm("shop_materialpath").set(matte.path())
-        self.compare_scene()
-
-    def test_signature_float_material(self):
-        dielectric = hou.node("/mat").createNode("pbrt_material_dieletric")
-        dielectric.parm("eta").set(1.3)
-        self.geo.parm("shop_materialpath").set(dielectric.path())
-        self.compare_scene()
-
-    def test_signature_spectrum_material(self):
-        dielectric = hou.node("/mat").createNode("pbrt_material_dieletric")
-        dielectric.parm("signature").set("s")
-        dielectric.parmTuple("eta_s").set([1.25, 1.5, 1.75])
-        self.geo.parm("shop_materialpath").set(dielectric.path())
-        self.compare_scene()
-
-    def test_signature_spectrum_texture_material(self):
-        dielectric = hou.node("/mat").createNode("pbrt_material_dieletric")
-        dielectric.parm("signature").set("s")
-        checks = hou.node("/mat").createNode("pbrt_texture_checkerboard")
-        checks.parm("signature").set("s")
-        dielectric.setNamedInput("eta", checks, "output")
-        self.geo.parm("shop_materialpath").set(dielectric.path())
         self.compare_scene()
 
 
