@@ -1,0 +1,41 @@
+# Dialog script for pbrt_integrator_function automatically generated
+
+{
+    name	pbrt_integrator_function
+    script	function
+    label	"PBRT FunctionIntegrator"
+
+    rendermask	PBRT
+    externalshader 1
+    shadertype	generic
+    signature	"Default Inputs"	default	{ }
+
+    outputoverrides	default
+    {
+    }
+
+    help {
+    }
+
+    parm {
+        name    "function"
+        label   "Function"
+        type    string
+        default { "step" }
+        menu {
+            "step" "Step"
+            "diagonal" "Diagonal"
+            "disk" "Disk"
+            "checkerboard" "Checkerboard"
+            "rotatedcheckerboard" "Rotated Checkerboard"
+            "gaussian" "Gaussian"
+        }
+    }
+    parm {
+        name    "filename"
+        label   "Filename"
+        type    file
+        default { "" }
+        parmtag { "filechooser_mode" "write" }
+    }
+}

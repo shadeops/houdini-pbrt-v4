@@ -334,6 +334,20 @@ Python:       false
 Empty:        false
 Modified:     Tue May 15 02:01:04 2018
 
+Operator:     pbrt_integrator_function
+Label:        PBRT FunctionIntegrator
+Path:         oplib:/Vop/pbrt_integrator_function?Vop/pbrt_integrator_function
+Icon:         opdef:/Vop/pbrt_integrator_function?IconImage
+Table:        Vop
+License:      
+Extra:        
+User:         {"dtype": "function", "directive": "integrator"}
+Inputs:       0 to 0
+Subnet:       false
+Python:       false
+Empty:        false
+Modified:     Tue May 15 02:01:04 2018
+
 Operator:     pbrt_integrator_simplevolpath
 Label:        PBRT SimpleVolPathIntegrator
 Path:         oplib:/Vop/pbrt_integrator_simplevolpath?Vop/pbrt_integrator_simplevolpath
