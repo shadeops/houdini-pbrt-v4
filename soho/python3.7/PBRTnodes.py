@@ -234,6 +234,9 @@ def get_pbrttype_from_nodetype(node_type):
         # PBRT nodes will always have a definition since they are HDAs.
         return None
 
+    dtype = None
+    directive = None
+
     user_data_str = node_definition.userInfo()
     if user_data_str:
         try:

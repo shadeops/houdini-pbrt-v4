@@ -383,8 +383,10 @@ def wrangle_sampler(obj, wrangler, now):
         if "jitter" in parms:
             paramset.add(parms["jitter"].to_pbrt())
     else:
-        if ( sampler_name in ("sobol", "paddedsobol", "zsobol", "halton") and
-            "randomization" in parms ):
+        if (
+            sampler_name in ("sobol", "paddedsobol", "zsobol", "halton")
+            and "randomization" in parms
+        ):
             # NOTE: If the halton sampler is picked, it is not compatible with the
             # randomization "fastowen".
             paramset.add(parms["randomization"].to_pbrt())
