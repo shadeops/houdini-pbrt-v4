@@ -41,6 +41,16 @@
         range   { 1! 4096 }
     }
     parm {
+        name    "coordinatesystem"
+        label   "Coordinate System"
+        type    string
+        default { "camera" }
+        menu {
+            "camera" "Camera"
+            "world" "World"
+        }
+    }
+    parm {
         name    "cropwindow"
         label   "Crop Window"
         type    float
