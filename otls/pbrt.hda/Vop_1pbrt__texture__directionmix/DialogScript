@@ -1,0 +1,81 @@
+# Dialog script for pbrt_texture_directionmix automatically generated
+
+{
+    name	pbrt_texture_directionmix
+    script	directionmix
+    label	"PBRT MixTexture"
+
+    rendermask	PBRT
+    externalshader 1
+    shadertype	generic
+    input	float	tex1	"Texture 1"
+    input	float	tex2	"Texture 2"
+    output	float	output	Output
+    inputflags	tex1	0
+    inputflags	tex2	0
+    signature	Float	default	{ float float float }
+    signature	Spectrum	s	{ struct_PBRTSpectrum struct_PBRTSpectrum struct_PBRTSpectrum }
+
+    outputoverrides	default
+    {
+	___begin	auto
+			(0)
+    }
+    outputoverrides	s
+    {
+	___begin	auto
+			(0)
+    }
+
+    help {
+    }
+
+    parm {
+        name    "signature"
+        baseparm
+        label   "Signature"
+        export  none
+    }
+    parm {
+        name    "tex1"
+        label   "Texture 1"
+        type    float
+        default { "0" }
+        help    "One of the two textures to be mixed. "
+        range   { 0 1 }
+    }
+    parm {
+        name    "tex1_s"
+        label   "Texture 1"
+        type    color
+        size    3
+        default { "0" "0" "0" }
+        help    "One of the two textures to be mixed. "
+        range   { 0 1 }
+    }
+    parm {
+        name    "tex2"
+        label   "Texture 2"
+        type    float
+        default { "1" }
+        help    "The other texture to be mixed. These two textures must be of the same type. "
+        range   { 0 1 }
+    }
+    parm {
+        name    "tex2_s"
+        label   "Texture 2"
+        type    color
+        size    3
+        default { "1" "1" "1" }
+        help    "The other texture to be mixed. These two textures must be of the same type. "
+        range   { 0 1 }
+    }
+    parm {
+        name    "dir"
+        label   "Direction"
+        type    vector
+		size	3
+        default { "0" "1" "0" }
+        help    "Texture Space Direction"
+    }
+}

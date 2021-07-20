@@ -670,6 +670,20 @@ Python:       false
 Empty:        false
 Modified:     Tue May 15 02:01:06 2018
 
+Operator:     pbrt_texture_directionmix
+Label:        PBRT DirectionMixTexture
+Path:         oplib:/Vop/pbrt_texture_directionmix?Vop/pbrt_texture_directionmix
+Icon:         opdef:/Vop/pbrt_texture_directionmix?IconImage
+Table:        Vop
+License:      
+Extra:        
+User:         {"dtype": "directionmix", "directive": "texture"}
+Inputs:       0 to 3
+Subnet:       false
+Python:       false
+Empty:        false
+Modified:     Tue May 15 02:01:06 2018
+
 Operator:     pbrt_texture_bilerp
 Label:        PBRT BilerpTexture
 Path:         oplib:/Vop/pbrt_texture_bilerp?Vop/pbrt_texture_bilerp
