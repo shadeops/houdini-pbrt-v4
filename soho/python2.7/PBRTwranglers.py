@@ -676,10 +676,9 @@ def wrangle_light(light, wrangler, now):
         elif "light_color" in parms:
             paramset.add(PBRTParam("rgb", "L", parms["light_color"].Value))
 
-        # Portal lights are only supported when supplying an env_map
         portal = light.wrangleString(wrangler, "env_portal", now, [""])[0]
         portal_enabled = light.wrangleInt(wrangler, "env_portalenable", now, [0])[0]
-        if env_map and portal_enabled and portal:
+        if portal_enabled and portal:
             portal_pts = _portal_helper(now, portal)
             if portal_pts is not None:
                 # TODO pbrt-v4 we may need to invert the Houdini -> PBRT xform

@@ -56,7 +56,6 @@
         parmtag { "opfilter" "!!SOP!!" }
 		parmtag { "pbrt.type" "point" }
 		parmtag { "pbrt.callback" "portal_points" }
-		disablewhen "{ filename == \"\" } { hasinput(0) == 1 }"
 	}
     parm {
         name    "filename"
