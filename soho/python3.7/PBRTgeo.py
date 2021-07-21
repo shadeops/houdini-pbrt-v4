@@ -14,6 +14,28 @@ from PBRTshading import wrangle_shading_network
 from PBRTstate import scene_state, temporary_file, HVER_17_5, HVER_18
 
 
+def create_suffix(oppath='', shape_num=None, override_num=None, prim_num=None, instance_info=None):
+
+    # Material / Texture Namespacing
+    # mat_node_path:soppath=shape_num+override_num[prim_num]:instance_src:instance_num
+
+    if instance_info is not None:
+        instance = ":{}:{}".format(instance_info.source, instance_info.number)
+    else:
+        instance = ""
+
+    shape = "={}".format(shape_num) if shape_num is not None else ""
+    override = "+{}".format(override_num) if override_num is not None else ""
+    prim = "[{}]".format(prim_num) if prim_num is not None else ""
+
+    return "{oppath}{shape}{override}{prim}{instance}".format(
+                oppath=oppath,
+                shape=shape,
+                override=override,
+                prim=prim,
+                instance=instance,
+                )
+
 def primitive_alpha_texs(properties):
     paramset = ParamSet()
     if not properties:
@@ -216,11 +238,13 @@ def ply_displacement_wrangler(prim, properties):
     if not hou.node(disp_tex):
         return paramset
 
-    suffix = ":%s[%i]" % (properties["object:soppath"].Value[0], prim.number())
-
     instance_info = properties.get(".instance_info")
-    if instance_info is not None:
-        suffix = "%s:%s[%i]" % (suffix, instance_info.source, instance_info.number)
+
+    suffix = create_suffix(properties["object:soppath"].Value[0],
+                           properties[".shape_count"],
+                           properties[".override_count"],
+                           prim.number(),
+                           instance_info)
 
     # TODO: We might need to cache parms and nodes if there are a lot of plys
     wrangle_shading_network(
@@ -1830,10 +1854,6 @@ def output_geo(soppath, now, properties=None):
     del prim_material_h
 
     instance_info = properties.get(".instance_info")
-    if instance_info is not None:
-        instance_suffix = ":%s:%i" % (instance_info.source, instance_info.number)
-    else:
-        instance_suffix = ""
 
     for material, material_gdp in material_gdps.items():
 
@@ -1850,6 +1870,7 @@ def output_geo(soppath, now, properties=None):
         material_gdp.clear()
         del material_gdp
 
+        shape_count = 0
         for shape, shape_gdp in shape_gdps.items():
 
             # Aggregate overrides, instead of per prim
@@ -1871,7 +1892,7 @@ def output_geo(soppath, now, properties=None):
                 base_paramset |= primitive_alpha_texs(properties)
 
                 if override_str:
-                    suffix = ":{}-{}{}".format(soppath, override_count, instance_suffix)
+                    suffix = create_suffix(soppath, shape_count, override_count, instance_info=instance_info)
                     api.AttributeBegin()
                     override_count += 1
                     overrides = eval(override_str, {}, {})
@@ -1895,12 +1916,17 @@ def output_geo(soppath, now, properties=None):
                 # At this point we will NOT have varying types or materials within the
                 # shape_wrangler.
 
+                properties[".shape_count"] = shape_count
+                properties[".override_count"] = override_count
+
                 shape_wrangler = shape_wranglers.get(shape, not_supported)
                 if shape_wrangler:
                     shape_wrangler(override_gdp, base_paramset, properties)
                 override_gdp.clear()
                 if override_str:
                     api.AttributeEnd()
+
+            shape_count += 1
 
         if material_node is not None:
             api.AttributeEnd()
