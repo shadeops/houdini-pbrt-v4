@@ -147,7 +147,7 @@ def wrangle_fast_instances(obj, now):
             continue
 
         with api.AttributeBlock():
-            api.Comment("%s:[%i]" % (sop, pt))
+            api.Comment("%s:%i" % (sop, pt))
             xform = geo.value(pt_attrib_map["geo:pointxform"], pt)
             api.ConcatTransform(xform)
             api.ObjectInstance(instance_geo)

@@ -159,7 +159,7 @@ def process_full_pt_instance_medium(instance_info, medium_type):
     if medium == "":
         return medium, ParamSet()
 
-    suffix = ":%s[%i]" % (instance_info.source, instance_info.number)
+    suffix = ":%s:%i" % (instance_info.source, instance_info.number)
     medium_node = BaseNode.from_node(medium)
     medium_node.path_suffix = suffix
 
@@ -236,7 +236,7 @@ def process_full_pt_instance_material(instance_info):
 
     # override and shop should exist beyond this point
     # Fully expand shading network since there will be uniqueness
-    suffix = ":%s[%i]" % (instance_info.source, instance_info.number)
+    suffix = ":%s:%i" % (instance_info.source, instance_info.number)
     # NOTE: If this becomes a bottleneck we could potentially cache nodes and params
     # similar to what we do in the PBRTgeo
     wrangle_shading_network(
@@ -975,22 +975,24 @@ def wrangle_geo(obj, wrangler, now):
         exterior = "" if exterior is None else exterior
         api.MediumInterface(interior, exterior)
 
-    for prop in ("alpha",):
-        alpha_tex = properties[prop].Value[0]
-        alpha_node = BaseNode.from_node(alpha_tex)
-        if (
-            alpha_node
-            and alpha_node.directive == "texture"
-            and alpha_node.output_type == "float"
-        ):
-            if alpha_node.path not in scene_state.shading_nodes:
-                wrangle_shading_network(alpha_node.path, exported_nodes=set())
-        else:
-            # If the passed in alpha_texture wasn't valid, clear it so we don't add
-            # it to the geometry
-            if alpha_tex:
-                api.Comment("%s is an invalid float texture" % alpha_tex)
-            properties[prop].Value[0] = ""
+    alpha_tex = properties["alpha"].Value[0]
+    alpha_node = BaseNode.from_node(alpha_tex)
+    if (
+        alpha_node
+        and alpha_node.directive == "texture"
+        and alpha_node.output_type == "float"
+    ):
+        if alpha_node.path not in scene_state.shading_nodes:
+            suffix = ":%s" % obj.getName()
+            alpha_tex = "%s%s" % (alpha_tex, suffix)
+            properties["alpha"].Value[0] = alpha_tex
+            wrangle_shading_network(alpha_node.path, name_suffix=suffix, exported_nodes=set())
+    else:
+        # If the passed in alpha_texture wasn't valid, clear it so we don't add
+        # it to the geometry
+        if alpha_tex:
+            api.Comment("%s is an invalid float texture" % alpha_tex)
+        properties["alpha"].Value[0] = ""
 
     if properties["pbrt_import"].Value[0]:
         # If we have included a file, skip output any geo.

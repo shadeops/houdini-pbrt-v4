@@ -15,16 +15,15 @@ from PBRTstate import scene_state, temporary_file, HVER_17_5, HVER_18
 
 
 def primitive_alpha_texs(properties):
-    if not properties:
-        return
     paramset = ParamSet()
-    for prop in ("alpha",):
-        if prop not in properties:
-            continue
-        tex = properties[prop].Value[0]
-        if not tex:
-            continue
-        paramset.add(PBRTParam("texture", prop, tex))
+    if not properties:
+        return paramset
+    if "alpha" not in properties:
+        return paramset
+    tex = properties["alpha"].Value[0]
+    if not tex:
+        return paramset
+    paramset.add(PBRTParam("texture", "alpha", tex))
     return paramset
 
 
@@ -918,7 +917,7 @@ def vdb_wrangler(gdp, paramset=None, properties=None):
         medium_suffix = ""
         instance_info = properties.get(".instance_info")
         if instance_info is not None:
-            medium_suffix = ":%s[%i]" % (instance_info.source, instance_info.number)
+            medium_suffix = ":%s:%i" % (instance_info.source, instance_info.number)
 
         medium_name = "{}-{}{}".format(sop_path, save_locations.part, medium_suffix)
 
@@ -1345,7 +1344,7 @@ def smoke_prim_wrangler(grids, paramset=None, properties=None):
     medium_suffix = ""
     instance_info = properties.get(".instance_info")
     if instance_info is not None:
-        medium_suffix = ":%s[%i]" % (instance_info.source, instance_info.number)
+        medium_suffix = ":%s:%i" % (instance_info.source, instance_info.number)
 
     exterior = None
     if "pbrt_exterior" in properties:
@@ -1830,6 +1829,12 @@ def output_geo(soppath, now, properties=None):
     del prim_override_h
     del prim_material_h
 
+    instance_info = properties.get(".instance_info")
+    if instance_info is not None:
+        instance_suffix = ":%s:%i" % (instance_info.source, instance_info.number)
+    else:
+        instance_suffix = ""
+
     for material, material_gdp in material_gdps.items():
 
         if material not in scene_state.shading_nodes:
@@ -1841,7 +1846,7 @@ def output_geo(soppath, now, properties=None):
             api.NamedMaterial(material)
             material_node = MaterialNode(material)
 
-        shape_gdps = partition_by_attrib(material_gdp, "typename", intrinsic=True)
+        shape_gdps = partition_by_intrinsic(material_gdp, "typename")
         material_gdp.clear()
         del material_gdp
 
@@ -1866,7 +1871,7 @@ def output_geo(soppath, now, properties=None):
                 base_paramset |= primitive_alpha_texs(properties)
 
                 if override_str:
-                    suffix = ":{}-{}".format(soppath, override_count)
+                    suffix = ":{}-{}{}".format(soppath, override_count, instance_suffix)
                     api.AttributeBegin()
                     override_count += 1
                     overrides = eval(override_str, {}, {})
