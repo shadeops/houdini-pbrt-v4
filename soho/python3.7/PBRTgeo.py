@@ -207,6 +207,38 @@ def disk_wrangler(gdp, paramset=None, properties=None):
             api.Shape("disk", shape_paramset)
     return
 
+def ply_displacement_wrangler(prim, properties):
+
+    paramset = ParamSet()
+
+    disp_tex = prim.attribValue("displacement")
+    if not disp_tex:
+        return paramset
+    if not hou.node(disp_tex):
+        return paramset
+
+    suffix = ":%s[%i]" % (properties["object:soppath"].Value[0], prim.number())
+
+    instance_info = properties.get(".instance_info")
+    if instance_info is not None:
+        suffix = "%s:%s[%i]" % (suffix, instance_info.source, instance_info.number)
+
+    # TODO: We might need to cache parms and nodes if there are a lot of plys
+    wrangle_shading_network(
+        disp_tex,
+        use_named=False,
+        exported_nodes=set(),
+        name_suffix=suffix,
+    )
+    texture_name = "%s%s" % (disp_tex, suffix)
+    paramset.add(PBRTParam("texture", "displacement", texture_name))
+    edgelen_attrib = prim.geometry().findPrimAttrib("displacement_edgelength")
+    if edgelen_attrib is not None:
+        edgelen_val = prim.attribValue(edgelen_attrib)
+        paramset.add(PBRTParam("float", "displacement.edgelength", edgelen_val))
+
+    return paramset
+
 
 def packeddisk_wrangler(gdp, paramset=None, properties=None):
     """Outputs "ply" Shapes for the input geometry
@@ -217,6 +249,9 @@ def packeddisk_wrangler(gdp, paramset=None, properties=None):
         properties (dict): Dictionary of SohoParms (Optional)
     Returns: None
     """
+
+    disp_tex_attrib = gdp.findPrimAttrib("displacement")
+
     for prim in gdp.prims():
         shape_paramset = ParamSet(paramset)
         filename = prim.intrinsicValue("filename")
@@ -228,6 +263,9 @@ def packeddisk_wrangler(gdp, paramset=None, properties=None):
         with api.AttributeBlock():
             xform = prim_transform(prim)
             api.ConcatTransform(xform)
+            if disp_tex_attrib is not None:
+                disp_paramset = ply_displacement_wrangler(prim, properties)
+                shape_paramset |= disp_paramset
             api.Shape("plymesh", shape_paramset)
     return
 
