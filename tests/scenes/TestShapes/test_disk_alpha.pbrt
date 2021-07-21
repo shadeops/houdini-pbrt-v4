@@ -38,10 +38,10 @@ WorldBegin	# {
     #  /obj/test_disk_alpha
     AttributeBegin	# {
 	ConcatTransform [ 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 ]
-	Texture "/mat/pbrt_texture_dots1" "float" "dots" "float uscale" [ 10 ] "float vscale" [ 10 ]
+	Texture "/mat/pbrt_texture_dots1:/obj/test_disk_alpha" "float" "dots" "float uscale" [ 10 ] "float vscale" [ 10 ]
 	AttributeBegin	# {
 	    ConcatTransform [ 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 ]
-	    Shape "disk" "texture alpha" [ "/mat/pbrt_texture_dots1" ]
+	    Shape "disk" "texture alpha" [ "/mat/pbrt_texture_dots1:/obj/test_disk_alpha" ]
 	AttributeEnd	# }
     AttributeEnd	# }
 

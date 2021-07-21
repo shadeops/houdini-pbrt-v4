@@ -57,7 +57,7 @@ WorldBegin	# {
     AttributeBegin	# {
 	ConcatTransform [ 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 ]
 	AttributeBegin	# {
-	    #  /obj/instance1/add1:[0]
+	    #  /obj/instance1/add1:0
 	    ConcatTransform [ 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 ]
 	    ObjectInstance "/obj/geo1"
 	AttributeEnd	# }

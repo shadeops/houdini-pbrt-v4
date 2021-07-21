@@ -38,13 +38,13 @@ WorldBegin	# {
     #  /obj/test_sphere_alpha
     AttributeBegin	# {
 	ConcatTransform [ 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 ]
-	Texture "/mat/pbrt_texture_dots1" "float" "dots" "float uscale" [ 10 ] "float vscale" [ 10 ]
+	Texture "/mat/pbrt_texture_dots1:/obj/test_sphere_alpha" "float" "dots" "float uscale" [ 10 ] "float vscale" [ 10 ]
 	AttributeBegin	# {
 	    ReverseOrientation
 	    AttributeBegin	# {
 		ConcatTransform [ 1 0 0 0 0 0 -1 0 0 1 0 0 0 0 0 1 ]
 		Scale 1 1 -1
-		Shape "sphere" "texture alpha" [ "/mat/pbrt_texture_dots1" ]
+		Shape "sphere" "texture alpha" [ "/mat/pbrt_texture_dots1:/obj/test_sphere_alpha" ]
 	    AttributeEnd	# }
 	AttributeEnd	# }
     AttributeEnd	# }
