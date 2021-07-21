@@ -19,7 +19,7 @@ WorldBegin	# {
 	Rotate -90 1 0 0
 	AreaLightSource "diffuse" "bool twosided" [ true ] "float scale" [ 5 ] "rgb L" [ 0.5 0.75 1 ]
 	AttributeBegin	# {
-	    Shape "sphere" "float radius" [ 0.5 ]
+	    Shape "sphere" "float alpha" [ 0 ] "float radius" [ 0.5 ]
 	AttributeEnd	# }
     AttributeEnd	# }
 

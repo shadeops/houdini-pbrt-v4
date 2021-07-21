@@ -702,6 +702,7 @@ def wrangle_light(light, wrangler, now):
 
         single_sided = light.wrangleInt(wrangler, "singlesided", now, [0])[0]
         reverse = light.wrangleInt(wrangler, "reverse", now, [0])[0]
+        visible = light.wrangleInt(wrangler, "light_contribprimary", now, [0])[0]
         size = light.wrangleFloat(wrangler, "areasize", now, [1, 1])
         paramset.add(PBRTParam("bool", "twosided", [not single_sided]))
 
@@ -723,6 +724,10 @@ def wrangle_light(light, wrangler, now):
         if single_sided and reverse:
             api.ReverseOrientation()
 
+        shape_paramset = ParamSet()
+        if not visible:
+            shape_paramset.add(PBRTParam("float", "alpha", 0.0))
+
         # PBRT only supports uniform scales for non-mesh area lights
         # this is in part due to explicit light's area scaling factor.
         if light_type in ("grid", "geo"):
@@ -737,37 +742,31 @@ def wrangle_light(light, wrangler, now):
             # api.ReverseOrientation() does not fix this.
 
             # We apply the scale to the radius instead of using a api.Scale
-            api.Shape("sphere", [PBRTParam("float", "radius", 0.5 * size[0])])
+            shape_paramset.add(PBRTParam("float", "radius", 0.5 * size[0]))
+            api.Shape("sphere", shape_paramset)
         elif light_type == "tube":
             api.Rotate(90, 0, 1, 0)
             api.Rotate(90, 0, 0, 1)
             # NOTE:
             # To match UVs we need a api.Scale(1, 1, -1)
             # see note above about spheres.
-            api.Shape(
-                "cylinder",
-                [
-                    PBRTParam("float", "radius", 0.075 * size[1]),
-                    PBRTParam("float", "zmin", -0.5 * size[0]),
-                    PBRTParam("float", "zmax", 0.5 * size[0]),
-                ],
-            )
+            shape_paramset.add(PBRTParam("float", "radius", 0.075 * size[1]))
+            shape_paramset.add(PBRTParam("float", "zmin", -0.5 * size[0]))
+            shape_paramset.add(PBRTParam("float", "zmax", 0.5 * size[0]))
+            api.Shape("cylinder", shape_paramset)
         elif light_type == "disk":
             # NOTE this should match mantra now, unlike in pbrt-v3
             api.Scale(-1, 1, -1)
-            api.Shape("disk", [PBRTParam("float", "radius", 0.5 * size[0])])
+            shape_paramset.add(PBRTParam("float", "radius", 0.5 * size[0]))
+            api.Shape("disk", shape_paramset)
         elif light_type == "grid":
             api.ReverseOrientation()
-            api.Shape(
-                "bilinearmesh",
-                [
-                    PBRTParam(
+            shape_paramset.add(PBRTParam(
                         "point",
                         "P",
                         [-0.5, -0.5, 0, 0.5, -0.5, 0, -0.5, 0.5, 0, 0.5, 0.5, 0],
-                    )
-                ],
-            )
+                    ))
+            api.Shape("bilinearmesh", shape_paramset)
         elif light_type == "geo":
             areageo_parm = hou.node(light.getName()).parm("areageometry")
             if not areageo_parm:
@@ -781,6 +780,10 @@ def wrangle_light(light, wrangler, now):
             api.Comment("Light geo from %s" % obj.getName())
             # TODO: The area light scale ('areasize') happens *after* the wrangle_obj's
             #       xform when 'intothisobject' is enabled.
+
+            # TODO: the Light visiblity paramset ("alpha") can't be easily passed
+            #       with this current interface. It can be worked aroudn by setting
+            #       the referenced object's "alpha" property
             into_this_obj = light.wrangleInt(wrangler, "intothisobject", now, [0])[0]
             ignore_xform = not into_this_obj
             wrangle_obj(obj, None, now, ignore_xform=ignore_xform)

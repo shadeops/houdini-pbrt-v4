@@ -18,7 +18,7 @@ WorldBegin	# {
 	Translate 0 10 0
 	AreaLightSource "diffuse" "bool twosided" [ true ] "float scale" [ 10 ]
 	AttributeBegin	# {
-	    Shape "sphere" "float radius" [ 1 ]
+	    Shape "sphere" "float alpha" [ 0 ] "float radius" [ 1 ]
 	AttributeEnd	# }
     AttributeEnd	# }
 

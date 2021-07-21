@@ -21,7 +21,7 @@ WorldBegin	# {
 	AttributeBegin	# {
 	    Rotate 90 0 1 0
 	    Rotate 90 0 0 1
-	    Shape "cylinder" "float radius" [ 0.075 ] "float zmin" [ -0.5 ] "float zmax" [ 0.5 ]
+	    Shape "cylinder" "float zmax" [ 0.5 ] "float zmin" [ -0.5 ] "float alpha" [ 0 ] "float radius" [ 0.075 ]
 	AttributeEnd	# }
     AttributeEnd	# }
 

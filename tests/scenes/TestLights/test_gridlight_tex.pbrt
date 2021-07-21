@@ -21,7 +21,7 @@ WorldBegin	# {
 	AttributeBegin	# {
 	    Scale 1 1 1
 	    ReverseOrientation
-	    Shape "bilinearmesh" "point3 P" [ -0.5 -0.5 0 0.5 -0.5 0 -0.5 0.5 0 0.5 0.5 0 ]
+	    Shape "bilinearmesh" "float alpha" [ 0 ] "point3 P" [ -0.5 -0.5 0 0.5 -0.5 0 -0.5 0.5 0 0.5 0.5 0 ]
 	AttributeEnd	# }
     AttributeEnd	# }
 
