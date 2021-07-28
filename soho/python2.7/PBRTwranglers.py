@@ -761,11 +761,13 @@ def wrangle_light(light, wrangler, now):
             api.Shape("disk", shape_paramset)
         elif light_type == "grid":
             api.ReverseOrientation()
-            shape_paramset.add(PBRTParam(
-                        "point",
-                        "P",
-                        [-0.5, -0.5, 0, 0.5, -0.5, 0, -0.5, 0.5, 0, 0.5, 0.5, 0],
-                    ))
+            shape_paramset.add(
+                PBRTParam(
+                    "point",
+                    "P",
+                    [-0.5, -0.5, 0, 0.5, -0.5, 0, -0.5, 0.5, 0, 0.5, 0.5, 0],
+                )
+            )
             api.Shape("bilinearmesh", shape_paramset)
         elif light_type == "geo":
             areageo_parm = hou.node(light.getName()).parm("areageometry")
@@ -991,7 +993,9 @@ def wrangle_geo(obj, wrangler, now):
             suffix = ":%s" % obj.getName()
             alpha_tex = "%s%s" % (alpha_tex, suffix)
             properties["alpha"].Value[0] = alpha_tex
-            wrangle_shading_network(alpha_node.path, name_suffix=suffix, exported_nodes=set())
+            wrangle_shading_network(
+                alpha_node.path, name_suffix=suffix, exported_nodes=set()
+            )
     else:
         # If the passed in alpha_texture wasn't valid, clear it so we don't add
         # it to the geometry

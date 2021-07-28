@@ -122,17 +122,16 @@ def build_volume(geo, name="", res=8, rgb=False, density_ramp=True):
 
     wrangler = geo.createNode("volumewrangle")
     wrangler.setFirstInput(volume)
-    wrangle_field = name if name else "density"
     if rgb:
+        wrangle_field = name if name else "density"
         wrangler.parm("snippet").set(
             "vector res = set(i@resx, i@resy, i@resz);\n"
             "vector i = set(i@ix, i@iy, i@iz);\n"
             "v@{} = fit(i,0,res,0,1);".format(wrangle_field)
         )
     else:
-        wrangler.parm("snippet").set(
-            "@{} = fit(i@ix,0,i@resx,0,1);".format(wrangle_field)
-        )
+        wrangler.parm("bindeach").set(True)
+        wrangler.parm("snippet").set("@density = fit(i@ix,0,i@resx,0,1);")
 
     return wrangler
 
@@ -250,6 +249,74 @@ class TestParamBase(unittest.TestCase):
         gen = (x for x in [400, 1, 500, 1, 600, 1])
         param = self.PBRTParam("spectrum", "my_name", gen)
         self.assertEqual(str(param), "spectrum my_name [ ... ]")
+
+
+class TestParamSet(unittest.TestCase):
+
+    # In order to import the Soho related PBRT modules we need to
+    # invoke a render first. While hacky this avoids having to setup
+    # custom python path.
+    @classmethod
+    def setUpClass(cls):
+        cls.cam = build_cam()
+        cls.rop = build_rop()
+        cls.rop.parm("filename").set("/dev/null")
+
+    @classmethod
+    def tearDownClass(cls):
+        hou.hipFile.clear(suppress_save_prompt=True)
+        if CLEANUP_FILES:
+            shutil.rmtree("tests/tmp")
+
+    def setUp(self):
+        self.rop.render()
+        from PBRTnodes import PBRTParam
+        from PBRTnodes import ParamSet
+
+        self.PBRTParam = PBRTParam
+        self.ParamSet = ParamSet
+
+    def test_find_param(self):
+        paramset = self.ParamSet()
+        paramset.add(self.PBRTParam("float", "my_float", 1.0))
+        self.assertEqual(paramset.find_param("float", "my_float").value, [1.0])
+
+    def test_add(self):
+        paramset = self.ParamSet()
+        paramset.add(self.PBRTParam("float", "my_float", 1.0))
+        paramset.add(self.PBRTParam("float", "my_float", 2.0))
+        self.assertEqual(paramset.find_param("float", "my_float").value, [1.0])
+
+    def test_replace(self):
+        paramset = self.ParamSet()
+        paramset.add(self.PBRTParam("float", "my_float", 1.0))
+        paramset.replace(self.PBRTParam("float", "my_float", 2.0))
+        self.assertEqual(paramset.find_param("float", "my_float").value, [2.0])
+
+    def test_merge(self):
+        paramset_a = self.ParamSet()
+        paramset_a.add(self.PBRTParam("float", "my_float", 1.0))
+        paramset_b = self.ParamSet()
+        paramset_b.add(self.PBRTParam("float", "my_float", 2.0))
+        paramset_a |= paramset_b
+        self.assertEqual(paramset_a.find_param("float", "my_float").value, [1.0])
+
+    def test_update(self):
+        paramset_a = self.ParamSet()
+        paramset_a.add(self.PBRTParam("float", "my_float", 1.0))
+        paramset_b = self.ParamSet()
+        paramset_b.add(self.PBRTParam("float", "my_float", 2.0))
+        paramset_a.update(paramset_b)
+        self.assertEqual(paramset_a.find_param("float", "my_float").value, [2.0])
+
+    def test_intersection(self):
+        paramset_a = self.ParamSet()
+        paramset_a.add(self.PBRTParam("float", "my_float", 1.0))
+        paramset_b = self.ParamSet()
+        paramset_b.add(self.PBRTParam("float", "my_float", 2.0))
+        paramset_c = paramset_a & paramset_b
+        self.assertEqual(len(paramset_c), 1)
+        self.assertEqual(paramset_c.find_param("float", "my_float").value, [2.0])
 
 
 class TestRoot(unittest.TestCase):
@@ -1534,6 +1601,20 @@ class TestShapes(TestRoot):
         volume.setRenderFlag(True)
         self.compare_scene()
 
+    def test_volume_rgb_name(self):
+        volume = build_volume(self.geo, rgb=True, name="density")
+        volume.setRenderFlag(True)
+        self.compare_scene()
+
+    def test_volume_sigma(self):
+        sigma_a = build_volume(self.geo, name="density.sigma_a")
+        sigma_s = build_volume(self.geo, name="density.sigma_s")
+        merge = self.geo.createNode("merge")
+        merge.setInput(0, sigma_a)
+        merge.setInput(1, sigma_s)
+        merge.setRenderFlag(True)
+        self.compare_scene()
+
     def test_volume_rgb_Lescale(self):
         density = build_volume(self.geo, rgb=True, name="density")
         Lescale = build_volume(self.geo, name="Lescale")
@@ -1551,6 +1632,21 @@ class TestShapes(TestRoot):
         merge.setInput(0, density_float1)
         merge.setInput(1, density_float2)
         merge.setInput(2, density_rgb)
+        merge.setRenderFlag(True)
+        self.compare_scene()
+
+    def test_volume_floats_sigma(self):
+        density_float1 = build_volume(self.geo, name="density")
+        density_float2 = build_volume(self.geo, name="density")
+        density_rgb = build_volume(self.geo, rgb=True, name="density")
+        density_sigma_a = build_volume(self.geo, name="density.sigma_a")
+        density_sigma_s = build_volume(self.geo, name="density.sigma_s")
+        merge = self.geo.createNode("merge")
+        merge.setInput(0, density_float1)
+        merge.setInput(1, density_float2)
+        merge.setInput(2, density_rgb)
+        merge.setInput(3, density_sigma_a)
+        merge.setInput(4, density_sigma_s)
         merge.setRenderFlag(True)
         self.compare_scene()
 

@@ -14,7 +14,9 @@ from PBRTshading import wrangle_shading_network
 from PBRTstate import scene_state, temporary_file, HVER_17_5, HVER_18
 
 
-def create_suffix(oppath='', shape_num=None, override_num=None, prim_num=None, instance_info=None):
+def create_suffix(
+    oppath="", shape_num=None, override_num=None, prim_num=None, instance_info=None
+):
 
     # Material / Texture Namespacing
     # mat_node_path:soppath=shape_num+override_num[prim_num]:instance_src:instance_num
@@ -29,12 +31,9 @@ def create_suffix(oppath='', shape_num=None, override_num=None, prim_num=None, i
     prim = "[{}]".format(prim_num) if prim_num is not None else ""
 
     return "{oppath}{shape}{override}{prim}{instance}".format(
-                oppath=oppath,
-                shape=shape,
-                override=override,
-                prim=prim,
-                instance=instance,
-                )
+        oppath=oppath, shape=shape, override=override, prim=prim, instance=instance
+    )
+
 
 def primitive_alpha_texs(properties):
     paramset = ParamSet()
@@ -228,6 +227,7 @@ def disk_wrangler(gdp, paramset=None, properties=None):
             api.Shape("disk", shape_paramset)
     return
 
+
 def ply_displacement_wrangler(prim, properties):
 
     paramset = ParamSet()
@@ -240,18 +240,17 @@ def ply_displacement_wrangler(prim, properties):
 
     instance_info = properties.get(".instance_info")
 
-    suffix = create_suffix(properties["object:soppath"].Value[0],
-                           properties[".shape_count"],
-                           properties[".override_count"],
-                           prim.number(),
-                           instance_info)
+    suffix = create_suffix(
+        properties["object:soppath"].Value[0],
+        properties[".shape_count"],
+        properties[".override_count"],
+        prim.number(),
+        instance_info,
+    )
 
     # TODO: We might need to cache parms and nodes if there are a lot of plys
     wrangle_shading_network(
-        disp_tex,
-        use_named=False,
-        exported_nodes=set(),
-        name_suffix=suffix,
+        disp_tex, use_named=False, exported_nodes=set(), name_suffix=suffix
     )
     texture_name = "%s%s" % (disp_tex, suffix)
     paramset.add(PBRTParam("texture", "displacement", texture_name))
@@ -665,6 +664,19 @@ class RGBGrid(object):
         return len(set([p.resolution() for p in to_check])) == 1
 
 
+class SigmaGrid(object):
+    def __init__(self, sigma_a, sigma_s):
+        self.sigma_a = sigma_a
+        self.sigma_s = sigma_s
+        self.lescale = None
+
+    def does_res_match(self):
+        to_check = [self.sigma_a, self.sigma_s]
+        if self.lescale is not None:
+            to_check.append(self.lescale)
+        return len(set([p.resolution() for p in to_check])) == 1
+
+
 def build_vdb_grid_list(sop_path, gdp):
     prims = gdp.prims()
 
@@ -672,13 +684,13 @@ def build_vdb_grid_list(sop_path, gdp):
     medium_grids_attrib = gdp.findPrimAttrib("medium_grids")
 
     name_map = collections.defaultdict(set)
-    mediums_map = collections.defaultdict(set)
+    medium_grids_map = collections.defaultdict(set)
     for prim in prims:
         name_map[prim.attribValue(name_attrib)].add(prim)
         medium_name = ""
         if medium_grids_attrib is not None:
             medium_name = prim.attribValue(medium_grids_attrib)
-        mediums_map[medium_name].add(prim)
+        medium_grids_map[medium_name].add(prim)
 
     # The only senarios which are valid are-
 
@@ -720,7 +732,7 @@ def build_vdb_grid_list(sop_path, gdp):
         return []
 
     grids = []
-    for medium, medium_prims in mediums_map.items():
+    for medium, medium_prims in medium_grids_map.items():
         medium_counts = collections.Counter(
             prim.attribValue(name_attrib) for prim in medium_prims
         )
@@ -968,16 +980,23 @@ def build_uniform_grid_list(sop_path, gdp):
     # The first few senarios are convenience and don't enforce a medium_grids
     # attribute on the user
 
+    #######################################################
     # Scenario 1
     # No name attribute, we'll assume everything is density
+    #
+    # prims | name value
+    # ------------------
+    # 0     | None
+    # 1     | None
+
     if name_attrib is None:
         return [FloatGrid(prim) for prim in prims]
 
     name_map = collections.defaultdict(set)
-    mediums_map = collections.defaultdict(set)
+    medium_grids_map = collections.defaultdict(set)
     res_map = collections.defaultdict(set)
 
-    density_renamer = {
+    rgb_density_renamer = {
         "density.x": "density.r",
         "density.y": "density.g",
         "density.z": "density.b",
@@ -990,21 +1009,36 @@ def build_uniform_grid_list(sop_path, gdp):
         name = prim.attribValue(name_attrib)
         # Instead of dealing with two different variation of vectors
         # we'll rename to rgb
-        name = density_renamer.get(name, name)
+        name = rgb_density_renamer.get(name, name)
         name_counts[name] += 1
         name_map[name].add(prim)
         medium_name = ""
         if medium_grids_attrib is not None:
             medium_name = prim.attribValue(medium_grids_attrib)
-        mediums_map[medium_name].add(prim)
+        medium_grids_map[medium_name].add(prim)
 
+    #######################################################
     # Scenario 2
-    # We just have density grids and no rgbs or Lescale
+    # We just have density grids and no rgbs, sigmas or Lescale
+    #
+    # prims | name value
+    # ------------------
+    # 0     | density
+    # 1     | density
+    # 2     | density
+
     if len(prims) == name_counts["density"]:
         return [FloatGrid(prim) for prim in prims]
 
+    #######################################################
     # Scenario 3
     # We just one density grid and one Lescale
+    #
+    # prims | name value
+    # ------------------
+    # 0     | density
+    # 1     | Lescale
+
     if (
         len(prims) == 2
         and name_counts["density"] == 1
@@ -1016,16 +1050,40 @@ def build_uniform_grid_list(sop_path, gdp):
         return [grid]
 
     grid_list = []
+
     den_rgb_strs = ("density.r", "density.g", "density.b")
     is_one_den_rgb = all(name_counts[c] == 1 for c in den_rgb_strs)
     is_no_den_rgb = all(name_counts[c] == 0 for c in den_rgb_strs)
     is_many_den_rgb = all(name_counts[c] > 1 for c in den_rgb_strs)
 
+    den_sigma_strs = ("density.sigma_a", "density.sigma_s")
+    is_one_den_sigma = all(name_counts[c] == 1 for c in den_sigma_strs)
+    is_no_den_sigma = all(name_counts[c] == 0 for c in den_sigma_strs)
+    is_many_den_sigma = all(name_counts[c] > 1 for c in den_sigma_strs)
+
+    #######################################################
     # Scenario 4
-    # We have no Lescale, but a mix of density and density.rgb
-    # We can first remove all the density, then check the density.rgb
-    if not name_counts["Lescale"] and (is_one_den_rgb or is_no_den_rgb):
+    # We have no Lescale, but >=0 density and 0 or 1 density.rgb and
+    # 0 or 1 density.sigma_[as]
+    #
+    # prims | name value
+    # ------------------
+    # 0     | density
+    # 1     | density.r
+    # 2     | density
+    # 3     | density.g
+    # 4     | density.b
+    # 5     | density.sigma_a
+    # 6     | density.sigma_s
+
+    # We can first remove all the density, then check the rgb and sigma
+    if (
+        not name_counts["Lescale"]
+        and (is_one_den_rgb or is_no_den_rgb)
+        and (is_one_den_sigma or is_no_den_sigma)
+    ):
         grid_list.extend([FloatGrid(x) for x in name_map["density"]])
+
         if is_one_den_rgb:
             grid_list.append(
                 RGBGrid(
@@ -1034,35 +1092,51 @@ def build_uniform_grid_list(sop_path, gdp):
                     name_map["density.b"].pop(),
                 )
             )
+
+        if is_one_den_sigma:
+            grid_list.append(
+                SigmaGrid(
+                    name_map["density.sigma_a"].pop(), name_map["density.sigma_s"].pop()
+                )
+            )
         return grid_list
 
+    #######################################################
     # Scenario 5
     # From this point on we won't be able to derive pairings without using the
-    # medium_grids exit out if we don't fit bsaic requirements
+    # medium_grids attribute. Exit out if we don't fit bsaic requirements
+
     if (
-        (name_counts["density"] > 1 and name_counts["Lescale"]) or is_many_den_rgb
+        (name_counts["density"] > 1 and name_counts["Lescale"])
+        or is_many_den_rgb
+        or is_many_den_sigma
     ) and medium_grids_attrib is None:
         soho.warning(
-            "{}: has density or density.rgb/Lescale and no way to link"
+            "{}: has density or density.rgb/sigma/Lescale and no way to link"
             " them, please use a medium_grids attribute".format(sop_path)
         )
         return []
 
     grids = []
-    for medium, medium_prims in mediums_map.items():
+    for medium, medium_prims in medium_grids_map.items():
 
         medium_counts = collections.defaultdict(int)
         for prim in medium_prims:
             name = prim.attribValue(name_attrib)
-            name = density_renamer.get(name, name)
+            name = rgb_density_renamer.get(name, name)
             medium_counts[name] += 1
 
         is_no_den_rgb = all(medium_counts[c] == 0 for c in den_rgb_strs)
         is_one_den_rgb = all(medium_counts[c] == 1 for c in den_rgb_strs)
+
+        is_no_den_sigma = all(medium_counts[c] == 0 for c in den_sigma_strs)
+        is_one_den_sigma = all(medium_counts[c] == 1 for c in den_sigma_strs)
+
         if (
             medium_counts["density"] == 1
             and medium_counts["Lescale"] <= 1
             and is_no_den_rgb
+            and is_no_den_sigma
         ):
             density_prim = name_map["density"] & medium_prims
             if len(density_prim) != 1:
@@ -1092,6 +1166,25 @@ def build_uniform_grid_list(sop_path, gdp):
             if lescale_prim:
                 rgb_grid.lescale = lescale_prim.pop()
             grids.append(rgb_grid)
+        elif (
+            not medium_counts["density"]
+            and medium_counts["Lescale"] <= 1
+            and is_one_den_sigma
+        ):
+            sigma_a_prim = name_map["density.sigma_a"] & medium_prims
+            sigma_s_prim = name_map["density.sigma_s"] & medium_prims
+            if len(sigma_a_prim) != 1 or len(sigma_s_prim) != 1:
+                soho.warning(
+                    "{}: Invalid density.sigma_a|s and medium_grid {}".format(
+                        sop_path, medium
+                    )
+                )
+                continue
+            sigma_grid = SigmaGrid(sigma_a_prim.pop(), sigma_s_prim.pop())
+            lescale_prim = name_map["Lescale"] & medium_prims
+            if lescale_prim:
+                sigma_grid.lescale = lescale_prim.pop()
+            grids.append(sigma_grid)
         else:
             soho.warning(
                 "{}: Can not map density grids for {}".format(sop_path, medium)
@@ -1386,12 +1479,26 @@ def smoke_prim_wrangler(grids, paramset=None, properties=None):
             )
             continue
 
+        clean_voxel_data = []
+
         if isinstance(grid, FloatGrid):
             prim_num_str = str(grid.density.number())
             ref_prim = grid.density
             voxeldata = array.array("f")
             voxeldata.frombytes(grid.density.allVoxelsAsString())
             smoke_paramset.add(PBRTParam("float", "density", voxeldata))
+            clean_voxel_data.append(voxeldata)
+        elif isinstance(grid, SigmaGrid):
+            prim_num_str = "{},{}".format(grid.sigma_a.number(), grid.sigma_s.number())
+            ref_prim = grid.sigma_s
+            sigma_a_voxeldata = array.array("f")
+            sigma_s_voxeldata = array.array("f")
+            sigma_a_voxeldata.frombytes(grid.sigma_a.allVoxelsAsString())
+            sigma_s_voxeldata.frombytes(grid.sigma_s.allVoxelsAsString())
+            smoke_paramset.add(PBRTParam("float", "density.sigma_a", sigma_a_voxeldata))
+            smoke_paramset.add(PBRTParam("float", "density.sigma_s", sigma_s_voxeldata))
+            clean_voxel_data.append(sigma_a_voxeldata)
+            clean_voxel_data.append(sigma_s_voxeldata)
         else:
             prim_num_str = "{},{},{}".format(
                 grid.r.number(), grid.g.number(), grid.b.number()
@@ -1399,23 +1506,37 @@ def smoke_prim_wrangler(grids, paramset=None, properties=None):
             # We'll use the r|x channel as the reference
             ref_prim = grid.r
 
-            r_voxeldata = array.array("f")
-            g_voxeldata = array.array("f")
-            b_voxeldata = array.array("f")
-            r_voxeldata.frombytes(grid.r.allVoxelsAsString())
-            g_voxeldata.frombytes(grid.g.allVoxelsAsString())
-            b_voxeldata.frombytes(grid.b.allVoxelsAsString())
-            voxeldata = array.array("f", r_voxeldata + g_voxeldata + b_voxeldata)
-            voxeldata[0::3] = r_voxeldata
-            voxeldata[1::3] = g_voxeldata
-            voxeldata[2::3] = b_voxeldata
-            smoke_paramset.add(PBRTParam("rgb", "density", voxeldata))
+            # The RGB values are interweaved, r,g,b,r,g,b
+            # So we'll first "allocate" the entire array, then slice into it.
+            # By operating on one component at a time we'll attempt to keep the
+            # memory usage down.
+            tmp_voxeldata = array.array("f")
+            tmp_voxeldata.frombytes(grid.r.allVoxelsAsString())
+            voxeldata = array.array("f", tmp_voxeldata * 3)
+
+            # Set the r values
+            voxeldata[0::3] = tmp_voxeldata
+            del tmp_voxeldata[:]
+
+            # Set the g values
+            tmp_voxeldata.frombytes(grid.g.allVoxelsAsString())
+            voxeldata[1::3] = tmp_voxeldata
+            del tmp_voxeldata[:]
+
+            # And last, the b values
+            tmp_voxeldata.frombytes(grid.b.allVoxelsAsString())
+            voxeldata[2::3] = tmp_voxeldata
+            del tmp_voxeldata[:]
+
+            smoke_paramset.add(PBRTParam("rgb", "density.rgb", voxeldata))
+            clean_voxel_data.append(voxeldata)
 
         medium_name = "%s[%s]%s" % (sop_path, prim_num_str, medium_suffix)
 
         if grid.lescale is not None:
             lescale_voxeldata = array.array("f")
             lescale_voxeldata.frombytes(grid.lescale.allVoxelsAsString())
+            clean_voxel_data.append(lescale_voxeldata)
             smoke_paramset.add(PBRTParam("float", "Lescale", lescale_voxeldata))
 
         resolution = ref_prim.resolution()
@@ -1436,10 +1557,16 @@ def smoke_prim_wrangler(grids, paramset=None, properties=None):
         # By default we'll set a sigma_a and sigma_s to be more Houdini-like
         # however the object's pbrt_interior, or prim's pbrt_interior
         # or prim attribs will override these.
-        if (
-            PBRTParam("rgb", "sigma_a") not in smoke_paramset
-            and PBRTParam("rgb", "sigma_s") not in smoke_paramset
-        ) and PBRTParam("string", "preset") not in smoke_paramset:
+        sigma_params = ParamSet(
+            [
+                PBRTParam("rgb", "sigma_a"),
+                PBRTParam("rgb", "sigma_s"),
+                PBRTParam("string", "preset"),
+                PBRTParam("float", "density.sigma_a"),
+                PBRTParam("float", "density.sigma_s"),
+            ]
+        )
+        if not (sigma_params & smoke_paramset):
             smoke_paramset.add(
                 PBRTParam("spectrum", "sigma_a", [400.0, 0.0, 800.0, 0.0])
             )
@@ -1455,6 +1582,10 @@ def smoke_prim_wrangler(grids, paramset=None, properties=None):
             api.MediumInterface(medium_name, exterior)
             # Pad this slightly?
             bounds_to_api_box([-1, 1, -1, 1, -1, 1])
+
+        for vox_data in clean_voxel_data:
+            del vox_data[:]
+
     return
 
 
@@ -1892,7 +2023,12 @@ def output_geo(soppath, now, properties=None):
                 base_paramset |= primitive_alpha_texs(properties)
 
                 if override_str:
-                    suffix = create_suffix(soppath, shape_count, override_count, instance_info=instance_info)
+                    suffix = create_suffix(
+                        soppath,
+                        shape_count,
+                        override_count,
+                        instance_info=instance_info,
+                    )
                     api.AttributeBegin()
                     override_count += 1
                     overrides = eval(override_str, {}, {})
