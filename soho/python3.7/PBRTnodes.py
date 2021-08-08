@@ -450,12 +450,12 @@ class BaseNode(object):
 
             cached_override = self.override_cache.get(override_name, None)
             if cached_override is not None:
-                # Hint to just skip
-                if cached_override == -1:
-                    continue
                 if isinstance(cached_override, PBRTParam):
                     # textures which can't be overridden
                     paramset.add(cached_override)
+                    continue
+                elif cached_override == -1:
+                    # Hint to just skip
                     continue
                 pbrt_name, pbrt_type, tuple_names = cached_override
                 if tuple_names:

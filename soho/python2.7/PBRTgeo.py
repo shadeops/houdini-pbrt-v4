@@ -2016,10 +2016,11 @@ def output_geo(soppath, now, properties=None):
             else:
                 override_gdps = {default_override: shape_gdp}
 
-            node_cache = {}
-            param_cache = {}
             override_count = 0
             for override_str, override_gdp in override_gdps.iteritems():
+
+                node_cache = {}
+                param_cache = {}
 
                 base_paramset = ParamSet()
                 base_paramset |= primitive_alpha_texs(properties)
