@@ -16,7 +16,7 @@ from PBRTstate import scene_state
 # flake8: noqa: F405
 
 
-def output_materials(obj, wrangler, now):
+def output_materials(obj, wrangler, now, skip_included=False):
     """Output Materials for an object
 
     The shop_materialpath parameter and shop_materialpath prim attribute
@@ -24,16 +24,30 @@ def output_materials(obj, wrangler, now):
     """
     # We use a shaderhandle instead of a string so Soho instances are properly
     # resolved when Full Instancing is used.
-    parms = [soho.SohoParm("shop_materialpath", "shaderhandle", skipdefault=False)]
+    parms = {
+        "shop_materialpath": soho.SohoParm(
+            "shop_materialpath", "shaderhandle", skipdefault=False
+        ),
+        "pbrt_include": soho.SohoParm("pbrt_include", "string", [""], skipdefault=True),
+        "pbrt_import": soho.SohoParm("pbrt_import", "string", [""], skipdefault=True),
+    }
+
     eval_parms = obj.evaluate(parms, now)
-    if eval_parms:
-        shop = eval_parms[0].Value[0]
+
+    if "shop_materialpath" in eval_parms:
+        shop = eval_parms["shop_materialpath"].Value[0]
         if shop:
             wrangle_shading_network(shop)
+
+    # If this object uses either an include or import statement then we assume internal
+    # material definitions are already resolved through other means.
+    if skip_included and ("pbrt_include" in eval_parms or "pbrt_import" in eval_parms):
+        return
 
     soppath = []
     if not obj.evalString("object:soppath", now, soppath):
         return
+
     soppath = soppath[0]
 
     gdp = SohoGeometry(soppath, now)
@@ -157,7 +171,7 @@ def scene_renderables(now):
     api.Comment("=" * 50)
     api.Comment("NamedMaterial Definitions")
     for obj in soho.objectList("objlist:instance"):
-        output_materials(obj, wrangler, now)
+        output_materials(obj, wrangler, now, skip_included=True)
 
     print()
 
