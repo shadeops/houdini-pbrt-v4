@@ -41,7 +41,7 @@ Empty:        false
 Modified:     Wed May 16 01:03:30 2018
 
 Operator:     pbrt_camera_spherical
-Label:        PBRT SphericalCamera
+Label:        PBRT Spherical Camera
 Path:         oplib:/Vop/pbrt_camera_spherical?Vop/pbrt_camera_spherical
 Icon:         opdef:/Vop/pbrt_camera_spherical?IconImage
 Table:        Vop
@@ -55,7 +55,7 @@ Empty:        false
 Modified:     Tue May 15 02:01:03 2018
 
 Operator:     pbrt_camera_perspective
-Label:        PBRT PerspectiveCamera
+Label:        PBRT Perspective Camera
 Path:         oplib:/Vop/pbrt_camera_perspective?Vop/pbrt_camera_perspective
 Icon:         opdef:/Vop/pbrt_camera_perspective?IconImage
 Table:        Vop
@@ -69,7 +69,7 @@ Empty:        false
 Modified:     Tue May 15 02:01:03 2018
 
 Operator:     pbrt_camera_orthographic
-Label:        PBRT OrthographicCamera
+Label:        PBRT Orthographic Camera
 Path:         oplib:/Vop/pbrt_camera_orthographic?Vop/pbrt_camera_orthographic
 Icon:         opdef:/Vop/pbrt_camera_orthographic?IconImage
 Table:        Vop
@@ -83,7 +83,7 @@ Empty:        false
 Modified:     Tue May 15 02:01:03 2018
 
 Operator:     pbrt_camera_realistic
-Label:        PBRT RealisticCamera
+Label:        PBRT Realistic Camera
 Path:         oplib:/Vop/pbrt_camera_realistic?Vop/pbrt_camera_realistic
 Icon:         opdef:/Vop/pbrt_camera_realistic?IconImage
 Table:        Vop
@@ -97,7 +97,7 @@ Empty:        false
 Modified:     Tue May 15 02:01:03 2018
 
 Operator:     pbrt_sampler_halton
-Label:        PBRT HaltonSampler
+Label:        PBRT Halton Sampler
 Path:         oplib:/Vop/pbrt_sampler_halton?Vop/pbrt_sampler_halton
 Icon:         opdef:/Vop/pbrt_sampler_halton?IconImage
 Table:        Vop
@@ -111,7 +111,7 @@ Empty:        false
 Modified:     Tue May 15 02:01:03 2018
 
 Operator:     pbrt_sampler_independent
-Label:        PBRT IndependentSampler
+Label:        PBRT Independent Sampler
 Path:         oplib:/Vop/pbrt_sampler_independent?Vop/pbrt_sampler_independent
 Icon:         opdef:/Vop/pbrt_sampler_independent?IconImage
 Table:        Vop
@@ -125,7 +125,7 @@ Empty:        false
 Modified:     Tue May 15 02:01:04 2018
 
 Operator:     pbrt_sampler_pmj02bn
-Label:        PBRT PMJ02BNSampler
+Label:        PBRT PMJ02BN Sampler
 Path:         oplib:/Vop/pbrt_sampler_pmj02bn?Vop/pbrt_sampler_pmj02bn
 Icon:         opdef:/Vop/pbrt_sampler_pmj02bn?IconImage
 Table:        Vop
@@ -139,7 +139,7 @@ Empty:        false
 Modified:     Tue May 15 02:01:04 2018
 
 Operator:     pbrt_sampler_sobol
-Label:        PBRT SobolSampler
+Label:        PBRT Sobol Sampler
 Path:         oplib:/Vop/pbrt_sampler_sobol?Vop/pbrt_sampler_sobol
 Icon:         opdef:/Vop/pbrt_sampler_sobol?IconImage
 Table:        Vop
@@ -153,7 +153,7 @@ Empty:        false
 Modified:     Tue May 15 02:01:04 2018
 
 Operator:     pbrt_sampler_paddedsobol
-Label:        PBRT PaddedSobolSampler
+Label:        PBRT PaddedSobol Sampler
 Path:         oplib:/Vop/pbrt_sampler_paddedsobol?Vop/pbrt_sampler_paddedsobol
 Icon:         opdef:/Vop/pbrt_sampler_paddedsobol?IconImage
 Table:        Vop
@@ -167,7 +167,7 @@ Empty:        false
 Modified:     Tue May 15 02:01:04 2018
 
 Operator:     pbrt_sampler_zsobol
-Label:        PBRT ZSobolSampler
+Label:        PBRT ZSobol Sampler
 Path:         oplib:/Vop/pbrt_sampler_zsobol?Vop/pbrt_sampler_zsobol
 Icon:         opdef:/Vop/pbrt_sampler_zsobol?IconImage
 Table:        Vop
@@ -181,7 +181,7 @@ Empty:        false
 Modified:     Tue May 15 02:01:04 2018
 
 Operator:     pbrt_sampler_stratified
-Label:        PBRT StratifiedSampler
+Label:        PBRT Stratified Sampler
 Path:         oplib:/Vop/pbrt_sampler_stratified?Vop/pbrt_sampler_stratified
 Icon:         opdef:/Vop/pbrt_sampler_stratified?IconImage
 Table:        Vop
@@ -195,7 +195,7 @@ Empty:        false
 Modified:     Tue May 15 02:01:04 2018
 
 Operator:     pbrt_film_rgb
-Label:        PBRT RGBFilm
+Label:        PBRT RGB Film
 Path:         oplib:/Vop/pbrt_film_rgb?Vop/pbrt_film_rgb
 Icon:         opdef:/Vop/pbrt_film_rgb?IconImage
 Table:        Vop
@@ -209,7 +209,7 @@ Empty:        false
 Modified:     Tue May 15 02:01:04 2018
 
 Operator:     pbrt_film_gbuffer
-Label:        PBRT GBufferFilm
+Label:        PBRT GBuffer Film
 Path:         oplib:/Vop/pbrt_film_gbuffer?Vop/pbrt_film_gbuffer
 Icon:         opdef:/Vop/pbrt_film_gbuffer?IconImage
 Table:        Vop
@@ -223,7 +223,7 @@ Empty:        false
 Modified:     Tue May 15 02:01:04 2018
 
 Operator:     pbrt_filter_box
-Label:        PBRT BoxFilter
+Label:        PBRT Box Filter
 Path:         oplib:/Vop/pbrt_filter_box?Vop/pbrt_filter_box
 Icon:         opdef:/Vop/pbrt_filter_box?IconImage
 Table:        Vop
@@ -237,7 +237,7 @@ Empty:        false
 Modified:     Tue May 15 02:01:04 2018
 
 Operator:     pbrt_filter_gaussian
-Label:        PBRT GaussianFilter
+Label:        PBRT Gaussian Filter
 Path:         oplib:/Vop/pbrt_filter_gaussian?Vop/pbrt_filter_gaussian
 Icon:         opdef:/Vop/pbrt_filter_gaussian?IconImage
 Table:        Vop
@@ -251,7 +251,7 @@ Empty:        false
 Modified:     Tue May 15 02:01:04 2018
 
 Operator:     pbrt_filter_triangle
-Label:        PBRT TriangleFilter
+Label:        PBRT Triangle Filter
 Path:         oplib:/Vop/pbrt_filter_triangle?Vop/pbrt_filter_triangle
 Icon:         opdef:/Vop/pbrt_filter_triangle?IconImage
 Table:        Vop
@@ -265,7 +265,7 @@ Empty:        false
 Modified:     Tue May 15 02:01:04 2018
 
 Operator:     pbrt_filter_mitchell
-Label:        PBRT MitchellFilter
+Label:        PBRT Mitchell Filter
 Path:         oplib:/Vop/pbrt_filter_mitchell?Vop/pbrt_filter_mitchell
 Icon:         opdef:/Vop/pbrt_filter_mitchell?IconImage
 Table:        Vop
@@ -279,7 +279,7 @@ Empty:        false
 Modified:     Tue May 15 02:01:04 2018
 
 Operator:     pbrt_filter_sinc
-Label:        PBRT LanczosSincFilter
+Label:        PBRT LanczosSinc Filter
 Path:         oplib:/Vop/pbrt_filter_sinc?Vop/pbrt_filter_sinc
 Icon:         opdef:/Vop/pbrt_filter_sinc?IconImage
 Table:        Vop
@@ -293,7 +293,7 @@ Empty:        false
 Modified:     Tue May 15 02:01:04 2018
 
 Operator:     pbrt_integrator_path
-Label:        PBRT PathIntegrator
+Label:        PBRT Path Integrator
 Path:         oplib:/Vop/pbrt_integrator_path?Vop/pbrt_integrator_path
 Icon:         opdef:/Vop/pbrt_integrator_path?IconImage
 Table:        Vop
@@ -307,7 +307,7 @@ Empty:        false
 Modified:     Tue May 15 02:01:04 2018
 
 Operator:     pbrt_integrator_simplepath
-Label:        PBRT SimplePathIntegrator
+Label:        PBRT SimplePath Integrator
 Path:         oplib:/Vop/pbrt_integrator_simplepath?Vop/pbrt_integrator_simplepath
 Icon:         opdef:/Vop/pbrt_integrator_simplepath?IconImage
 Table:        Vop
@@ -321,7 +321,7 @@ Empty:        false
 Modified:     Tue May 15 02:01:04 2018
 
 Operator:     pbrt_integrator_lightpath
-Label:        PBRT LightPathIntegrator
+Label:        PBRT LightPath Integrator
 Path:         oplib:/Vop/pbrt_integrator_lightpath?Vop/pbrt_integrator_lightpath
 Icon:         opdef:/Vop/pbrt_integrator_lightpath?IconImage
 Table:        Vop
@@ -335,7 +335,7 @@ Empty:        false
 Modified:     Tue May 15 02:01:04 2018
 
 Operator:     pbrt_integrator_function
-Label:        PBRT FunctionIntegrator
+Label:        PBRT Function Integrator
 Path:         oplib:/Vop/pbrt_integrator_function?Vop/pbrt_integrator_function
 Icon:         opdef:/Vop/pbrt_integrator_function?IconImage
 Table:        Vop
@@ -349,7 +349,7 @@ Empty:        false
 Modified:     Tue May 15 02:01:04 2018
 
 Operator:     pbrt_integrator_simplevolpath
-Label:        PBRT SimpleVolPathIntegrator
+Label:        PBRT SimpleVolPath Integrator
 Path:         oplib:/Vop/pbrt_integrator_simplevolpath?Vop/pbrt_integrator_simplevolpath
 Icon:         opdef:/Vop/pbrt_integrator_simplevolpath?IconImage
 Table:        Vop
@@ -363,7 +363,7 @@ Empty:        false
 Modified:     Tue May 15 02:01:04 2018
 
 Operator:     pbrt_integrator_bdpt
-Label:        PBRT BDPTIntegrator
+Label:        PBRT BDPT Integrator
 Path:         oplib:/Vop/pbrt_integrator_bdpt?Vop/pbrt_integrator_bdpt
 Icon:         opdef:/Vop/pbrt_integrator_bdpt?IconImage
 Table:        Vop
@@ -377,7 +377,7 @@ Empty:        false
 Modified:     Tue May 15 02:01:04 2018
 
 Operator:     pbrt_integrator_mlt
-Label:        PBRT MLTIntegrator
+Label:        PBRT MLT Integrator
 Path:         oplib:/Vop/pbrt_integrator_mlt?Vop/pbrt_integrator_mlt
 Icon:         opdef:/Vop/pbrt_integrator_mlt?IconImage
 Table:        Vop
@@ -391,7 +391,7 @@ Empty:        false
 Modified:     Tue May 15 02:01:04 2018
 
 Operator:     pbrt_integrator_sppm
-Label:        PBRT SPPMIntegrator
+Label:        PBRT SPPM Integrator
 Path:         oplib:/Vop/pbrt_integrator_sppm?Vop/pbrt_integrator_sppm
 Icon:         opdef:/Vop/pbrt_integrator_sppm?IconImage
 Table:        Vop
@@ -405,7 +405,7 @@ Empty:        false
 Modified:     Tue May 15 02:01:04 2018
 
 Operator:     pbrt_integrator_randomwalk
-Label:        PBRT RandomWalkIntegrator
+Label:        PBRT RandomWalk Integrator
 Path:         oplib:/Vop/pbrt_integrator_randomwalk?Vop/pbrt_integrator_randomwalk
 Icon:         opdef:/Vop/pbrt_integrator_randomwalk?IconImage
 Table:        Vop
@@ -419,7 +419,7 @@ Empty:        false
 Modified:     Tue May 15 02:01:04 2018
 
 Operator:     pbrt_integrator_ambientocclusion
-Label:        PBRT AOIntegrator
+Label:        PBRT AO Integrator
 Path:         oplib:/Vop/pbrt_integrator_ambientocclusion?Vop/pbrt_integrator_ambientocclusion
 Icon:         opdef:/Vop/pbrt_integrator_ambientocclusion?IconImage
 Table:        Vop
@@ -433,7 +433,7 @@ Empty:        false
 Modified:     Tue May 15 02:01:05 2018
 
 Operator:     pbrt_integrator_volpath
-Label:        PBRT VolPathIntegrator
+Label:        PBRT VolPath Integrator
 Path:         oplib:/Vop/pbrt_integrator_volpath?Vop/pbrt_integrator_volpath
 Icon:         opdef:/Vop/pbrt_integrator_volpath?IconImage
 Table:        Vop
@@ -447,7 +447,7 @@ Empty:        false
 Modified:     Tue May 15 02:01:05 2018
 
 Operator:     pbrt_accelerator_bvh
-Label:        PBRT BVHAccel
+Label:        PBRT BVH Accelerator
 Path:         oplib:/Vop/pbrt_accelerator_bvh?Vop/pbrt_accelerator_bvh
 Icon:         opdef:/Vop/pbrt_accelerator_bvh?IconImage
 Table:        Vop
@@ -461,7 +461,7 @@ Empty:        false
 Modified:     Tue May 15 02:01:05 2018
 
 Operator:     pbrt_accelerator_kdtree
-Label:        PBRT KdTreeAccel
+Label:        PBRT KdTree Accelerator
 Path:         oplib:/Vop/pbrt_accelerator_kdtree?Vop/pbrt_accelerator_kdtree
 Icon:         opdef:/Vop/pbrt_accelerator_kdtree?IconImage
 Table:        Vop
@@ -475,7 +475,7 @@ Empty:        false
 Modified:     Tue May 15 02:01:05 2018
 
 Operator:     pbrt_light_distant
-Label:        PBRT DistantLight
+Label:        PBRT Distant Light
 Path:         oplib:/Vop/pbrt_light_distant?Vop/pbrt_light_distant
 Icon:         opdef:/Vop/pbrt_light_distant?IconImage
 Table:        Vop
@@ -489,7 +489,7 @@ Empty:        false
 Modified:     Tue May 15 02:01:05 2018
 
 Operator:     pbrt_light_goniometric
-Label:        PBRT GonioPhotometricLight
+Label:        PBRT GonioPhotometric Light
 Path:         oplib:/Vop/pbrt_light_goniometric?Vop/pbrt_light_goniometric
 Icon:         opdef:/Vop/pbrt_light_goniometric?IconImage
 Table:        Vop
@@ -503,7 +503,7 @@ Empty:        false
 Modified:     Tue May 15 02:01:05 2018
 
 Operator:     pbrt_light_infinite
-Label:        PBRT InfiniteAreaLight
+Label:        PBRT Infinite AreaLight
 Path:         oplib:/Vop/pbrt_light_infinite?Vop/pbrt_light_infinite
 Icon:         opdef:/Vop/pbrt_light_infinite?IconImage
 Table:        Vop
@@ -517,7 +517,7 @@ Empty:        false
 Modified:     Tue May 15 02:01:05 2018
 
 Operator:     pbrt_light_point
-Label:        PBRT PointLight
+Label:        PBRT Point Light
 Path:         oplib:/Vop/pbrt_light_point?Vop/pbrt_light_point
 Icon:         opdef:/Vop/pbrt_light_point?IconImage
 Table:        Vop
@@ -531,7 +531,7 @@ Empty:        false
 Modified:     Mon Jun 11 01:40:25 2018
 
 Operator:     pbrt_light_projection
-Label:        PBRT ProjectionLight
+Label:        PBRT Projection Light
 Path:         oplib:/Vop/pbrt_light_projection?Vop/pbrt_light_projection
 Icon:         opdef:/Vop/pbrt_light_projection?IconImage
 Table:        Vop
@@ -545,7 +545,7 @@ Empty:        false
 Modified:     Tue May 15 02:01:05 2018
 
 Operator:     pbrt_light_spot
-Label:        PBRT SpotLight
+Label:        PBRT Spot Light
 Path:         oplib:/Vop/pbrt_light_spot?Vop/pbrt_light_spot
 Icon:         opdef:/Vop/pbrt_light_spot?IconImage
 Table:        Vop
@@ -559,7 +559,7 @@ Empty:        false
 Modified:     Mon Jun 11 21:25:22 2018
 
 Operator:     pbrt_arealight_diffuse
-Label:        PBRT DiffuseAreaLight
+Label:        PBRT DiffuseArea Light
 Path:         oplib:/Vop/pbrt_arealight_diffuse?Vop/pbrt_arealight_diffuse
 Icon:         opdef:/Vop/pbrt_arealight_diffuse?IconImage
 Table:        Vop
@@ -573,7 +573,7 @@ Empty:        false
 Modified:     Tue May 15 02:01:05 2018
 
 Operator:     pbrt_material_mix
-Label:        PBRT MixMaterial
+Label:        PBRT Mix Material
 Path:         oplib:/Vop/pbrt_material_mix?Vop/pbrt_material_mix
 Icon:         opdef:/Vop/pbrt_material_mix?IconImage
 Table:        Vop
@@ -587,7 +587,7 @@ Empty:        false
 Modified:     Tue May 15 02:01:06 2018
 
 Operator:     pbrt_material_hair
-Label:        PBRT HairMaterial
+Label:        PBRT Hair Material
 Path:         oplib:/Vop/pbrt_material_hair?Vop/pbrt_material_hair
 Icon:         opdef:/Vop/pbrt_material_hair?IconImage
 Table:        Vop
@@ -601,7 +601,7 @@ Empty:        false
 Modified:     Tue May 15 02:01:05 2018
 
 Operator:     pbrt_material_diffuse
-Label:        PBRT DiffuseMaterial
+Label:        PBRT Diffuse Material
 Path:         oplib:/Vop/pbrt_material_diffuse?Vop/pbrt_material_diffuse
 Icon:         opdef:/Vop/pbrt_material_diffuse?IconImage
 Table:        Vop
@@ -615,7 +615,7 @@ Empty:        false
 Modified:     Tue May 15 02:01:06 2018
 
 Operator:     pbrt_material_subsurface
-Label:        PBRT SubsurfaceMaterial
+Label:        PBRT Subsurface Material
 Path:         oplib:/Vop/pbrt_material_subsurface?Vop/pbrt_material_subsurface
 Icon:         opdef:/Vop/pbrt_material_subsurface?IconImage
 Table:        Vop
@@ -629,7 +629,7 @@ Empty:        false
 Modified:     Sun Aug 23 02:53:11 2020
 
 Operator:     pbrt_texture_constant
-Label:        PBRT ConstantTexture
+Label:        PBRT Constant Texture
 Path:         oplib:/Vop/pbrt_texture_constant?Vop/pbrt_texture_constant
 Icon:         opdef:/Vop/pbrt_texture_constant?IconImage
 Table:        Vop
@@ -643,7 +643,7 @@ Empty:        false
 Modified:     Sat Jun 23 02:22:12 2018
 
 Operator:     pbrt_texture_scale
-Label:        PBRT ScaleTexture
+Label:        PBRT Scale Texture
 Path:         oplib:/Vop/pbrt_texture_scale?Vop/pbrt_texture_scale
 Icon:         opdef:/Vop/pbrt_texture_scale?IconImage
 Table:        Vop
@@ -657,7 +657,7 @@ Empty:        false
 Modified:     Tue May 15 02:01:06 2018
 
 Operator:     pbrt_texture_mix
-Label:        PBRT MixTexture
+Label:        PBRT Mix Texture
 Path:         oplib:/Vop/pbrt_texture_mix?Vop/pbrt_texture_mix
 Icon:         opdef:/Vop/pbrt_texture_mix?IconImage
 Table:        Vop
@@ -671,7 +671,7 @@ Empty:        false
 Modified:     Tue May 15 02:01:06 2018
 
 Operator:     pbrt_texture_directionmix
-Label:        PBRT DirectionMixTexture
+Label:        PBRT DirectionMix Texture
 Path:         oplib:/Vop/pbrt_texture_directionmix?Vop/pbrt_texture_directionmix
 Icon:         opdef:/Vop/pbrt_texture_directionmix?IconImage
 Table:        Vop
@@ -685,7 +685,7 @@ Empty:        false
 Modified:     Tue May 15 02:01:06 2018
 
 Operator:     pbrt_texture_bilerp
-Label:        PBRT BilerpTexture
+Label:        PBRT Bilerp Texture
 Path:         oplib:/Vop/pbrt_texture_bilerp?Vop/pbrt_texture_bilerp
 Icon:         opdef:/Vop/pbrt_texture_bilerp?IconImage
 Table:        Vop
@@ -699,7 +699,7 @@ Empty:        false
 Modified:     Tue May 15 02:01:06 2018
 
 Operator:     pbrt_texture_imagemap
-Label:        PBRT ImageTexture
+Label:        PBRT Image Texture
 Path:         oplib:/Vop/pbrt_texture_imagemap?Vop/pbrt_texture_imagemap
 Icon:         opdef:/Vop/pbrt_texture_imagemap?IconImage
 Table:        Vop
@@ -713,7 +713,7 @@ Empty:        false
 Modified:     Tue May 15 02:01:06 2018
 
 Operator:     pbrt_texture_dots
-Label:        PBRT DotsTexture
+Label:        PBRT Dots Texture
 Path:         oplib:/Vop/pbrt_texture_dots?Vop/pbrt_texture_dots
 Icon:         opdef:/Vop/pbrt_texture_dots?IconImage
 Table:        Vop
@@ -727,7 +727,7 @@ Empty:        false
 Modified:     Tue May 15 02:01:06 2018
 
 Operator:     pbrt_texture_checkerboard
-Label:        PBRT CheckerboardTexture
+Label:        PBRT Checkerboard Texture
 Path:         oplib:/Vop/pbrt_texture_checkerboard?Vop/pbrt_texture_checkerboard
 Icon:         opdef:/Vop/pbrt_texture_checkerboard?IconImage
 Table:        Vop
@@ -741,7 +741,7 @@ Empty:        false
 Modified:     Tue May 15 02:01:07 2018
 
 Operator:     pbrt_texture_fbm
-Label:        PBRT FBmTexture
+Label:        PBRT FBm Texture
 Path:         oplib:/Vop/pbrt_texture_fbm?Vop/pbrt_texture_fbm
 Icon:         opdef:/Vop/pbrt_texture_fbm?IconImage
 Table:        Vop
@@ -755,7 +755,7 @@ Empty:        false
 Modified:     Tue May 15 02:01:07 2018
 
 Operator:     pbrt_texture_wrinkled
-Label:        PBRT WrinkledTexture
+Label:        PBRT Wrinkled Texture
 Path:         oplib:/Vop/pbrt_texture_wrinkled?Vop/pbrt_texture_wrinkled
 Icon:         opdef:/Vop/pbrt_texture_wrinkled?IconImage
 Table:        Vop
@@ -769,7 +769,7 @@ Empty:        false
 Modified:     Tue May 15 02:01:07 2018
 
 Operator:     pbrt_texture_windy
-Label:        PBRT WindyTexture
+Label:        PBRT Windy Texture
 Path:         oplib:/Vop/pbrt_texture_windy?Vop/pbrt_texture_windy
 Icon:         opdef:/Vop/pbrt_texture_windy?IconImage
 Table:        Vop
@@ -783,7 +783,7 @@ Empty:        false
 Modified:     Tue May 15 02:01:07 2018
 
 Operator:     pbrt_texture_marble
-Label:        PBRT MarbleTexture
+Label:        PBRT Marble Texture
 Path:         oplib:/Vop/pbrt_texture_marble?Vop/pbrt_texture_marble
 Icon:         opdef:/Vop/pbrt_texture_marble?IconImage
 Table:        Vop
@@ -797,7 +797,7 @@ Empty:        false
 Modified:     Tue May 15 02:01:07 2018
 
 Operator:     pbrt_texture_ptex
-Label:        PBRT PtexTexture
+Label:        PBRT Ptex Texture
 Path:         oplib:/Vop/pbrt_texture_ptex?Vop/pbrt_texture_ptex
 Icon:         opdef:/Vop/pbrt_texture_ptex?IconImage
 Table:        Vop
@@ -811,7 +811,7 @@ Empty:        false
 Modified:     Tue May 15 02:01:07 2018
 
 Operator:     pbrt_material_interface
-Label:        PBRT InterfaceMaterial
+Label:        PBRT Interface Material
 Path:         oplib:/Vop/pbrt_material_interface?Vop/pbrt_material_interface
 Icon:         opdef:/Vop/pbrt_material_interface?IconImage
 Table:        Vop
@@ -825,7 +825,7 @@ Empty:        false
 Modified:     Thu May 17 00:27:42 2018
 
 Operator:     pbrt_material_coateddiffuse
-Label:        PBRT CoatedDiffuseMaterial
+Label:        PBRT CoatedDiffuse Material
 Path:         oplib:/Vop/pbrt_material_coateddiffuse?Vop/pbrt_material_coateddiffuse
 Icon:         opdef:/Vop/pbrt_material_coateddiffuse?IconImage
 Table:        Vop
@@ -839,7 +839,7 @@ Empty:        false
 Modified:     Sat Aug 22 20:53:45 2020
 
 Operator:     pbrt_material_coatedconductor
-Label:        PBRT CoatedConductorMaterial
+Label:        PBRT CoatedConductor Material
 Path:         oplib:/Vop/pbrt_material_coatedconductor?Vop/pbrt_material_coatedconductor
 Icon:         opdef:/Vop/pbrt_material_coatedconductor?IconImage
 Table:        Vop
@@ -853,7 +853,7 @@ Empty:        false
 Modified:     Mon Jan 11 19:38:00 2021
 
 Operator:     pbrt_material_diffusetransmission
-Label:        PBRT DiffuseTransmissionMaterial
+Label:        PBRT DiffuseTransmission Material
 Path:         oplib:/Vop/pbrt_material_diffusetransmission?Vop/pbrt_material_diffusetransmission
 Icon:         opdef:/Vop/pbrt_material_diffusetransmission?IconImage
 Table:        Vop
@@ -867,7 +867,7 @@ Empty:        false
 Modified:     Sun Aug 23 02:14:48 2020
 
 Operator:     pbrt_material_dieletric
-Label:        PBRT DielectricMaterial
+Label:        PBRT Dielectric Material
 Path:         oplib:/Vop/pbrt_material_dieletric?Vop/pbrt_material_dieletric
 Icon:         opdef:/Vop/pbrt_material_dieletric?IconImage
 Table:        Vop
@@ -881,7 +881,7 @@ Empty:        false
 Modified:     Sun Aug 23 02:14:39 2020
 
 Operator:     pbrt_material_thindieletric
-Label:        PBRT ThinDielectricMaterial
+Label:        PBRT ThinDielectric Material
 Path:         oplib:/Vop/pbrt_material_thindieletric?Vop/pbrt_material_thindieletric
 Icon:         opdef:/Vop/pbrt_material_thindieletric?IconImage
 Table:        Vop
@@ -895,7 +895,7 @@ Empty:        false
 Modified:     Sun Aug 23 02:14:30 2020
 
 Operator:     pbrt_material_conductor
-Label:        PBRT ConductorMaterial
+Label:        PBRT Conductor Material
 Path:         oplib:/Vop/pbrt_material_conductor?Vop/pbrt_material_conductor
 Icon:         opdef:/Vop/pbrt_material_conductor?IconImage
 Table:        Vop
@@ -909,7 +909,7 @@ Empty:        false
 Modified:     Sun Aug 23 02:23:05 2020
 
 Operator:     pbrt_material_measured
-Label:        PBRT MeasuredMaterial
+Label:        PBRT Measured Material
 Path:         oplib:/Vop/pbrt_material_measured?Vop/pbrt_material_measured
 Icon:         opdef:/Vop/pbrt_material_measured?IconImage
 Table:        Vop
@@ -923,7 +923,7 @@ Empty:        false
 Modified:     Sun Aug 23 02:24:37 2020
 
 Operator:     pbrt_medium_homogeneous
-Label:        PBRT HomogeneousMedium
+Label:        PBRT Homogeneous Medium
 Path:         oplib:/Vop/pbrt_medium_homogeneous?Vop/pbrt_medium_homogeneous
 Icon:         opdef:/Vop/pbrt_medium_homogeneous?IconImage
 Table:        Vop
@@ -938,7 +938,7 @@ Empty:        false
 Modified:     Sun Sep 13 12:10:06 2020
 
 Operator:     pbrt_medium_uniformgrid
-Label:        PBRT UniformGridMedium
+Label:        PBRT UniformGrid Medium
 Path:         oplib:/Vop/pbrt_medium_uniformgrid?Vop/pbrt_medium_uniformgrid
 Icon:         opdef:/Vop/pbrt_medium_uniformgrid?IconImage
 Table:        Vop
@@ -953,7 +953,7 @@ Empty:        false
 Modified:     Sun Sep 13 12:18:09 2020
 
 Operator:     pbrt_medium_cloud
-Label:        PBRT CloudMedium
+Label:        PBRT Cloud Medium
 Path:         oplib:/Vop/pbrt_medium_cloud?Vop/pbrt_medium_cloud
 Icon:         opdef:/Vop/pbrt_medium_cloud?IconImage
 Table:        Vop
@@ -968,7 +968,7 @@ Empty:        false
 Modified:     Sun Sep 13 12:10:24 2020
 
 Operator:     pbrt_medium_nanovdb
-Label:        PBRT NanoVDBMedium
+Label:        PBRT NanoVDB Medium
 Path:         oplib:/Vop/pbrt_medium_nanovdb?Vop/pbrt_medium_nanovdb
 Icon:         opdef:/Vop/pbrt_medium_nanovdb?IconImage
 Table:        Vop
