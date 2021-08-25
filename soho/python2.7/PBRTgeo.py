@@ -356,11 +356,18 @@ def tube_wrangler(gdp, paramset=None, properties=None):
     return
 
 
-def splice_into_every_n(iter_a, iter_b, n):
-    for i, v in iter_a:
+def splice_into_every_n_end(iter_a, iter_b, n):
+    for i, v in enumerate(iter_a):
         yield v
         if i % n == n - 1:
             yield next(iter_b)
+
+
+def splice_into_every_n_start(iter_a, iter_b, n):
+    for i, v in enumerate(iter_a):
+        if i % n == 0:
+            yield next(iter_b)
+        yield v
 
 
 class OutputGeo(object):
@@ -387,7 +394,10 @@ class OutputGeo(object):
         self._init_mesh(mesh_gdp)
 
     def _init_mesh(self, mesh_gdp):
-        self.gdp = mesh_gdp
+        self._gdp = mesh_gdp
+
+        self.num_points = len(self.gdp.iterPoints())
+        self.num_prims = len(self.gdp.iterPrims())
 
         N_attrib = self.gdp.findVertexAttrib("N")
         if N_attrib is None:
@@ -449,6 +459,10 @@ class OutputGeo(object):
                 sort_verb = hou.sopNodeTypeCategory().nodeVerb("sort")
                 sort_verb.setParms({"ptsort": 1})
                 sort_verb.execute(self.gdp, [self.gdp])
+
+    @property
+    def gdp(self):
+        return self._gdp
 
     @property
     def indices(self):
@@ -526,19 +540,17 @@ class OutputGeo(object):
 
         return mesh_paramset
 
-    def ply_writer(self, path):
+    def save_ply(self, path):
 
+        soho.makeFilePathDirsIfEnabled(path)
         with open(path, "wb") as f_handle:
-
-            num_points = len(self.gdp.iterPoints())
-            num_prims = len(self.gdp.iterPrims())
 
             num_elements = 3
 
             header = [
                 "ply",
                 "format binary_little_endian 1.0",
-                "element vertex %i" % num_points,
+                "element vertex %i" % self.num_points,
                 "property float x",
                 "property float y",
                 "property float z",
@@ -553,8 +565,8 @@ class OutputGeo(object):
                 num_elements += 2
             header.extend(
                 [
-                    "element face %i" % num_prims,
-                    "property list uchar int vertex_indices",
+                    "element face %i" % self.num_prims,
+                    "property list int int vertex_indices",
                 ]
             )
             if self.has_faceIndices:
@@ -564,48 +576,58 @@ class OutputGeo(object):
             f_handle.write("\r\n".join(header))
 
             data_pool = array.array("f")
-            data_pool.fromstring("\x00" * 4 * num_elements * num_points)
+            data_pool.fromstring("\x00" * 4 * num_elements * self.num_points)
 
             tmp = array.array("f")
-            tmp.fromstring(geo.pointFloatAttribValuesAsString("P"))
+            tmp.fromstring(self.gdp.pointFloatAttribValuesAsString("P"))
             offset = 0
             data_pool[offset::num_elements] = tmp[0::3]
-            offset = +1
+            offset += 1
             data_pool[offset::num_elements] = tmp[1::3]
-            offset = +1
+            offset += 1
             data_pool[offset::num_elements] = tmp[2::3]
-            offset = +1
+            offset += 1
             del tmp
 
             if self.has_N:
                 tmp = array.array("f")
-                tmp.fromstring(geo.pointFloatAttribValuesAsString("N"))
+                tmp.fromstring(self.gdp.pointFloatAttribValuesAsString("N"))
                 data_pool[offset::num_elements] = tmp[0::3]
-                offset = +1
+                offset += 1
                 data_pool[offset::num_elements] = tmp[1::3]
-                offset = +1
+                offset += 1
                 data_pool[offset::num_elements] = tmp[2::3]
-                offset = +1
+                offset += 1
                 del tmp
 
             if self.has_uv:
                 tmp = array.array("f")
-                tmp.fromstring(geo.pointFloatAttribValuesAsString("uv"))
+                tmp.fromstring(self.gdp.pointFloatAttribValuesAsString("uv"))
                 data_pool[offset::num_elements] = tmp[0::3]
-                offset = +1
+                offset += 1
                 data_pool[offset::num_elements] = tmp[1::3]
-                offset = +1
+                offset += 1
                 del tmp
 
             data_pool.tofile(f_handle)
 
-            tmp = array.array("i")
-            tmp.fromstring(geo.primIntAttribValuesAsString("face_indices"))
-            data_pool = array.array(
-                "i", splice_into_every_n(self.indices, iter(tmp), 3)
-            )
+            if self.has_faceIndices:
+                tmp = array.array("i")
+                tmp.fromstring(self.gdp.primIntAttribValuesAsString("faceIndices"))
+                data_pool = array.array(
+                    "i",
+                    splice_into_every_n_start(
+                        splice_into_every_n_end(self.indices, iter(tmp), 3),
+                        iter(lambda: 3, 0),
+                        4,
+                    ),
+                )
+                del tmp
+            else:
+                data_pool = array.array(
+                    "i", splice_into_every_n_start(self.indices, iter(lambda: 3, 0), 3)
+                )
             data_pool.tofile(f_handle)
-            del tmp
 
 
 # NOTE: HOUDINI COMPATIBILITY
@@ -671,7 +693,36 @@ def mesh_wrangler(gdp, paramset=None, properties=None):
         computeN = properties["pbrt_computeN"].Value[0]
 
     output_geo = OutputGeo(gdp, computeN)
-    wrangler_paramset = output_geo.mesh_params()
+
+    # There are various conditions which must be met in order to save a ply file
+    geofile_mode = properties["pbrt_allow_geofiles"].Value[0]
+    # Is the mode even enabled?
+    save_ply = geofile_mode > 0
+    # If the mode is 1 (threshold mode), are under the poly count we can't save a ply
+    save_ply &= (
+        False
+        if (
+            geofile_mode == 1
+            and output_geo.num_prims <= properties["pbrt_geofile_threshold"].Value[0]
+        )
+        else True
+    )
+    # If the geometry uses an S attribute which ply does not support we can't use it
+    save_ply &= False if output_geo.has_S else True
+
+    if save_ply:
+        shape = "plymesh"
+        save_locations = scene_state.get_geo_path_and_part(
+            properties["pbrt_geo_location"].Value[0],
+            properties["object:soppath"].Value[0],
+            "ply",
+            properties[".time_dependent"],
+        )
+        output_geo.save_ply(save_locations.save_path)
+        wrangler_paramset = ParamSet()
+        wrangler_paramset.add(PBRTParam("string", "filename", save_locations.pbrt_path))
+    else:
+        wrangler_paramset = output_geo.mesh_params()
 
     mesh_paramset.update(wrangler_paramset)
     api.Shape(shape, mesh_paramset)
