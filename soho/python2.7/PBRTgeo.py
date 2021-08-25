@@ -904,7 +904,7 @@ def vdb_wrangler(gdp, paramset=None, properties=None):
     else:
         sop_path = properties["object:soppath"].Value[0]
 
-    if not scene_state.allow_geofiles:
+    if not properties["pbrt_allow_geofiles"].Value[0]:
         return None
 
     if not scene_state.nanovdb_converter:
@@ -958,7 +958,12 @@ def vdb_wrangler(gdp, paramset=None, properties=None):
         # converting from the vdb path. Then ultimately the path of the nvdb file
         # in the pbrt scene file which might be a different relative path to the
         # one we exported.
-        save_locations = scene_state.get_geo_path_and_part(sop_path, "nvdb")
+        save_locations = scene_state.get_geo_path_and_part(
+            properties["pbrt_geo_location"].Value[0],
+            sop_path,
+            "nvdb",
+            properties[".time_dependent"],
+        )
 
         nvdb_path = save_locations.save_path
 
@@ -2062,6 +2067,8 @@ def output_geo(soppath, now, properties=None):
     node = hou.node(soppath)
     if node is None or node.type().category() != hou.sopNodeTypeCategory():
         return
+
+    properties[".time_dependent"] = node.isTimeDependent()
 
     input_gdp = node.geometry()
     if input_gdp is None:

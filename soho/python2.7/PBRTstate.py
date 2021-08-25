@@ -69,10 +69,7 @@ if gdp is not None:
         self.exterior = None
         self.tesselator = None
         self.have_nanovdb_convert = True
-        self.allow_geofiles = None
-        self.geo_location = None
         self.nanovdb_converter = None
-        self.geofile_threshold = None
         self.rop = None
         self.output_mode = None
         self.disk_file = None
@@ -103,25 +100,12 @@ if gdp is not None:
             ),
             "now": soho.SohoParm("state:time", "real", [0], False, key="now"),
             "fps": soho.SohoParm("state:fps", "real", [24], False, key="fps"),
-            "pbrt_allow_geofiles": soho.SohoParm(
-                "pbrt_allow_geofiles", "bool", [1], False, key="allow_geofiles"
-            ),
-            "pbrt_geo_location": soho.SohoParm(
-                "pbrt_geo_location",
-                "string",
-                ["$HIP/geometry"],
-                False,
-                key="geo_location",
-            ),
             "pbrt_nanovdb_converter": soho.SohoParm(
                 "pbrt_nanovdb_converter",
                 "string",
                 ["nanovdb_convert -z -f {vdb} {nanovdb}"],
                 False,
                 key="nanovdb_converter",
-            ),
-            "pbrt_geofile_threshold": soho.SohoParm(
-                "pbrt_geofile_threshold", "integer", [10000], key="geofile_threshold"
             ),
         }
         rop = soho.getOutputDriver()
@@ -143,7 +127,7 @@ if gdp is not None:
         self.reset()
         return
 
-    def get_geo_path_and_part(self, sop_path, ext):
+    def get_geo_path_and_part(self, geo_location, sop_path, ext, time_dependent=True):
         SaveLocations = collections.namedtuple(
             "SaveLocations", ["save_path", "pbrt_path", "part"]
         )
@@ -155,7 +139,7 @@ if gdp is not None:
         # makes more sense to have relative paths to your $HIP. Technically we could
         # use os.chdir, but his might break other file references within the session.
 
-        if not os.path.isabs(self.geo_location):
+        if not os.path.isabs(geo_location):
             if self.output_mode == 1:
                 # Disk file behavior (diskfile)
                 # os.getcwd : /my/project
@@ -167,17 +151,17 @@ if gdp is not None:
                 # Note, we can't use os.path.join, since on Windows Houdini still
                 # prefers "/"
                 diskfile_dir = "." if not diskfile_dir else diskfile_dir
-                save_dir = "{}/{}".format(diskfile_dir, self.geo_location)
+                save_dir = "{}/{}".format(diskfile_dir, geo_location)
             else:
                 # Stdout behavior ($HIP)
                 # os.getcwd : /my/project
                 # geo_location : geometry
                 # pbrt_path : geometry/filename.ext
                 # save_path : /my/project/geometry/filename.ext
-                save_dir = "./{}".format(self.geo_location)
+                save_dir = "./{}".format(geo_location)
         else:
-            save_dir = self.geo_location
-        pbrt_dir = self.geo_location
+            save_dir = geo_location
+        pbrt_dir = geo_location
 
         part_num = self.geometry_parts[sop_path]
         self.geometry_parts[sop_path] += 1
@@ -185,13 +169,19 @@ if gdp is not None:
         # TODO: We could be smart and not output frames that are not time dependent.
         #       we can check this via a sohog gdp.globalValue('geo:timedependent')[0]
 
-        frame = hou.timeToFrame(self.now)
+        frame_str = ""
+        if time_dependent:
+            frame = hou.timeToFrame(self.now)
+            frame_str = ".{frame:g}".format(frame=frame)
+
         filename = sop_path
         if filename.startswith("/obj/"):
             filename = filename[5:]
-        filename = filename.replace("/", "-")
-        filename = "{filename}-{part}.{frame:g}.{ext}".format(
-            filename=filename, part=part_num, frame=frame, ext=ext
+        else:
+            filename = filename[1:]
+        filename = filename.replace("/", "+")
+        filename = "{filename}+{part}{frame}.{ext}".format(
+            filename=filename, part=part_num, frame=frame_str, ext=ext
         )
         return SaveLocations(
             "{}/{}".format(save_dir, filename),
@@ -210,10 +200,7 @@ if gdp is not None:
         self.ver = None
         self.now = None
         self.inv_fps = None
-        self.allow_geofiles = None
-        self.geo_location = None
         self.nanovdb_converter = None
-        self.geofile_threshold = None
         self.shading_nodes.clear()
         self.invalid_shading_nodes.clear()
         self.medium_nodes.clear()

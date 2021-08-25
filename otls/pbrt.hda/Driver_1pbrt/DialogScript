@@ -1304,23 +1304,28 @@
 			parm {
 				name    "pbrt_allow_geofiles"
 				label   "Allow Geo Archives"
-				type    toggle
-				default { "1" }
+				type    ordinal
+				default { "threshold" }
 				help    "When outputing we have the option to save NanoVDB and meshes to separate files."
+				menu {
+					"off" "Disable geometry archives (ply and nvdb)"
+					"threshold" "Save nvdb and meshes as ply after threshold"
+					"always" "Always save nvdb and meshes as ply"
+				}
 			}
 			parm {
 				name    "pbrt_geo_location"
 				label   "Geometry Output Path"
 				type    directory
 				default { "geometry" }
-				disablewhen "{ pbrt_allow_geofiles != 1 }"
+				disablewhen "{ pbrt_allow_geofiles off }"
 			}
 			parm {
 				name    "pbrt_nanovdb_converter"
 				label   "VDB -> NanoVDB Tool"
 				type    file
 				default { "nanovdb_convert -z -f {vdb} {nanovdb}" }
-				disablewhen "{ pbrt_allow_geofiles != 1 }"
+				disablewhen "{ pbrt_allow_geofiles off }"
 			}
             parm {
                 name    "pbrt_geofile_threshold"
@@ -1328,7 +1333,7 @@
                 type    integer
                 default { "10000" }
                 help    "Threshold for when PLY files are used"
-				disablewhen "{ pbrt_allow_geofiles != 1 }"
+				disablewhen "{ pbrt_allow_geofiles != threshold }"
             }
 		}
         groupsimple {

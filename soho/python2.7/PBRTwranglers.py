@@ -929,7 +929,16 @@ def wrangle_geo(obj, wrangler, now):
         "pbrt_include": SohoPBRT("pbrt_include", "string", [""], False),
         "pbrt_import": SohoPBRT("pbrt_import", "string", [""], False),
         "pbrt_alpha_texture": SohoPBRT(
-            "pbrt_alpha_texture", "string", [""], skipdefault=False, key="alpha"
+            "pbrt_alpha_texture", "string", [""], False, key="alpha"
+        ),
+        "pbrt_allow_geofiles": soho.SohoParm(
+            "pbrt_allow_geofiles", "integer", [1], False
+        ),
+        "pbrt_geo_location": soho.SohoParm(
+            "pbrt_geo_location", "string", ["geometry"], False
+        ),
+        "pbrt_geofile_threshold": soho.SohoParm(
+            "pbrt_geofile_threshold", "integer", [10000], False
         ),
     }
     properties = obj.evaluate(parm_selection, now)

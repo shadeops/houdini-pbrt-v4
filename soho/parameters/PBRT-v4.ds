@@ -126,7 +126,7 @@
             "srgb"      "sRGB"
             "rec2020"    "Rec. 2020"
             "dci-p3"  "DCI P3"
-			"aces2065-1" "ACES 2065-1"
+            "aces2065-1" "ACES 2065-1"
         }
         parmtag     { "pbrt.meta" "1" }
     }
@@ -137,11 +137,47 @@
         type        oppath
         default     { "" }
         parmtag     { spare_opfilter "!!VOP!!" }
-    }
+    } 
     parm {
-		SOHO_IMAGE(pbrt_emissionfilename, "Emission Filename", "Geometry", "")
+        SOHO_IMAGE(pbrt_emissionfilename, "Emission Filename", "Geometry", "")
         parmtag     { filechooser_mode  "read" }
-		help		"A special sampling option for Bilinear Patch Meshes"
+        help        "A special sampling option for Bilinear Patch Meshes"
+    }
+    collection {
+        name    "geo_files_output"
+        label   "Geo Files Output"
+        parmtag { spare_category "Geometry" }
+        
+        parm {
+            name    "pbrt_allow_geofiles"
+            label   "Allow Geo Archives"
+            type    ordinal
+            default { "threshold" }
+            parmtag { spare_category "Geometry" }
+            help    "When outputing we have the option to save NanoVDB and meshes to separate files."
+            menu {
+                "off" "Disable geometry archives (ply and nvdb)"
+                "threshold" "Save nvdb and meshes as ply after threshold"
+                "always" "Always save nvdb and meshes as ply"
+            }
+        }
+        parm {
+            name    "pbrt_geo_location"
+            label   "Geometry Output Path"
+            type    directory
+            default { "geometry" }
+            parmtag { spare_category "Geometry" }
+            disablewhen "{ pbrt_allow_geofiles off }"
+        }
+        parm {
+            name    "pbrt_geofile_threshold"
+            label   "Geo. File Threshold"
+            type    integer
+            default { "10000" }
+            help    "Threshold for when PLY files are used"
+            parmtag { spare_category "Geometry" }
+            disablewhen "{ pbrt_allow_geofiles != threshold }"
+        }
     }
     parm {
         name        pbrt_interior
