@@ -498,7 +498,7 @@ class OutputGeo(object):
 
         if self.has_S:
             S = array.array("f")
-            S.fromsbytes(self.gdp.pointFloatAttribValuesAsString("S"))
+            S.frombytes(self.gdp.pointFloatAttribValuesAsString("S"))
             mesh_paramset.add(PBRTParam("vector", "S", S))
 
         if self.has_faceIndices:
@@ -740,7 +740,8 @@ def patch_wrangler(gdp, paramset=None, properties=None):
                 prim_paramset.add(
                     PBRTParam("string", "emissionfilename", emission_file)
                 )
-            wrangler_paramset = mesh_params(gdp, computeN, is_patchmesh=True)
+            output_geo = OutputGeo(emission_gdp, computeN, is_patchmesh=True)
+            wrangler_paramset = output_geo.mesh_params()
             prim_paramset.update(wrangler_paramset)
 
             api.Shape("bilinearmesh", prim_paramset)
@@ -2133,7 +2134,7 @@ def output_geo(soppath, now, properties=None):
                 override_gdps = {default_override: shape_gdp}
 
             override_count = 0
-            for override_str, override_gdp in override_gdps.iteritems():
+            for override_str, override_gdp in override_gdps.items():
 
                 node_cache = {}
                 param_cache = {}
