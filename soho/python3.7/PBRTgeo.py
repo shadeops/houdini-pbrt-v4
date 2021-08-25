@@ -354,6 +354,258 @@ def tube_wrangler(gdp, paramset=None, properties=None):
     return
 
 
+def splice_into_every_n(iter_a, iter_b, n):
+    for i, v in iter_a:
+        yield v
+        if i % n == n - 1:
+            yield next(iter_b)
+
+
+class OutputGeo(object):
+    """Prepares a Hou.Geometry for a trianglemesh or patchgrid
+
+    The following attributes are checked for -
+     P (point), built-in attribute
+     N (vertex/point), float[3]
+     uv (vertex/point), float[3]
+     S (vertex/point), float[3]
+     faceIndices (prim), integer, used for ptex
+
+    Args:
+        mesh_gdp (hou.Geometry): Input geo
+        computeN (bool): Whether to auto-compute normals if they don't exist
+                         Defaults to True
+        is_patchmesh (bool): Is this a patch mesh
+                         Defaults to False
+    """
+
+    def __init__(self, mesh_gdp, computeN=True, is_patchmesh=False):
+        self.computeN = computeN
+        self.is_patchmesh = is_patchmesh
+        self._init_mesh(mesh_gdp)
+
+    def _init_mesh(self, mesh_gdp):
+        self.gdp = mesh_gdp
+
+        N_attrib = self.gdp.findVertexAttrib("N")
+        if N_attrib is None:
+            N_attrib = self.gdp.findPointAttrib("N")
+
+        # If there are no vertex or point normals and we need to compute
+        # them with a SopVerb
+        if N_attrib is None and self.computeN:
+            normal_verb = hou.sopNodeTypeCategory().nodeVerb("normal")
+            # type 0 is point normals
+            normal_verb.setParms({"type": 0})
+            normal_verb.execute(self.gdp, [self.gdp])
+            N_attrib = self.gdp.findPointAttrib("N")
+
+        uv_attrib = self.gdp.findVertexAttrib("uv")
+        if uv_attrib is None:
+            uv_attrib = self.gdp.findPointAttrib("uv")
+
+        if self.is_patchmesh:
+            S_attrib = None
+            faceIndices_attrib = None
+        else:
+            S_attrib = self.gdp.findVertexAttrib("S")
+            if S_attrib is None:
+                S_attrib = self.gdp.findPointAttrib("S")
+
+            faceIndices_attrib = self.gdp.findPrimAttrib("faceIndices")
+
+        # We need to unique the points if any of the handles
+        # to vtx attributes exists.
+        to_promote = []
+        for attrib in (N_attrib, uv_attrib, S_attrib):
+            if attrib is None:
+                continue
+            if attrib.type() == hou.attribType.Vertex:
+                to_promote.append(attrib.name())
+
+        self.unique_points = True if to_promote else False
+
+        if self.unique_points:
+            if hou.applicationVersion() >= HVER_18:
+                unique_verb = hou.sopNodeTypeCategory().nodeVerb("splitpoints")
+            else:
+                unique_verb = hou.sopNodeTypeCategory().nodeVerb("facet")
+                unique_verb.setParms({"unique": True})
+            unique_verb.execute(self.gdp, [self.gdp])
+
+            promote_verb = hou.sopNodeTypeCategory().nodeVerb("attribpromote")
+            # inclass 3 = vertex, method 8 = first match
+            promote_str = " ".join(to_promote)
+            promote_verb.setParms({"inclass": 3, "method": 8, "inname": promote_str})
+            promote_verb.execute(self.gdp, [self.gdp])
+
+            # If we sort the points by their vtx number we can just get a simple
+            # range, the C++ Sort is much faster than looking up the actual point
+            # numbers from the verts. The previous implementation of this was doing
+            # the sort indirectly by iterator per vert per prim.
+            if not self.is_patchmesh:
+                sort_verb = hou.sopNodeTypeCategory().nodeVerb("sort")
+                sort_verb.setParms({"ptsort": 1})
+                sort_verb.execute(self.gdp, [self.gdp])
+
+    @property
+    def indices(self):
+        if self.unique_points and not self.is_patchmesh:
+            # This is an optimization where we know the indices are 0,1,2,3,4,5....
+            return linear_vtx_gen(self.gdp, 3)
+
+        if self.is_patchmesh:
+            vertices = patch_vtx_gen(self.gdp)
+        else:
+            vertices = mesh_vtx_gen(self.gdp)
+
+        return vtx_attrib_gen(vertices, None)
+
+    @property
+    def has_S(self):
+        return True if self.gdp.findPointAttrib("S") is not None else False
+
+    @property
+    def has_uv(self):
+        return True if self.gdp.findPointAttrib("uv") is not None else False
+
+    @property
+    def has_N(self):
+        return True if self.gdp.findPointAttrib("N") is not None else False
+
+    @property
+    def has_faceIndices(self):
+        return True if self.gdp.findPrimAttrib("faceIndices") is not None else False
+
+    def mesh_params(self):
+
+        mesh_paramset = ParamSet()
+        mesh_paramset.add(PBRTParam("integer", "indices", self.indices))
+
+        # NOTE: We are using arrays here for very fast access since we can
+        #       fetch all the values at once compactly, while faster, this
+        #       will take more RAM than a generator approach. If this becomes
+        #       and issue we can change it.
+
+        P = array.array("f")
+        P.frombytes(self.gdp.pointFloatAttribValuesAsString("P"))
+        mesh_paramset.add(PBRTParam("point", "P", P))
+
+        if self.has_N:
+            N = array.array("f")
+            N.frombytes(self.gdp.pointFloatAttribValuesAsString("N"))
+            mesh_paramset.add(PBRTParam("normal", "N", N))
+
+        if self.has_S:
+            S = array.array("f")
+            S.fromsbytes(self.gdp.pointFloatAttribValuesAsString("S"))
+            mesh_paramset.add(PBRTParam("vector", "S", S))
+
+        if self.has_faceIndices:
+            faceIndices = array.array("i")
+            faceIndices.frombytes(self.gdp.primIntAttribValuesAsString("faceIndices"))
+            mesh_paramset.add(PBRTParam("integer", "faceIndices", faceIndices))
+
+        if self.has_uv:
+            uv = array.array("f")
+            uv.frombytes(self.gdp.pointFloatAttribValuesAsString("uv"))
+            # Houdini's uvs are stored as 3 floats, but pbrt only needs two
+            # We'll use some array slicing of continous memory to avoid
+            # costly iteration
+            # The follow is the equivalent of
+            # uv_xy = (x for i, x in enumerate(uv) if i % 3 != 2)
+            # but avoids having to do a mod for N times.
+            uv_x = uv[::3]
+            uv_y = uv[1::3]
+            uv_xy = array.array("f", uv_x + uv_y)
+            uv_xy[::2] = uv_x
+            uv_xy[1::2] = uv_y
+            mesh_paramset.add(PBRTParam("point2", "uv", uv_xy))
+
+        return mesh_paramset
+
+    def ply_writer(self, path):
+
+        with open(path, "wb") as f_handle:
+
+            num_points = len(self.gdp.iterPoints())
+            num_prims = len(self.gdp.iterPrims())
+
+            num_elements = 3
+
+            header = [
+                "ply",
+                "format binary_little_endian 1.0",
+                "element vertex %i" % num_points,
+                "property float x",
+                "property float y",
+                "property float z",
+            ]
+            if self.has_N:
+                header.extend(
+                    ["property float nx", "property float ny", "property float nz"]
+                )
+                num_elements += 3
+            if self.has_uv:
+                header.extend(["property float u", "property float v"])
+                num_elements += 2
+            header.extend(
+                [
+                    "element face %i" % num_prims,
+                    "property list uchar int vertex_indices",
+                ]
+            )
+            if self.has_faceIndices:
+                header.append("property int face_indices")
+            header.extend(["end_header", ""])
+
+            f_handle.write("\r\n".join(header))
+
+            data_pool = array.array("f")
+            data_pool.frombytes("\x00" * 4 * num_elements * num_points)
+
+            tmp = array.array("f")
+            tmp.frombytes(geo.pointFloatAttribValuesAsString("P"))
+            offset = 0
+            data_pool[offset::num_elements] = tmp[0::3]
+            offset = +1
+            data_pool[offset::num_elements] = tmp[1::3]
+            offset = +1
+            data_pool[offset::num_elements] = tmp[2::3]
+            offset = +1
+            del tmp
+
+            if self.has_N:
+                tmp = array.array("f")
+                tmp.frombytes(geo.pointFloatAttribValuesAsString("N"))
+                data_pool[offset::num_elements] = tmp[0::3]
+                offset = +1
+                data_pool[offset::num_elements] = tmp[1::3]
+                offset = +1
+                data_pool[offset::num_elements] = tmp[2::3]
+                offset = +1
+                del tmp
+
+            if self.has_uv:
+                tmp = array.array("f")
+                tmp.frombytes(geo.pointFloatAttribValuesAsString("uv"))
+                data_pool[offset::num_elements] = tmp[0::3]
+                offset = +1
+                data_pool[offset::num_elements] = tmp[1::3]
+                offset = +1
+                del tmp
+
+            data_pool.tofile(f_handle)
+
+            tmp = array.array("i")
+            tmp.frombytes(geo.primIntAttribValuesAsString("face_indices"))
+            data_pool = array.array(
+                "i", splice_into_every_n(self.indices, iter(tmp), 3)
+            )
+            data_pool.tofile(f_handle)
+            del tmp
+
+
 # NOTE: HOUDINI COMPATIBILITY
 #   The parametric uvs for trianglemeshs do NOT match Houdini's. This is acceptable
 #   since the common use case is to supply uvs. I believe it would be possible to
@@ -391,11 +643,6 @@ def mesh_wrangler(gdp, paramset=None, properties=None):
     # If subdivs are turned on, instead of running the
     # trianglemesh wrangler, use the loop subdiv one instead
 
-    shape = "trianglemesh"
-    if "pbrt_rendersubd" in properties:
-        if properties["pbrt_rendersubd"].Value[0]:
-            shape = "loopsubdiv"
-
     gdp = scene_state.tesselate_geo(gdp)
 
     # Exit out if there are no prims
@@ -403,160 +650,31 @@ def mesh_wrangler(gdp, paramset=None, properties=None):
         api.Comment("No primitives found")
         return None
 
+    shape = "trianglemesh"
+    if "pbrt_rendersubd" in properties:
+        if properties["pbrt_rendersubd"].Value[0]:
+            shape = "loopsubdiv"
+
     if shape == "loopsubdiv":
         wrangler_paramset = loopsubdiv_params(gdp)
         if "levels" in properties:
             wrangler_paramset.replace(properties["levels"].to_pbrt())
-    else:
-        computeN = True
-        if "pbrt_computeN" in properties:
-            computeN = properties["pbrt_computeN"].Value[0]
-        wrangler_paramset = mesh_params(gdp, computeN)
+
+        mesh_paramset.update(wrangler_paramset)
+        api.Shape(shape, mesh_paramset)
+        return None
+
+    computeN = True
+    if "pbrt_computeN" in properties:
+        computeN = properties["pbrt_computeN"].Value[0]
+
+    output_geo = OutputGeo(gdp, computeN)
+    wrangler_paramset = output_geo.mesh_params()
 
     mesh_paramset.update(wrangler_paramset)
-
     api.Shape(shape, mesh_paramset)
 
     return None
-
-
-def mesh_params(mesh_gdp, computeN=True, is_patchmesh=False):
-    """Generates a ParamSet for a trianglemesh
-
-    The following attributes are checked for -
-     P (point), built-in attribute
-     N (vertex/point), float[3]
-     uv (vertex/point), float[3]
-     S (vertex/point), float[3]
-     faceIndices (prim), integer, used for ptex
-
-    Args:
-        mesh_gdp (hou.Geometry): Input geo
-        computeN (bool): Whether to auto-compute normals if they don't exist
-                         Defaults to True
-    Returns: ParamSet of the attributes on the geometry
-    """
-
-    mesh_paramset = ParamSet()
-
-    # Optional Attributes
-
-    N_attrib = mesh_gdp.findVertexAttrib("N")
-    if N_attrib is None:
-        N_attrib = mesh_gdp.findPointAttrib("N")
-
-    # If there are no vertex or point normals and we need to compute
-    # them with a SopVerb
-    if N_attrib is None and computeN:
-        normal_verb = hou.sopNodeTypeCategory().nodeVerb("normal")
-        # type 0 is point normals
-        normal_verb.setParms({"type": 0})
-        normal_verb.execute(mesh_gdp, [mesh_gdp])
-        N_attrib = mesh_gdp.findPointAttrib("N")
-
-    uv_attrib = mesh_gdp.findVertexAttrib("uv")
-    if uv_attrib is None:
-        uv_attrib = mesh_gdp.findPointAttrib("uv")
-
-    if is_patchmesh:
-        S_attrib = None
-        faceIndices_attrib = None
-    else:
-        S_attrib = mesh_gdp.findVertexAttrib("S")
-        if S_attrib is None:
-            S_attrib = mesh_gdp.findPointAttrib("S")
-
-        faceIndices_attrib = mesh_gdp.findPrimAttrib("faceIndices")
-
-    # We need to unique the points if any of the handles
-    # to vtx attributes exists.
-    to_promote = []
-    for attrib in (N_attrib, uv_attrib, S_attrib):
-        if attrib is None:
-            continue
-        if attrib.type() == hou.attribType.Vertex:
-            to_promote.append(attrib.name())
-
-    unique_points = True if to_promote else False
-
-    if is_patchmesh:
-        vertices = patch_vtx_gen(mesh_gdp)
-    else:
-        vertices = mesh_vtx_gen(mesh_gdp)
-
-    if unique_points:
-        if hou.applicationVersion() >= HVER_18:
-            unique_verb = hou.sopNodeTypeCategory().nodeVerb("splitpoints")
-        else:
-            unique_verb = hou.sopNodeTypeCategory().nodeVerb("facet")
-            unique_verb.setParms({"unique": True})
-        unique_verb.execute(mesh_gdp, [mesh_gdp])
-
-        promote_verb = hou.sopNodeTypeCategory().nodeVerb("attribpromote")
-        # inclass 3 = vertex, method 8 = first match
-        promote_str = " ".join(to_promote)
-        promote_verb.setParms({"inclass": 3, "method": 8, "inname": promote_str})
-        promote_verb.execute(mesh_gdp, [mesh_gdp])
-
-        # If we sort the points by their vtx number we can just get a simple
-        # range, the C++ Sort is much faster than looking up the actual point
-        # numbers from the verts. The previous implementation of this was doing
-        # the sort indirectly by iterator per vert per prim.
-        if not is_patchmesh:
-            sort_verb = hou.sopNodeTypeCategory().nodeVerb("sort")
-            sort_verb.setParms({"ptsort": 1})
-            sort_verb.execute(mesh_gdp, [mesh_gdp])
-
-            indices = linear_vtx_gen(mesh_gdp, 3)
-        else:
-            indices = vtx_attrib_gen(vertices, None)
-
-    else:
-        indices = vtx_attrib_gen(vertices, None)
-
-    mesh_paramset.add(PBRTParam("integer", "indices", indices))
-
-    # NOTE: We are using arrays here for very fast access since we can
-    #       fetch all the values at once compactly, while faster, this
-    #       will take more RAM than a generator approach. If this becomes
-    #       and issue we can change it.
-
-    P = array.array("f")
-    P.frombytes(mesh_gdp.pointFloatAttribValuesAsString("P"))
-    mesh_paramset.add(PBRTParam("point", "P", P))
-
-    if N_attrib is not None:
-        N = array.array("f")
-        N.frombytes(mesh_gdp.pointFloatAttribValuesAsString("N"))
-        mesh_paramset.add(PBRTParam("normal", "N", N))
-
-    if S_attrib is not None:
-        S = array.array("f")
-        S.frombytes(mesh_gdp.pointFloatAttribValuesAsString("S"))
-        mesh_paramset.add(PBRTParam("vector", "S", S))
-
-    if faceIndices_attrib is not None:
-        faceIndices = array.array("i")
-        faceIndices.frombytes(mesh_gdp.primIntAttribValuesAsString("faceIndices"))
-        mesh_paramset.add(PBRTParam("integer", "faceIndices", faceIndices))
-
-    if uv_attrib is not None:
-        uv = array.array("f")
-        uv.frombytes(mesh_gdp.pointFloatAttribValuesAsString("uv"))
-        # Houdini's uvs are stored as 3 floats, but pbrt only needs two
-        # We'll use some array slicing of continous memory to avoid
-        # costly iteration
-        # The follow is the equivalent of
-        # uv_xy = (x for i, x in enumerate(uv) if i % 3 != 2)
-        # but avoids having to do a mod for N times.
-        uv_x = uv[::3]
-        uv_y = uv[1::3]
-        uv_xy = array.array("f", uv_x + uv_y)
-        uv_xy[::2] = uv_x
-        uv_xy[1::2] = uv_y
-        mesh_paramset.add(PBRTParam("point2", "uv", uv_xy))
-
-    return mesh_paramset
 
 
 def loopsubdiv_params(mesh_gdp):
