@@ -171,8 +171,7 @@ class ParamSet(collections.abc.MutableSet):
         return item in self._data
 
     def __iter__(self):
-        # TODO: Sort based on type/name?
-        for v in self._data:
+        for v in sorted(self._data, key=lambda x: x.name):
             yield v
 
     def __len__(self):
