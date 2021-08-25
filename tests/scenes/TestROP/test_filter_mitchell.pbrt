@@ -1,6 +1,6 @@
 
-Film "rgb" "integer xresolution" [ 320 ] "integer yresolution" [ 240 ] "string filename" [ "test_filter_mitchell.exr" ]
-PixelFilter "mitchell" "float C" [ 0.3 ] "float yradius" [ 2 ] "float B" [ 0.3 ] "float xradius" [ 2 ]
+Film "rgb" "string filename" [ "test_filter_mitchell.exr" ] "integer xresolution" [ 320 ] "integer yresolution" [ 240 ]
+PixelFilter "mitchell" "float B" [ 0.3 ] "float C" [ 0.3 ] "float xradius" [ 2 ] "float yradius" [ 2 ]
 Sampler "zsobol" "integer pixelsamples" [ 16 ]
 Integrator "volpath" "integer maxdepth" [ 5 ]
 Accelerator "bvh"

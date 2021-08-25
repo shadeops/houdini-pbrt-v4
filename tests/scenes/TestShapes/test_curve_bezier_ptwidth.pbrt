@@ -1,6 +1,6 @@
 
-Film "rgb" "integer xresolution" [ 320 ] "integer yresolution" [ 240 ] "string filename" [ "test_curve_bezier_ptwidth.exr" ]
-PixelFilter "gaussian" "float yradius" [ 2 ] "float xradius" [ 2 ]
+Film "rgb" "string filename" [ "test_curve_bezier_ptwidth.exr" ] "integer xresolution" [ 320 ] "integer yresolution" [ 240 ]
+PixelFilter "gaussian" "float xradius" [ 2 ] "float yradius" [ 2 ]
 Sampler "zsobol" "integer pixelsamples" [ 16 ]
 Integrator "volpath" "integer maxdepth" [ 5 ]
 Accelerator "bvh"
@@ -38,7 +38,7 @@ WorldBegin	# {
     #  /obj/test_curve_bezier_ptwidth
     AttributeBegin	# {
 	ConcatTransform [ 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 ]
-	Shape "curve" "float width0" [ 0.01 ] "string basis" [ "bezier" ] "integer degree" [ 3 ] "point3 P" [ -1 0 0 -1 0 -1 0 0 -1 0 0 0 ] "float width1" [ 0.1 ]
+	Shape "curve" "point3 P" [ -1 0 0 -1 0 -1 0 0 -1 0 0 0 ] "string basis" [ "bezier" ] "integer degree" [ 3 ] "float width0" [ 0.01 ] "float width1" [ 0.1 ]
     AttributeEnd	# }
 
 

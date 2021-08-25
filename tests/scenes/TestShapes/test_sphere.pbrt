@@ -1,6 +1,6 @@
 
-Film "rgb" "integer xresolution" [ 320 ] "integer yresolution" [ 240 ] "string filename" [ "test_sphere.exr" ]
-PixelFilter "gaussian" "float yradius" [ 2 ] "float xradius" [ 2 ]
+Film "rgb" "string filename" [ "test_sphere.exr" ] "integer xresolution" [ 320 ] "integer yresolution" [ 240 ]
+PixelFilter "gaussian" "float xradius" [ 2 ] "float yradius" [ 2 ]
 Sampler "zsobol" "integer pixelsamples" [ 16 ]
 Integrator "volpath" "integer maxdepth" [ 5 ]
 Accelerator "bvh"

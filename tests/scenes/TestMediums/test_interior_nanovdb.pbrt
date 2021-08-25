@@ -1,6 +1,6 @@
 
-Film "rgb" "integer xresolution" [ 320 ] "integer yresolution" [ 240 ] "string filename" [ "test_interior_nanovdb.exr" ]
-PixelFilter "gaussian" "float yradius" [ 2 ] "float xradius" [ 2 ]
+Film "rgb" "string filename" [ "test_interior_nanovdb.exr" ] "integer xresolution" [ 320 ] "integer yresolution" [ 240 ]
+PixelFilter "gaussian" "float xradius" [ 2 ] "float yradius" [ 2 ]
 Sampler "zsobol" "integer pixelsamples" [ 16 ]
 Integrator "volpath" "integer maxdepth" [ 5 ]
 Accelerator "bvh"
@@ -16,7 +16,7 @@ WorldBegin	# {
     #  /obj/hlight1
     AttributeBegin	# {
 	Translate 0 10 0
-	AreaLightSource "diffuse" "bool twosided" [ true ] "float scale" [ 10 ]
+	AreaLightSource "diffuse" "float scale" [ 10 ] "bool twosided" [ true ]
 	AttributeBegin	# {
 	    Shape "sphere" "float alpha" [ 0 ] "float radius" [ 1 ]
 	AttributeEnd	# }

@@ -1,6 +1,6 @@
 
-Film "rgb" "integer xresolution" [ 320 ] "integer yresolution" [ 240 ] "string filename" [ "test_cylinder_caps.exr" ]
-PixelFilter "gaussian" "float yradius" [ 2 ] "float xradius" [ 2 ]
+Film "rgb" "string filename" [ "test_cylinder_caps.exr" ] "integer xresolution" [ 320 ] "integer yresolution" [ 240 ]
+PixelFilter "gaussian" "float xradius" [ 2 ] "float yradius" [ 2 ]
 Sampler "zsobol" "integer pixelsamples" [ 16 ]
 Integrator "volpath" "integer maxdepth" [ 5 ]
 Accelerator "bvh"
@@ -42,7 +42,7 @@ WorldBegin	# {
 	    ConcatTransform [ 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 ]
 	    Rotate -90 1 0 0
 	    AttributeBegin	# {
-		Shape "cylinder" "float zmin" [ -0.5 ] "float zmax" [ 0.5 ]
+		Shape "cylinder" "float zmax" [ 0.5 ] "float zmin" [ -0.5 ]
 	    AttributeEnd	# }
 	    Shape "disk" "float height" [ 0.5 ]
 	    AttributeBegin	# {
