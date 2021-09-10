@@ -10,12 +10,10 @@
     shadertype	generic
     input	float	displacement	displacement
     input	struct_PBRTSpectrum	reflectance	Reflectance
-    input	float	sigma	Sigma
     output	struct_PBRTMaterial	material	material
     inputflags	displacement	0
     inputflags	reflectance	0
-    inputflags	sigma	0
-    signature	"Default Inputs"	default	{ float struct_PBRTSpectrum float struct_PBRTMaterial }
+    signature	"Default Inputs"	default	{ float struct_PBRTSpectrum struct_PBRTMaterial }
 
     outputoverrides	default
     {
@@ -42,14 +40,6 @@
         type    color
         size    3
         default { "0.5" "0.5" "0.5" }
-        range   { 0 1 }
-    }
-    parm {
-        name    "sigma"
-        label   "Sigma"
-        type    float
-        default { "0" }
-        help    "The sigma parameter for the Oren-Nayar model, in degrees. If this is zero, the surface exhibits pure Lambertian reflection. "
         range   { 0 1 }
     }
 }
