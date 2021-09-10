@@ -34,6 +34,9 @@
         SOHO_STRING(msereferenceout, "MSE Reference Out", "Options", "")
     }
     parm {
+        SOHO_TOGGLE(wavefront, "Wavefront Rendering", "Options", 0)
+    }
+    parm {
         SOHO_TOGGLE(pbrt_dof, "Allow Depth of Field", "Camera", 0)
     }
     parm {

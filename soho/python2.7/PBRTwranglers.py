@@ -406,6 +406,7 @@ def wrangle_options(obj, wrangler, now):
         "seed": SohoPBRT("seed", "integer", [0], True),
         "forcediffuse": SohoPBRT("forcediffuse", "bool", [0], True),
         "pixelstats": SohoPBRT("pixelstats", "bool", [0], True),
+        "wavefront": SohoPBRT("wavefront", "bool", [0], True),
     }
     parms = obj.evaluate(parm_selection, now)
 
