@@ -800,17 +800,6 @@ def patch_wrangler(gdp, paramset=None, properties=None):
     return None
 
 
-class FloatGrid(object):
-    def __init__(self, prim):
-        self.density = prim
-        self.lescale = None
-
-    def does_res_match(self):
-        if self.lescale is None:
-            return True
-        return self.density.resolution() == self.lescale.resolution()
-
-
 class VDBGrid(object):
     def __init__(self, prim):
         self.density = prim
@@ -818,33 +807,6 @@ class VDBGrid(object):
 
     def does_res_match(self):
         return True
-
-
-class RGBGrid(object):
-    def __init__(self, r, g, b):
-        self.r = r
-        self.g = g
-        self.b = b
-        self.lescale = None
-
-    def does_res_match(self):
-        to_check = [self.r, self.g, self.b]
-        if self.lescale is not None:
-            to_check.append(self.lescale)
-        return len(set([p.resolution() for p in to_check])) == 1
-
-
-class SigmaGrid(object):
-    def __init__(self, sigma_a, sigma_s):
-        self.sigma_a = sigma_a
-        self.sigma_s = sigma_s
-        self.lescale = None
-
-    def does_res_match(self):
-        to_check = [self.sigma_a, self.sigma_s]
-        if self.lescale is not None:
-            to_check.append(self.lescale)
-        return len(set([p.resolution() for p in to_check])) == 1
 
 
 def build_vdb_grid_list(sop_path, gdp):
@@ -1145,6 +1107,167 @@ def vdb_wrangler(gdp, paramset=None, properties=None):
     return None
 
 
+class FloatVolume(object):
+    def __init__(self, den):
+        self.den = den
+
+    def prims(self):
+        return (self.den,)
+
+    @property
+    def voxeldata(self):
+        voxs = array.array("f")
+        voxs.frombytes(self.den.allVoxelsAsString())
+        return voxs
+
+    @property
+    def ptype(self):
+        return "float"
+
+
+class RGBVolume(object):
+    def __init__(self, r, g, b):
+        self.r = r
+        self.g = g
+        self.b = b
+
+    def prims(self):
+        return (self.r, self.g, self.b)
+
+    @property
+    def voxeldata(self):
+        tmp_voxs = array.array("f")
+        tmp_voxs.frombytes(self.r.allVoxelsAsString())
+        voxs = array.array("f", tmp_voxs * 3)
+
+        # Set the r values
+        voxs[0::3] = tmp_voxs
+        del tmp_voxs[:]
+
+        # Set the g values
+        tmp_voxs.frombytes(self.g.allVoxelsAsString())
+        voxs[1::3] = tmp_voxs
+        del tmp_voxs[:]
+
+        # And last, the b values
+        tmp_voxs.frombytes(self.b.allVoxelsAsString())
+        voxs[2::3] = tmp_voxs
+        del tmp_voxs[:]
+
+        return voxs
+
+    @property
+    def ptype(self):
+        return "rgb"
+
+
+class UniformDensityGrid(object):
+    def __init__(self, density):
+        self.density = density
+        self.lescale = None
+
+    @property
+    def resolution(self):
+        return self.refprim.resolution()
+
+    @property
+    def refprim(self):
+        return self.density.prims()[0]
+
+    def does_res_match(self):
+        resolutions = {res.resolution() for res in self.density.prims()}
+        if self.lescale is not None:
+            resolutions.add(self.lescale.resolution())
+        return len(resolutions) == 1
+
+    def paramset(self):
+        grid_paramset = ParamSet()
+        grid_paramset.add(
+            PBRTParam(
+                self.density.ptype,
+                "density" if self.density.ptype == "float" else "density.rgb",
+                self.density.voxeldata,
+            )
+        )
+        if self.lescale is not None:
+            grid_paramset.add(
+                PBRTParam("float", "Lescale", FloatVolume(self.lescale).voxeldata)
+            )
+
+        return grid_paramset
+
+    @property
+    def primnums(self):
+        nums = [str(i.number()) for i in self.density.prims()]
+        if self.lescale is not None:
+            nums.append(str(self.lescale.number()))
+        return ",".join(nums)
+
+
+class UniformSigmaGrid(object):
+    def __init__(self, sigma_a, sigma_s):
+        self.sigma_a = sigma_a
+        self.sigma_s = sigma_s
+        self.lescale = None
+
+    @property
+    def resolution(self):
+        return self.refprim.resolution()
+
+    @property
+    def refprim(self):
+        return self.sigma_a.prims()[0]
+
+    def does_res_match(self):
+        resolutions = set()
+        for prim in self.sigma_a.prims():
+            resolutions.add(prim.resolution())
+        for prim in self.sigma_s.prims():
+            resolutions.add(prim.resolution())
+        if self.lescale is not None:
+            resolutions.add(self.lescale.resolution())
+        return len(resolutions) == 1
+
+    def paramset(self):
+        grid_paramset = ParamSet()
+        grid_paramset.add(
+            PBRTParam(
+                self.sigma_a.ptype,
+                (
+                    "density.sigma_a"
+                    if self.sigma_a.ptype == "float"
+                    else "density.sigma_a.rgb"
+                ),
+                self.sigma_a.voxeldata,
+            )
+        )
+        grid_paramset.add(
+            PBRTParam(
+                self.sigma_s.ptype,
+                (
+                    "density.sigma_s"
+                    if self.sigma_s.ptype == "float"
+                    else "density.sigma_s.rgb"
+                ),
+                self.sigma_s.voxeldata,
+            )
+        )
+        if self.lescale is not None:
+            grid_paramset.add(
+                PBRTParam("float", "Lescale", FloatVolume(self.lescale).voxeldata)
+            )
+
+        return grid_paramset
+
+    @property
+    def primnums(self):
+        nums = [str(i.number()) for i in self.sigma_a.prims()]
+        nums.extend([str(i.number()) for i in self.sigma_s.prims()])
+        if self.lescale is not None:
+            nums.append(str(self.lescale.number()))
+        return ",".join(nums)
+
+
 def build_uniform_grid_list(sop_path, gdp):
     prims = gdp.prims()
 
@@ -1165,7 +1288,8 @@ def build_uniform_grid_list(sop_path, gdp):
     # 1     | None
 
     if name_attrib is None:
-        return [FloatGrid(prim) for prim in prims]
+        # api.Comment("Volume Scenario 1")
+        return [UniformDensityGrid(FloatVolume(prim)) for prim in prims]
 
     name_map = collections.defaultdict(set)
     medium_grids_map = collections.defaultdict(set)
@@ -1175,6 +1299,12 @@ def build_uniform_grid_list(sop_path, gdp):
         "density.x": "density.r",
         "density.y": "density.g",
         "density.z": "density.b",
+        "density.sigma_a.x": "density.sigma_a.r",
+        "density.sigma_a.y": "density.sigma_a.g",
+        "density.sigma_a.z": "density.sigma_a.b",
+        "density.sigma_s.x": "density.sigma_s.r",
+        "density.sigma_s.y": "density.sigma_s.g",
+        "density.sigma_s.z": "density.sigma_s.b",
     }
 
     name_counts = collections.defaultdict(int)
@@ -1203,11 +1333,45 @@ def build_uniform_grid_list(sop_path, gdp):
     # 2     | density
 
     if len(prims) == name_counts["density"]:
-        return [FloatGrid(prim) for prim in prims]
+        # api.Comment("Volume Scenario 2")
+        return [UniformDensityGrid(FloatVolume(prim)) for prim in prims]
+
+    den_rgb_strs = ("density.r", "density.g", "density.b")
+    is_one_den_rgb = all(name_counts[c] == 1 for c in den_rgb_strs)
+    is_no_den_rgb = all(name_counts[c] == 0 for c in den_rgb_strs)
+
+    is_one_sigma_a = name_counts["density.sigma_a"] == 1
+    is_no_sigma_a = name_counts["density.sigma_a"] == 0
+    is_one_sigma_s = name_counts["density.sigma_s"] == 1
+    is_no_sigma_s = name_counts["density.sigma_s"] == 0
+
+    den_rgb_sigma_a_strs = (
+        "density.sigma_a.r",
+        "density.sigma_a.g",
+        "density.sigma_a.b",
+    )
+    is_one_rgb_sigma_a = all(name_counts[c] == 1 for c in den_rgb_sigma_a_strs)
+    is_no_rgb_sigma_a = all(name_counts[c] == 0 for c in den_rgb_sigma_a_strs)
+
+    den_rgb_sigma_s_strs = (
+        "density.sigma_s.r",
+        "density.sigma_s.g",
+        "density.sigma_s.b",
+    )
+    is_one_rgb_sigma_s = all(name_counts[c] == 1 for c in den_rgb_sigma_s_strs)
+    is_no_rgb_sigma_s = all(name_counts[c] == 0 for c in den_rgb_sigma_s_strs)
+
+    is_one_sigma = (is_one_sigma_a ^ is_one_rgb_sigma_a) and (
+        is_one_sigma_s ^ is_one_rgb_sigma_s
+    )
+    is_no_sigma = (
+        is_no_sigma_s and is_no_sigma_a and is_no_rgb_sigma_a and is_no_rgb_sigma_s
+    )
 
     #######################################################
     # Scenario 3
-    # We just one density grid and one Lescale
+    # We have just one density grid or one sigma grid or one density.rgb
+    # and an optional Lescale
     #
     # prims | name value
     # ------------------
@@ -1215,26 +1379,42 @@ def build_uniform_grid_list(sop_path, gdp):
     # 1     | Lescale
 
     if (
-        len(prims) == 2
-        and name_counts["density"] == 1
-        and name_counts["Lescale"]
+        (
+            (name_counts["density"] == 1 and is_no_sigma and is_no_den_rgb)
+            or (name_counts["density"] == 0 and is_one_sigma and is_no_den_rgb)
+            or (name_counts["density"] == 0 and is_no_sigma and is_one_den_rgb)
+        )
+        and name_counts["Lescale"] <= 1
         and medium_grids_attrib is None
     ):
-        grid = FloatGrid(name_map["density"].pop())
-        grid.lescale = name_map["Lescale"].pop()
+        # api.Comment("Volume Scenario 3")
+        if is_one_den_rgb:
+            grid = UniformDensityGrid(
+                RGBVolume(
+                    name_map["density.r"].pop(),
+                    name_map["density.g"].pop(),
+                    name_map["density.b"].pop(),
+                )
+            )
+        elif is_one_sigma:
+            if is_one_sigma_a:
+                sigma_a = FloatVolume(name_map["density.sigma_a"].pop())
+            else:
+                sigma_a = RGBVolume(name_map["density.sigma_a.rgb"].pop())
+
+            if is_one_sigma_s:
+                sigma_s = FloatVolume(name_map["density.sigma_s"].pop())
+            else:
+                sigma_s = RGBVolume(name_map["density.sigma_s.rgb"].pop())
+            grid = UniformSigmaGrid(sigma_a, sigma_s)
+        else:
+            grid = UniformDensityGrid(FloatVolume(name_map["density"].pop()))
+
+        if name_counts["Lescale"] == 1:
+            grid.lescale = name_map["Lescale"].pop()
         return [grid]
 
     grid_list = []
-
-    den_rgb_strs = ("density.r", "density.g", "density.b")
-    is_one_den_rgb = all(name_counts[c] == 1 for c in den_rgb_strs)
-    is_no_den_rgb = all(name_counts[c] == 0 for c in den_rgb_strs)
-    is_many_den_rgb = all(name_counts[c] > 1 for c in den_rgb_strs)
-
-    den_sigma_strs = ("density.sigma_a", "density.sigma_s")
-    is_one_den_sigma = all(name_counts[c] == 1 for c in den_sigma_strs)
-    is_no_den_sigma = all(name_counts[c] == 0 for c in den_sigma_strs)
-    is_many_den_sigma = all(name_counts[c] > 1 for c in den_sigma_strs)
 
     #######################################################
     # Scenario 4
@@ -1248,50 +1428,56 @@ def build_uniform_grid_list(sop_path, gdp):
     # 2     | density
     # 3     | density.g
     # 4     | density.b
-    # 5     | density.sigma_a
-    # 6     | density.sigma_s
+    # 5     | density.sigma_a or density.sigma_a.rgb
+    # 6     | density.sigma_s or density.sigma_s.rgb
 
-    # We can first remove all the density, then check the rgb and sigma
     if (
         not name_counts["Lescale"]
         and (is_one_den_rgb or is_no_den_rgb)
-        and (is_one_den_sigma or is_no_den_sigma)
+        and (is_one_sigma or is_no_sigma)
     ):
-        grid_list.extend([FloatGrid(x) for x in name_map["density"]])
-
+        # api.Comment("Volume Scenario 4")
+        grid_list.extend(
+            [UniformDensityGrid(FloatVolume(x)) for x in name_map["density"]]
+        )
         if is_one_den_rgb:
             grid_list.append(
-                RGBGrid(
-                    name_map["density.r"].pop(),
-                    name_map["density.g"].pop(),
-                    name_map["density.b"].pop(),
+                UniformDensityGrid(
+                    RGBVolume(
+                        name_map["density.r"].pop(),
+                        name_map["density.g"].pop(),
+                        name_map["density.b"].pop(),
+                    )
                 )
             )
 
-        if is_one_den_sigma:
-            grid_list.append(
-                SigmaGrid(
-                    name_map["density.sigma_a"].pop(), name_map["density.sigma_s"].pop()
-                )
-            )
+        if is_one_sigma:
+            if is_one_sigma_a:
+                sigma_a = FloatVolume(name_map["density.sigma_a"].pop())
+            else:
+                sigma_a = RGBVolume(name_map["density.sigma_a.rgb"].pop())
+
+            if is_one_sigma_s:
+                sigma_s = FloatVolume(name_map["density.sigma_s"].pop())
+            else:
+                sigma_s = RGBVolume(name_map["density.sigma_s.rgb"].pop())
+
+            grid_list.append(UniformSigmaGrid(sigma_a, sigma_s))
         return grid_list
 
     #######################################################
     # Scenario 5
     # From this point on we won't be able to derive pairings without using the
-    # medium_grids attribute. Exit out if we don't fit bsaic requirements
+    # medium_grids attribute. Exit out if we don't fit basic requirements
 
-    if (
-        (name_counts["density"] > 1 and name_counts["Lescale"])
-        or is_many_den_rgb
-        or is_many_den_sigma
-    ) and medium_grids_attrib is None:
+    if medium_grids_attrib is None:
         soho.warning(
             "{}: has density or density.rgb/sigma/Lescale and no way to link"
             " them, please use a medium_grids attribute".format(sop_path)
         )
         return []
 
+    # api.Comment("Volume Scenario 5")
     grids = []
     for medium, medium_prims in medium_grids_map.items():
 
@@ -1304,27 +1490,45 @@ def build_uniform_grid_list(sop_path, gdp):
         is_no_den_rgb = all(medium_counts[c] == 0 for c in den_rgb_strs)
         is_one_den_rgb = all(medium_counts[c] == 1 for c in den_rgb_strs)
 
-        is_no_den_sigma = all(medium_counts[c] == 0 for c in den_sigma_strs)
-        is_one_den_sigma = all(medium_counts[c] == 1 for c in den_sigma_strs)
+        is_one_sigma_a = medium_counts["density.sigma_a"] == 1
+        is_no_sigma_a = medium_counts["density.sigma_a"] == 0
+        is_one_sigma_s = medium_counts["density.sigma_s"] == 1
+        is_no_sigma_s = medium_counts["density.sigma_s"] == 0
+
+        is_one_rgb_sigma_a = all(medium_counts[c] == 1 for c in den_rgb_sigma_a_strs)
+        is_no_rgb_sigma_a = all(medium_counts[c] == 0 for c in den_rgb_sigma_a_strs)
+        is_one_rgb_sigma_s = all(medium_counts[c] == 1 for c in den_rgb_sigma_s_strs)
+        is_no_rgb_sigma_s = all(medium_counts[c] == 0 for c in den_rgb_sigma_s_strs)
+
+        is_no_sigma = (
+            is_no_sigma_s and is_no_sigma_a and is_no_rgb_sigma_a and is_no_rgb_sigma_s
+        )
+
+        is_one_sigma = (is_one_sigma_a ^ is_one_rgb_sigma_a) and (
+            is_one_sigma_s ^ is_one_rgb_sigma_s
+        )
 
         if (
+            ## density and Lescale
             medium_counts["density"] == 1
             and medium_counts["Lescale"] <= 1
             and is_no_den_rgb
-            and is_no_den_sigma
+            and is_no_sigma
         ):
             density_prim = name_map["density"] & medium_prims
             if len(density_prim) != 1:
                 soho.warning("{}: Invalid density and medium_grid".format(sop_path))
-            density_grid = FloatGrid(density_prim.pop())
+            density_grid = UniformDensityGrid(FloatVolume(density_prim.pop()))
             lescale_prim = name_map["Lescale"] & medium_prims
             if lescale_prim:
                 density_grid.lescale = lescale_prim.pop()
             grids.append(density_grid)
         elif (
+            ## density.rgb and Lescale
             not medium_counts["density"]
             and medium_counts["Lescale"] <= 1
             and is_one_den_rgb
+            and is_no_sigma
         ):
             r_prim = name_map["density.r"] & medium_prims
             g_prim = name_map["density.g"] & medium_prims
@@ -1336,7 +1540,9 @@ def build_uniform_grid_list(sop_path, gdp):
                     )
                 )
                 continue
-            rgb_grid = RGBGrid(r_prim.pop(), g_prim.pop(), b_prim.pop())
+            rgb_grid = UniformDensityGrid(
+                RGBVolume(r_prim.pop(), g_prim.pop(), b_prim.pop())
+            )
             lescale_prim = name_map["Lescale"] & medium_prims
             if lescale_prim:
                 rgb_grid.lescale = lescale_prim.pop()
@@ -1344,22 +1550,29 @@ def build_uniform_grid_list(sop_path, gdp):
         elif (
             not medium_counts["density"]
             and medium_counts["Lescale"] <= 1
-            and is_one_den_sigma
+            and is_one_sigma
         ):
-            sigma_a_prim = name_map["density.sigma_a"] & medium_prims
-            sigma_s_prim = name_map["density.sigma_s"] & medium_prims
-            if len(sigma_a_prim) != 1 or len(sigma_s_prim) != 1:
-                soho.warning(
-                    "{}: Invalid density.sigma_a|s and medium_grid {}".format(
-                        sop_path, medium
-                    )
-                )
-                continue
-            sigma_grid = SigmaGrid(sigma_a_prim.pop(), sigma_s_prim.pop())
+            if is_one_sigma_a:
+                sigma_a_prim = name_map["density.sigma_a"] & medium_prims
+                sigma_a = FloatVolume(sigma_a_prim)
+            else:
+                sigma_a_prim = name_map["density.sigma_a.rgb"] & medium_prims
+                sigma_a = RGBVolume(sigma_a_prim)
+
+            if is_one_sigma_s:
+                sigma_s_prim = name_map["density.sigma_s"] & medium_prims
+                sigma_s = FloatVolume(sigma_s_prim)
+            else:
+                sigma_s_prim = name_map["density.sigma_s.rgb"] & medium_prims
+                sigma_s = RGBVolume(sigma_s_prim)
+
+            sigma_grid = UniformSigmaGrid(sigma_a, sigma_s)
+
             lescale_prim = name_map["Lescale"] & medium_prims
             if lescale_prim:
                 sigma_grid.lescale = lescale_prim.pop()
             grids.append(sigma_grid)
+
         else:
             soho.warning(
                 "{}: Can not map density grids for {}".format(sop_path, medium)
@@ -1608,7 +1821,6 @@ def smoke_prim_wrangler(grids, paramset=None, properties=None):
     exterior = "" if exterior is None else exterior
 
     for grid in grids:
-        smoke_paramset = ParamSet()
 
         if not grid.does_res_match():
             soho.warning(
@@ -1618,77 +1830,19 @@ def smoke_prim_wrangler(grids, paramset=None, properties=None):
             )
             continue
 
-        clean_voxel_data = []
+        smoke_paramset = grid.paramset()
 
-        if isinstance(grid, FloatGrid):
-            prim_num_str = str(grid.density.number())
-            ref_prim = grid.density
-            voxeldata = array.array("f")
-            voxeldata.frombytes(grid.density.allVoxelsAsString())
-            smoke_paramset.add(PBRTParam("float", "density", voxeldata))
-            clean_voxel_data.append(voxeldata)
-        elif isinstance(grid, SigmaGrid):
-            prim_num_str = "{},{}".format(grid.sigma_a.number(), grid.sigma_s.number())
-            ref_prim = grid.sigma_s
-            sigma_a_voxeldata = array.array("f")
-            sigma_s_voxeldata = array.array("f")
-            sigma_a_voxeldata.frombytes(grid.sigma_a.allVoxelsAsString())
-            sigma_s_voxeldata.frombytes(grid.sigma_s.allVoxelsAsString())
-            smoke_paramset.add(PBRTParam("float", "density.sigma_a", sigma_a_voxeldata))
-            smoke_paramset.add(PBRTParam("float", "density.sigma_s", sigma_s_voxeldata))
-            clean_voxel_data.append(sigma_a_voxeldata)
-            clean_voxel_data.append(sigma_s_voxeldata)
-        else:
-            prim_num_str = "{},{},{}".format(
-                grid.r.number(), grid.g.number(), grid.b.number()
-            )
-            # We'll use the r|x channel as the reference
-            ref_prim = grid.r
+        medium_name = "%s[%s]%s" % (sop_path, grid.primnums, medium_suffix)
 
-            # The RGB values are interweaved, r,g,b,r,g,b
-            # So we'll first "allocate" the entire array, then slice into it.
-            # By operating on one component at a time we'll attempt to keep the
-            # memory usage down.
-            tmp_voxeldata = array.array("f")
-            tmp_voxeldata.frombytes(grid.r.allVoxelsAsString())
-            voxeldata = array.array("f", tmp_voxeldata * 3)
-
-            # Set the r values
-            voxeldata[0::3] = tmp_voxeldata
-            del tmp_voxeldata[:]
-
-            # Set the g values
-            tmp_voxeldata.frombytes(grid.g.allVoxelsAsString())
-            voxeldata[1::3] = tmp_voxeldata
-            del tmp_voxeldata[:]
-
-            # And last, the b values
-            tmp_voxeldata.frombytes(grid.b.allVoxelsAsString())
-            voxeldata[2::3] = tmp_voxeldata
-            del tmp_voxeldata[:]
-
-            smoke_paramset.add(PBRTParam("rgb", "density.rgb", voxeldata))
-            clean_voxel_data.append(voxeldata)
-
-        medium_name = "%s[%s]%s" % (sop_path, prim_num_str, medium_suffix)
-
-        if grid.lescale is not None:
-            lescale_voxeldata = array.array("f")
-            lescale_voxeldata.frombytes(grid.lescale.allVoxelsAsString())
-            clean_voxel_data.append(lescale_voxeldata)
-            smoke_paramset.add(PBRTParam("float", "Lescale", lescale_voxeldata))
-
-        resolution = ref_prim.resolution()
-
-        smoke_paramset.add(PBRTParam("integer", "nx", resolution[0]))
-        smoke_paramset.add(PBRTParam("integer", "ny", resolution[1]))
-        smoke_paramset.add(PBRTParam("integer", "nz", resolution[2]))
+        smoke_paramset.add(PBRTParam("integer", "nx", grid.resolution[0]))
+        smoke_paramset.add(PBRTParam("integer", "ny", grid.resolution[1]))
+        smoke_paramset.add(PBRTParam("integer", "nz", grid.resolution[2]))
         smoke_paramset.add(PBRTParam("point", "p0", [-1, -1, -1]))
         smoke_paramset.add(PBRTParam("point", "p1", [1, 1, 1]))
 
         extra_attribs = [("rgb", "Le")]
         medium_prim_overrides = medium_prim_paramset(
-            ref_prim, medium_paramset, extra_attribs=extra_attribs
+            grid.refprim, medium_paramset, extra_attribs=extra_attribs
         )
         smoke_paramset.update(medium_prim_overrides)
         smoke_paramset |= paramset
@@ -1703,6 +1857,8 @@ def smoke_prim_wrangler(grids, paramset=None, properties=None):
                 PBRTParam("string", "preset"),
                 PBRTParam("float", "density.sigma_a"),
                 PBRTParam("float", "density.sigma_s"),
+                PBRTParam("rgb", "density.sigma_a.rgb"),
+                PBRTParam("rgb", "density.sigma_s.rgb"),
             ]
         )
         if not (sigma_params & smoke_paramset):
@@ -1714,16 +1870,13 @@ def smoke_prim_wrangler(grids, paramset=None, properties=None):
             )
 
         with api.AttributeBlock():
-            xform = prim_transform(ref_prim)
+            xform = prim_transform(grid.refprim)
             api.ConcatTransform(xform)
             api.MakeNamedMedium(medium_name, "uniformgrid", smoke_paramset)
             api.Material("interface")
             api.MediumInterface(medium_name, exterior)
             # Pad this slightly?
             bounds_to_api_box([-1, 1, -1, 1, -1, 1])
-
-        for vox_data in clean_voxel_data:
-            del vox_data[:]
 
     return
 
