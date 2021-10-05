@@ -77,5 +77,6 @@
 		size	3
         default { "0" "1" "0" }
         help    "Texture Space Direction"
+		parmtag { "pbrt.type" "vector" }
     }
 }

@@ -9,19 +9,17 @@
     externalshader 1
     shadertype	generic
     input	float	displacement	displacement
-    input	struct_PBRTSpectrum tint Tint
     input	struct_PBRTSpectrum eta	eta
     input	float	roughness	Roughness
     input	float	uroughness	"Roughness U"
     input	float	vroughness	"Roughness V"
     output	struct_PBRTMaterial	material	material
     inputflags	displacement	0
-	inputflags	tint 0
     inputflags	eta	0
     inputflags	roughness	0
     inputflags	uroughness	0
     inputflags	vroughness	0
-    signature	"Default Inputs"	default	{ float struct_PBRTSpectrum float float float float struct_PBRTMaterial }
+    signature	"Default Inputs"	default	{ float struct_PBRTSpectrum float float float struct_PBRTMaterial }
 
     outputoverrides	default
     {
@@ -40,14 +38,6 @@
         default { "" }
         help    "RGB image"
         parmtag { "filechooser_mode" "read" }
-    }
-	parm {
-        name    "tint"
-        label   "Tint"
-        type    color
-        size    3
-        default { "1" "1" "1" }
-        range   { 0 1 }
     }
     parm {
         name    "eta"
