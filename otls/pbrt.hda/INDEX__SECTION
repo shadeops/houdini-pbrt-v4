@@ -952,6 +952,21 @@ Python:       false
 Empty:        false
 Modified:     Sun Sep 13 12:18:09 2020
 
+Operator:     pbrt_medium_rgbgrid
+Label:        PBRT UniformGrid Medium
+Path:         oplib:/Vop/pbrt_medium_rgbgrid?Vop/pbrt_medium_rgbgrid
+Icon:         opdef:/Vop/pbrt_medium_rgbgrid?IconImage
+Table:        Vop
+License:      
+Extra:        
+User:         {"dtype": "rgbgrid", "directive": "medium"}
+Inputs:       0 to 3
+Outputs:      0
+Subnet:       false
+Python:       false
+Empty:        false
+Modified:     Sun Sep 13 12:18:09 2020
+
 Operator:     pbrt_medium_cloud
 Label:        PBRT Cloud Medium
 Path:         oplib:/Vop/pbrt_medium_cloud?Vop/pbrt_medium_cloud

@@ -1,20 +1,14 @@
-# Dialog script for pbrt_medium_uniformgrid automatically generated
+# Dialog script for pbrt_medium_rgbgrid automatically generated
 
 {
-    name	pbrt_medium_uniformgrid
-    script	pbrt_medium_uniformgrid
-    label	"PBRT UniformGridMedium"
+    name	pbrt_medium_rgbgrid
+    script	pbrt_medium_rgbgrid
+    label	"PBRT RGBGridMedium"
 
     rendermask	PBRT
     externalshader 1
     shadertype	generic
-    input	struct_PBRTSpectrum	sigma_a	"Sigma a"
-    input	struct_PBRTSpectrum	sigma_s	"Sigma s"
-    input	struct_PBRTSpectrum	Le	Le
-    inputflags	sigma_a	0
-    inputflags	sigma_s	0
-    inputflags	Le	0
-    signature	"Default Inputs"	default	{ struct_PBRTSpectrum struct_PBRTSpectrum struct_PBRTSpectrum }
+    signature	"Default Inputs"	default	{ }
 
     outputoverrides	default
     {
@@ -23,35 +17,13 @@
     help {
 	""
     }
-
-    parm {
-        name    "sigma_a"
-        label   "Sigma a"
-        type    color
-        size    3
-        default { "1" "1" "1" }
-        help    "The absorption cross section."
-        disablewhen "{ preset != \"\" }"
-        range   { 0 1 }
-    }
-    parm {
-        name    "sigma_s"
-        label   "Sigma s"
-        type    color
-        size    3
-        default { "1" "1" "1" }
-        help    "The scattering cross section."
-        disablewhen "{ preset != \"\" }"
-        range   { 0 1 }
-    }
-    parm {
-        name    "Le"
-        label   "Le"
-        type    color
-        size    3
-        default { "0" "0" "0" }
-        range   { 0 1 }
-    }
+	parm {
+		name    "LeScale"
+		label   "LeScale"
+		type    float
+		default { 1.0 }
+        help    "Scale the emissive light"
+	}
     parm {
         name    "scale"
         label   "Scale"
@@ -74,22 +46,22 @@
         parmtag { "pbrt.meta" "1" }
 
         parm {
-            name    "density"
-            label   "float[] density"
+            name    "sigma_a"
+            label   "rgb[] sigma_a"
             type    label
             default { "" }
             parmtag { "pbrt.meta" "1" }
         }
         parm {
-            name    "temperature"
-            label   "float[] temperature"
+            name    "sigma_s"
+            label   "rgb[] sigma_s"
             type    label
             default { "" }
             parmtag { "pbrt.meta" "1" }
         }
         parm {
-            name    "Lescale"
-            label   "float[] Lescale"
+            name    "Le"
+            label   "rgb[] Le"
             type    label
             default { "" }
             parmtag { "pbrt.meta" "1" }
