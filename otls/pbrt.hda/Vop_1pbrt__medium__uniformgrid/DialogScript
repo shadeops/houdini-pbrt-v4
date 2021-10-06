@@ -31,7 +31,6 @@
         size    3
         default { "1" "1" "1" }
         help    "The absorption cross section."
-        disablewhen "{ preset != \"\" }"
         range   { 0 1 }
     }
     parm {
@@ -41,7 +40,6 @@
         size    3
         default { "1" "1" "1" }
         help    "The scattering cross section."
-        disablewhen "{ preset != \"\" }"
         range   { 0 1 }
     }
     parm {
