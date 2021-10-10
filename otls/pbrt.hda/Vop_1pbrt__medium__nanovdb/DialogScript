@@ -25,69 +25,12 @@
     }
 
     parm {
-        name    "preset"
-        label   "Preset"
-        type    ordinal
-        default { "" }
-        help    "Name of measured subsurface scattering coefficients. See the file src/core/media.cpp in the pbrt distribution for all of the measurements that are available."
-        menu {
-            ""                              "----"
-            "Apple"                         "Apple"
-            "Chicken1"                      "Chicken1"
-            "Chicken2"                      "Chicken2"
-            "Cream"                         "Cream"
-            "Ketchup"                       "Ketchup"
-            "Marble"                        "Marble"
-            "Potato"                        "Potato"
-            "Skimmilk"                      "Skimmilk"
-            "Skin1"                         "Skin1"
-            "Skin2"                         "Skin2"
-            "Spectralon"                    "Spectralon"
-            "Wholemilk"                     "Wholemilk"
-            "Lowfat Milk"                   "Lowfat Milk"
-            "Reduced Milk"                  "Reduced Milk"
-            "Regular Milk"                  "Regular Milk"
-            "Espresso"                      "Espresso"
-            "Mint Mocha Coffee"             "Mint Mocha Coffee"
-            "Lowfat Soy Milk"               "Lowfat Soy Milk"
-            "Regular Soy Milk"              "Regular Soy Milk"
-            "Lowfat Chocolate Milk"         "Lowfat Chocolate Milk"
-            "Regular Chocolate Milk"        "Regular Chocolate Milk"
-            "Coke"                          "Coke"
-            "Pepsi"                         "Pepsi"
-            "Sprite"                        "Sprite"
-            "Gatorade"                      "Gatorade"
-            "Chardonnay"                    "Chardonnay"
-            "White Zinfandel"               "White Zinfandel"
-            "Merlot"                        "Merlot"
-            "Budweiser Beer"                "Budweiser Beer"
-            "Coors Light Beer"              "Coors Light Beer"
-            "Clorox"                        "Clorox"
-            "Apple Juice"                   "Apple Juice"
-            "Cranberry Juice"               "Cranberry Juice"
-            "Grape Juice"                   "Grape Juice"
-            "Ruby Grapefruit Juice"         "Ruby Grapefruit Juice"
-            "White Grapefruit Juice"        "White Grapefruit Juice"
-            "Shampoo"                       "Shampoo"
-            "Head & Shoulders Shampoo"      "Head & Shoulders Shampoo"
-            "Lemon Tea Powder"              "Lemon Tea Powder"
-            "Orange Powder"                 "Orange Powder"
-            "Pink Lemonade Powder"          "Pink Lemonade Powder"
-            "Cappuccino Powder"             "Cappuccino Powder"
-            "Salt Powder"                   "Salt Powder"
-            "Sugar Powder"                  "Sugar Powder"
-            "Suisse Mocha Powder"           "Suisse Mocha Powder"
-            "Pacific Ocean Surface Water"   "Pacific Ocean Surface Water"
-        }
-    }
-    parm {
         name    "sigma_a"
         label   "Sigma a"
         type    color
         size    3
         default { "1" "1" "1" }
         help    "The absorption cross section."
-        disablewhen "{ preset != \"\" }"
         range   { 0 1 }
     }
     parm {
@@ -97,7 +40,6 @@
         size    3
         default { "1" "1" "1" }
         help    "The scattering cross section."
-        disablewhen "{ preset != \"\" }"
         range   { 0 1 }
     }
     parm {
@@ -131,7 +73,6 @@
         type    float
         default { "1" }
         range   { 0 10 }
-        parmtag { "script_callback_language" "python" }
     }
     parm {
         name    "temperaturecutoff"
@@ -139,7 +80,6 @@
         type    float
         default { "0" }
         range   { 0 10 }
-        parmtag { "script_callback_language" "python" }
     }
     parm {
         name    "temperaturescale"
@@ -147,6 +87,5 @@
         type    float
         default { "1" }
         range   { 0 10 }
-        parmtag { "script_callback_language" "python" }
     }
 }
