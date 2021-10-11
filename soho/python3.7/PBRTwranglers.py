@@ -662,6 +662,12 @@ def wrangle_light(light, wrangler, now):
     parms = light.evaluate(parm_selection, now)
     light_wrangler = parms["light_wrangler"].Value[0]
 
+    exterior = light.wrangleString(wrangler, "pbrt_exterior", now, [None])[0]
+    exterior = wrangle_medium(exterior)
+    if exterior:
+        api.MediumInterface("", exterior)
+        print()
+
     paramset = ParamSet()
     paramset.add(_to_light_scale(parms))
 
