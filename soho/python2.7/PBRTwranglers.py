@@ -868,13 +868,20 @@ def wrangle_medium(medium):
     if medium_vop.directive != "medium":
         return None
 
-    colorspace = medium_vop.colorspace
-    if colorspace:
-        api.AttributeBegin()
-        api.ColorSpace(colorspace)
-    api.MakeNamedMedium(medium_vop.path, medium_vop.directive_type, medium_vop.paramset)
-    if colorspace:
-        api.AttributeEnd()
+    with api.AttributeBlock():
+
+        coord_sys = medium_vop.coord_sys
+        if coord_sys:
+            api.Transform(coord_sys)
+
+        colorspace = medium_vop.colorspace
+        if colorspace:
+            api.ColorSpace(colorspace)
+
+        api.MakeNamedMedium(
+            medium_vop.path, medium_vop.directive_type, medium_vop.paramset
+        )
+
     return medium_vop.path
 
 

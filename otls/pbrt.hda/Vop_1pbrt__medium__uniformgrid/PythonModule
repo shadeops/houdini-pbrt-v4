@@ -1,0 +1,96 @@
+import array
+import collections
+
+def volume_prim_menu(node):
+    try:
+        volume_sop = node.parm("./volume_sop").evalAsNode()
+    except hou.TypeError:
+        return ( "", "No Geometry" )
+    
+    if volume_sop is None:
+        return ( "", "No Geometry" )
+    
+    try:
+        geo = volume_sop.geometry()
+    except AttributeError:
+        return ( "", "Invalid SOP")
+
+    if geo.findPrimAttrib("name") is None:
+        return ( "", "No named primitives" )
+    
+    vol_prims = geo.globPrims("@intrinsic:typename=Volume")
+    name_counts = collections.Counter(prim.attribValue("name")
+                                      for prim in vol_prims
+                                      )
+    ret = []                                      
+    for name,count in name_counts.items():
+        if count == 1 and name:
+            ret.extend( ["@name="+name, name] )    
+    if not ret:
+        return ( "", "No named primitives" )
+    
+    return tuple(ret)
+
+def get_prim_from_parm(node, parm_name):
+    sop = node.parm("./volume_sop").evalAsNode()
+    if sop is None:
+        return None  
+    try:
+        geo = sop.geometry()
+    except AttributeError:
+        return None
+    prim_name = node.parm(parm_name).evalAsString().strip()
+    if not prim_name:
+        return None
+    prim = geo.globPrims(prim_name)
+    if len(prim) != 1:
+        return None
+    prim = prim[0]
+    if not isinstance(prim, hou.Volume):
+        return None
+    return prim
+   
+def coord_sys(node):
+    sop = node.parm("./volume_sop").evalAsNode()
+    if sop is None:
+        return None
+    
+    ref_prim = get_prim_from_parm(node, "density")
+    if ref_prim is None:
+        return None
+
+    rot_mat = ref_prim.transform()
+    vtx = ref_prim.vertex(0)
+    pt = vtx.point()
+    pos = pt.position()
+    xlate = hou.hmath.buildTranslate(pos)
+    prim_xform = hou.Matrix4(rot_mat) * xlate
+    try:
+        world_mat = sop.creator().worldTransform()
+    except AttributeError:
+        world_mat = hou.Matrix4(1)
+    
+    return prim_xform * world_mat
+
+def get_volume_res(parm):
+    parm_map = {"nx" : 0, "ny" : 1, "nz" : 2}
+    node = parm.node()
+    prim = get_prim_from_parm(node, "density")
+    if prim is None:
+        return 0
+    return prim.resolution()[parm_map[parm.name()]]
+
+def volume_geometry(node, parm):
+    prim = get_prim_from_parm(node, parm.name())
+    if prim is None:
+        return None
+        
+    voxels = array.array("f")
+    
+    try:
+        filler = voxels.fromstring
+    except AttributeError:
+        # Python 3
+        filler = voxels.frombytes
+    filler(prim.allVoxelsAsString())    
+    return voxels

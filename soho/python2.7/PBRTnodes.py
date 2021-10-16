@@ -304,6 +304,8 @@ class BaseNode(object):
                 return MaterialNode(node, ignore_defaults)
         elif pbrt_type.directive == "texture":
             return TextureNode(node, ignore_defaults)
+        elif pbrt_type.directive == "medium":
+            return MediumNode(node)
         elif pbrt_type.dtype == "pbrt_spectrum":
             return SpectrumNode(node)
         return BaseNode(node, ignore_defaults)
@@ -634,17 +636,18 @@ class BaseNode(object):
         ):
             pbrt_type = "texture"
             pbrt_value = coshader.full_name
-        # PBRT: point*/vector*/normal
-        elif parm_type == hou.parmTemplateType.Float and "pbrt.type" in parm_tags:
-            pbrt_type = parm_tags["pbrt.type"]
-            pbrt_value = parm.eval()
-        # PBRT: float (sometimes a float is just a float)
+        # PBRT: point*/vector*/normal/float
         elif parm_type == hou.parmTemplateType.Float:
             pbrt_type = "float"
             pbrt_value = parm.eval()
         # PBRT: wut is dis?
         else:
             raise HouParmException("Can't convert %s to pbrt type" % (parm))
+
+        # This is to rename types like point3/vector3/normal or things that have
+        # a callback
+        if "pbrt.type" in parm_tags:
+            pbrt_type = parm_tags["pbrt.type"]
 
         # If there is a coshader we can't override the value as there is a connection
         if value_override is not None and coshader is None:
@@ -658,6 +661,12 @@ class BaseNode(object):
                 callback = None
             if callback is not None:
                 pbrt_value = callback(node, parm)
+                if pbrt_value is None:
+                    raise ValueError(
+                        "Error evaluating callback for node {} and parm {}".format(
+                            node.path(), parm.name()
+                        )
+                    )
 
         pbrt_name = parm_tags.get("pbrt.alias", parm_name)
 
@@ -840,3 +849,16 @@ class TextureNode(MaterialNode):
         elif self.node.outputDataTypes()[0] == "struct_PBRTSpectrum":
             return "spectrum"
         return None
+
+
+class MediumNode(BaseNode):
+    @property
+    def coord_sys(self):
+        try:
+            mat = self.node.hm().coord_sys(self.node)
+        except AttributeError:
+            return None
+
+        if mat is None:
+            return None
+        return mat.asTuple()

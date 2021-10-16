@@ -3,7 +3,7 @@
 {
     name	pbrt_medium_uniformgrid
     script	pbrt_medium_uniformgrid
-    label	"PBRT UniformGridMedium"
+    label	"PBRT UniformGrid Medium"
 
     rendermask	PBRT
     externalshader 1
@@ -69,63 +69,114 @@
     groupsimple {
         name    "derived"
         label   "Parameters Derived From Volume Prims"
-        parmtag { "pbrt.meta" "1" }
 
         parm {
-            name    "density"
-            label   "float[] density"
-            type    label
+            name    "volume_sop"
+            label   "Volume SOP"
+            type    oppath
             default { "" }
+            parmtag { "opfilter" "!!SOP!!" }
+            parmtag { "oprelative" "." }
             parmtag { "pbrt.meta" "1" }
+        }
+        parm {
+            name    "density"
+            label   "Density Prim"
+            type    string
+            default { "" }
+            disablewhen "{ volume_sop == \"\" }"
+            menureplace {
+                [ "node = kwargs[\"node\"]" ]
+                [ "return node.hm().volume_prim_menu(node)" ]
+                language python
+            }
+            parmtag { "pbrt.callback" "volume_geometry" }
+            parmtag { "pbrt.type" "float" }
+            parmtag { "script_callback_language" "python" }
         }
         parm {
             name    "temperature"
-            label   "float[] temperature"
-            type    label
+            label   "Temperature Prim"
+            type    string
             default { "" }
-            parmtag { "pbrt.meta" "1" }
+            disablewhen "{ volume_sop == \"\" }"
+            menureplace {
+                [ "node = kwargs[\"node\"]" ]
+                [ "return node.hm().volume_prim_menu(node)" ]
+                language python
+            }
+            parmtag { "pbrt.callback" "volume_geometry" }
+            parmtag { "pbrt.type" "float" }
+            parmtag { "script_callback_language" "python" }
         }
         parm {
             name    "Lescale"
-            label   "float[] Lescale"
-            type    label
+            label   "Lescale Prim"
+            type    string
             default { "" }
-            parmtag { "pbrt.meta" "1" }
+            disablewhen "{ volume_sop == \"\" }"
+            menureplace {
+                [ "node = kwargs[\"node\"]" ]
+                [ "return node.hm().volume_prim_menu(node)" ]
+                language python
+            }
+            parmtag { "pbrt.callback" "volume_geometry" }
+            parmtag { "pbrt.type" "float" }
+            parmtag { "script_callback_language" "python" }
         }
         parm {
             name    "p0"
-            label   "point3 p0"
-            type    label
-            default { "" }
-            parmtag { "pbrt.meta" "1" }
+            label   "P0"
+            type    vector
+            size    3
+            default { "-1" "-1" "-1" }
+            disablewhen "{ volume_sop == \"\" } { density == \"\" }"
+            range   { -1 1 }
+            parmtag { "pbrt.force" "1" }
+            parmtag { "pbrt.type" "point3" }
+            parmtag { "script_callback_language" "python" }
         }
         parm {
             name    "p1"
-            label   "point3 p1"
-            type    label
-            default { "" }
-            parmtag { "pbrt.meta" "1" }
+            label   "P1"
+            type    vector
+            size    3
+            default { "1" "1" "1" }
+            disablewhen "{ volume_sop == \"\" } { density == \"\" }"
+            range   { -1 1 }
+            parmtag { "pbrt.force" "1" }
+            parmtag { "pbrt.type" "point3" }
+            parmtag { "script_callback_language" "python" }
         }
         parm {
             name    "nx"
-            label   "integer nx"
-            type    label
-            default { "" }
-            parmtag { "pbrt.meta" "1" }
+            label   "Nx"
+            type    integer
+            default { [ "hou.evaluatingParm().node().hm().get_volume_res(hou.evaluatingParm())" python ] }
+            disablewhen "{ volume_sop == \"\" } { density == \"\" }"
+            range   { 0 10 }
+            parmtag { "pbrt.force" "1" }
+            parmtag { "script_callback_language" "python" }
         }
         parm {
             name    "ny"
-            label   "integer ny"
-            type    label
-            default { "" }
-            parmtag { "pbrt.meta" "1" }
+            label   "Ny"
+            type    integer
+            default { [ "hou.evaluatingParm().node().hm().get_volume_res(hou.evaluatingParm())" python ] }
+            disablewhen "{ volume_sop == \"\" } { density == \"\" }"
+            range   { 0 10 }
+            parmtag { "pbrt.force" "1" }
+            parmtag { "script_callback_language" "python" }
         }
         parm {
             name    "nz"
-            label   "integer nz"
-            type    label
-            default { "" }
-            parmtag { "pbrt.meta" "1" }
+            label   "Nz"
+            type    integer
+            default { [ "hou.evaluatingParm().node().hm().get_volume_res(hou.evaluatingParm())" python ] }
+            disablewhen "{ volume_sop == \"\" } { density == \"\" }"
+            range   { 0 10 }
+            parmtag { "pbrt.force" "1" }
+            parmtag { "script_callback_language" "python" }
         }
     }
 

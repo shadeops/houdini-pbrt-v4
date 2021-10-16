@@ -3,7 +3,7 @@
 {
     name	pbrt_medium_rgbgrid
     script	pbrt_medium_rgbgrid
-    label	"PBRT RGBGridMedium"
+    label	"PBRT RGBGrid Medium"
 
     rendermask	PBRT
     externalshader 1
@@ -17,13 +17,15 @@
     help {
 	""
     }
-	parm {
-		name    "LeScale"
-		label   "LeScale"
-		type    float
-		default { 1.0 }
+
+    parm {
+        name    "LeScale"
+        label   "LeScale"
+        type    float
+        default { "1" }
         help    "Scale the emissive light"
-	}
+        range   { 0 10 }
+    }
     parm {
         name    "scale"
         label   "Scale"
@@ -43,63 +45,102 @@
     groupsimple {
         name    "derived"
         label   "Parameters Derived From Volume Prims"
-        parmtag { "pbrt.meta" "1" }
 
         parm {
-            name    "sigma_a"
-            label   "rgb[] sigma_a"
-            type    label
+            name    "volume_sop"
+            label   "Volume SOP"
+            type    oppath
             default { "" }
+            parmtag { "opfilter" "!!SOP!!" }
+            parmtag { "oprelative" "." }
             parmtag { "pbrt.meta" "1" }
+        }
+        parm {
+            name    "sigma_a"
+            label   "Sigma a"
+            type    string
+            size    3
+            default { "" "" "" }
+            disablewhen "{ volume_sop == \"\" }"
+            parmtag { "pbrt.callback" "volume_geometry" }
+            parmtag { "pbrt.type" "rgb" }
+            parmtag { "script_callback_language" "python" }
         }
         parm {
             name    "sigma_s"
-            label   "rgb[] sigma_s"
-            type    label
-            default { "" }
-            parmtag { "pbrt.meta" "1" }
+            label   "Sigma s"
+            type    string
+            size    3
+            default { "" "" "" }
+            disablewhen "{ volume_sop == \"\" }"
+            parmtag { "pbrt.callback" "volume_geometry" }
+            parmtag { "pbrt.type" "rgb" }
+            parmtag { "script_callback_language" "python" }
         }
         parm {
             name    "Le"
-            label   "rgb[] Le"
-            type    label
-            default { "" }
-            parmtag { "pbrt.meta" "1" }
+            label   "Le"
+            type    string
+            size    3
+            default { "" "" "" }
+            disablewhen "{ volume_sop == \"\" } { sigma_a == \"\" }"
+            parmtag { "pbrt.callback" "volume_geometry" }
+            parmtag { "pbrt.type" "rgb" }
+            parmtag { "script_callback_language" "python" }
         }
         parm {
             name    "p0"
-            label   "point3 p0"
-            type    label
-            default { "" }
-            parmtag { "pbrt.meta" "1" }
+            label   "P0"
+            type    vector
+            size    3
+            default { "-1" "-1" "-1" }
+            disablewhen "{ volume_sop == \"\" } { sigma_a == \"\" sigma_s == \"\" }"
+            range   { -1 1 }
+            parmtag { "pbrt.force" "1" }
+            parmtag { "pbrt.type" "point3" }
+            parmtag { "script_callback_language" "python" }
         }
         parm {
             name    "p1"
-            label   "point3 p1"
-            type    label
-            default { "" }
-            parmtag { "pbrt.meta" "1" }
+            label   "P1"
+            type    vector
+            size    3
+            default { "1" "1" "1" }
+            disablewhen "{ volume_sop == \"\" } { sigma_a == \"\" sigma_s == \"\" }"
+            range   { -1 1 }
+            parmtag { "pbrt.force" "1" }
+            parmtag { "pbrt.type" "point3" }
+            parmtag { "script_callback_language" "python" }
         }
         parm {
             name    "nx"
-            label   "integer nx"
-            type    label
-            default { "" }
-            parmtag { "pbrt.meta" "1" }
+            label   "Nx"
+            type    integer
+            default { [ "hou.evaluatingParm().node().hm().get_volume_res(hou.evaluatingParm())" python ] }
+            disablewhen "{ volume_sop == \"\" } { sigma_a == \"\" sigma_s == \"\" }"
+            range   { 0 10 }
+            parmtag { "pbrt.force" "1" }
+            parmtag { "script_callback_language" "python" }
         }
         parm {
             name    "ny"
-            label   "integer ny"
-            type    label
-            default { "" }
-            parmtag { "pbrt.meta" "1" }
+            label   "Ny"
+            type    integer
+            default { [ "hou.evaluatingParm().node().hm().get_volume_res(hou.evaluatingParm())" python ] }
+            disablewhen "{ volume_sop == \"\" } { sigma_a == \"\" sigma_s == \"\" }"
+            range   { 0 10 }
+            parmtag { "pbrt.force" "1" }
+            parmtag { "script_callback_language" "python" }
         }
         parm {
             name    "nz"
-            label   "integer nz"
-            type    label
-            default { "" }
-            parmtag { "pbrt.meta" "1" }
+            label   "Nz"
+            type    integer
+            default { [ "hou.evaluatingParm().node().hm().get_volume_res(hou.evaluatingParm())" python ] }
+            disablewhen "{ volume_sop == \"\" } { sigma_a == \"\" sigma_s == \"\" }"
+            range   { 0 10 }
+            parmtag { "pbrt.force" "1" }
+            parmtag { "script_callback_language" "python" }
         }
     }
 

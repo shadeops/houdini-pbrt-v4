@@ -1,0 +1,97 @@
+import sys
+import array
+import collections
+
+def get_prim_from_parm(node, parm_name):
+    sop = node.parm("./volume_sop").evalAsNode()
+    if sop is None:
+        return None  
+    try:
+        geo = sop.geometry()
+    except AttributeError:
+        return None
+    prim_name = node.parm(parm_name).evalAsString().strip()
+    if not prim_name:
+        return None
+    prim = geo.globPrims(prim_name)
+    if len(prim) != 1:
+        return None
+    prim = prim[0]
+    if not isinstance(prim, hou.Volume):
+        return None
+    return prim
+
+def ref_prim(node):
+    ref_prim = get_prim_from_parm(node, "sigma_a1")
+    if ref_prim:
+        return ref_prim
+    ref_prim = get_prim_from_parm(node, "sigma_s1")
+    if ref_prim:
+            return ref_prim
+    return None
+    
+def coord_sys(node):
+    sop = node.parm("./volume_sop").evalAsNode()
+    if sop is None:
+        return None
+    
+    ref_prim = ref_prim(node)
+
+    rot_mat = ref_prim.transform()
+    vtx = ref_prim.vertex(0)
+    pt = vtx.point()
+    pos = pt.position()
+    xlate = hou.hmath.buildTranslate(pos)
+    prim_xform = hou.Matrix4(rot_mat) * xlate
+    try:
+        world_mat = sop.creator().worldTransform()
+    except AttributeError:
+        world_mat = hou.Matrix4(1)
+    
+    return prim_xform * world_mat
+
+def get_volume_res(parm):
+    parm_map = {"nx" : 0, "ny" : 1, "nz" : 2}
+    node = parm.node()
+    ref_prim = ref_prim(node)
+    if ref_prim is None:
+        return 0
+    return ref_prim.resolution()[parm_map[parm.name()]]
+
+def _fill_voxels(prim, voxel_array):
+    if sys.version_info[0] == 2:
+        voxel_array.fromstring(prim.allVoxelsAsString())
+    else:
+        voxel_array.fromsbytes(prim.allVoxelsAsString())
+    
+def volume_geometry(node, parm):
+    r = get_prim_from_parm(node, parm.name()+"1")
+    g = get_prim_from_parm(node, parm.name()+"2")
+    b = get_prim_from_parm(node, parm.name()+"3")
+    
+    if not all([r,g,b]):
+        raise ValueError("Unable to create voxel data for {} in node {}".format(
+                         parm.name(), node.path()
+                         ))
+                         
+    tmp_voxs = array.array("f")
+    
+    _fill_voxels(r, tmp_voxs)
+    voxs = array.array("f", tmp_voxs * 3)
+
+    # Set the r values
+    voxs[0::3] = tmp_voxs
+    del tmp_voxs[:]
+
+    # Set the g values
+    _fill_voxels(g, tmp_voxs)
+    voxs[1::3] = tmp_voxs
+    del tmp_voxs[:]
+
+    # And last, the b values
+    _fill_voxels(v, tmp_voxs)
+    voxs[2::3] = tmp_voxs
+    del tmp_voxs[:]
+
+    return voxs
+
