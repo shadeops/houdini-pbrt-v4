@@ -26,6 +26,7 @@ __all__ = [
     "wrangle_filter",
     "wrangle_camera",
     "wrangle_light",
+    "wrangle_preworld_medium",
     "wrangle_medium",
     "wrangle_obj",
 ]
@@ -523,7 +524,7 @@ def output_cam_xform(obj, projection, now):
         output_xform(obj, now, no_motionblur=True, invert=True, flipz=True)
     elif projection in ("spherical",):
         api.Rotate(-180, 0, 1, 0)
-        output_xform(obj, now, invert=True, flipx=True, flipz=True)
+        output_xform(obj, now, no_motionblur=True, invert=True, flipx=True, flipz=True)
     return
 
 
@@ -852,6 +853,58 @@ def wrangle_light(light, wrangler, now):
     _light_api_wrapper(light_name, paramset, node)
 
     return
+
+
+def wrangle_preworld_medium(obj, wrangler, now):
+    """Output a NamedMedium from the input oppath"""
+
+    # Due to PBRT's scene description we can't use the standard wrangle_medium
+    # when declaring a medium and its transform/colorspace when attached to a
+    # camera. This is because we don't have AttributeBegin/End blocks to pop
+    # the stack, so when we declare the transform for the medium we need to so
+    # with respect to being in the camera's coordinate system. We'll extract
+    # the translates from the camera, to establish a pivot.
+    medium = obj.wrangleString(wrangler, "pbrt_exterior", now, [None])[0]
+
+    if not medium:
+        return None
+    if medium in scene_state.medium_nodes:
+        return None
+    scene_state.medium_nodes.add(medium)
+
+    medium_vop = BaseNode.from_node(medium)
+    if medium_vop is None:
+        return None
+    if medium_vop.directive != "medium":
+        return None
+
+    coord_sys = medium_vop.coord_sys
+    if coord_sys:
+        cam_xform = hou.Matrix4(get_transform(obj, now, invert=False, flipz=False))
+        cam_pivot = cam_xform.extractTranslates()
+        cam_pivot = hou.hmath.buildTranslate(cam_pivot).inverted()
+        xform = hou.Matrix4(coord_sys)
+        xform *= cam_pivot
+
+        api.Transform(xform.asTuple())
+
+    colorspace = medium_vop.colorspace
+    if colorspace:
+        api.ColorSpace(colorspace)
+
+    api.MakeNamedMedium(medium_vop.path, medium_vop.directive_type, medium_vop.paramset)
+    api.Identity()
+    # Restore Colorspace if one was set on the Medium
+    if colorspace:
+        scene_cs = []
+        if obj.evalString("pbrt_colorspace", now, scene_cs):
+            scene_cs = scene_cs[0]
+        else:
+            scene_cs = "srgb"
+        if scene_cs != colorspace:
+            api.ColorSpace(scene_cs)
+
+    return medium_vop.path
 
 
 def wrangle_medium(medium):

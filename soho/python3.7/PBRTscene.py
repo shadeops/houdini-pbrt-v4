@@ -232,6 +232,15 @@ def render(cam, now):
 
     print()
 
+    # We will stash the global exterior in case they need
+    # to be compared against later.
+    # Pre WorldBegin Mediums can't have AttributeBlocks and thus
+    # need to be output relative to the camera's space.
+    exterior = wrangle_preworld_medium(cam, wrangler, now)
+    if exterior:
+        api.MediumInterface("", exterior)
+        print()
+
     # wrangle_camera will output api.Transforms
     api.Comment(cam.getName())
     api.Camera(*wrangle_camera(cam, wrangler, now))
@@ -239,15 +248,6 @@ def render(cam, now):
     print()
 
     output_transform_times(cam, now)
-
-    # We will stash the global exterior and interior values in case they need
-    # to be compared against later.
-    interior, exterior = output_mediums(cam, wrangler, now)
-    scene_state.exterior = exterior
-    scene_state.interior = interior
-    if exterior:
-        api.MediumInterface("", exterior)
-        print()
 
     api.WorldBegin()
 
