@@ -416,13 +416,10 @@ class OutputGeo(object):
 
         if self.is_patchmesh:
             S_attrib = None
-            faceIndices_attrib = None
         else:
             S_attrib = self.gdp.findVertexAttrib("S")
             if S_attrib is None:
                 S_attrib = self.gdp.findPointAttrib("S")
-
-            faceIndices_attrib = self.gdp.findPrimAttrib("faceIndices")
 
         # We need to unique the points if any of the handles
         # to vtx attributes exists.
@@ -477,6 +474,8 @@ class OutputGeo(object):
 
     @property
     def has_S(self):
+        if self.is_patchmesh:
+            return False
         return True if self.gdp.findPointAttrib("S") is not None else False
 
     @property
@@ -787,12 +786,15 @@ def patch_wrangler(gdp, paramset=None, properties=None):
 
         for emission_file, emission_gdp in patch_gdps.items():
             prim_paramset = ParamSet(paramset)
-            if emission_file:
+
+            output_geo = OutputGeo(emission_gdp, computeN, is_patchmesh=True)
+            wrangler_paramset = output_geo.mesh_params()
+
+            # pbrt-v4 does not support emissionfilename if there are uvs
+            if emission_file and PBRTParam("point2", "uv") not in wrangler_paramset:
                 prim_paramset.add(
                     PBRTParam("string", "emissionfilename", emission_file)
                 )
-            output_geo = OutputGeo(emission_gdp, computeN, is_patchmesh=True)
-            wrangler_paramset = output_geo.mesh_params()
             prim_paramset.update(wrangler_paramset)
 
             api.Shape("bilinearmesh", prim_paramset)
