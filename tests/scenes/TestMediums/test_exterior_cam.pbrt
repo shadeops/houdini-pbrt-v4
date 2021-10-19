@@ -5,12 +5,13 @@ Sampler "zsobol" "integer pixelsamples" [ 16 ]
 Integrator "volpath" "integer maxdepth" [ 5 ]
 Accelerator "bvh"
 
+MakeNamedMedium "/mat/pbrt_medium_homogeneous1" "string type" "homogeneous" "float scale" [ 0.1 ] "rgb sigma_a" [ 0.01 0.01 0.01 ]
+Identity
+MediumInterface "" "/mat/pbrt_medium_homogeneous1"
+
 #  /obj/cam1
 Transform [ 0.6691 -0.4263 -0.6087 0 0 0.8192 -0.5736 0 -0.7431 -0.3838 -0.5481 0 0.5921 -0.07283 13.84 1 ]
 Camera "perspective" "float fov" [ 45 ] "float screenwindow" [ -1 1 -0.75 0.75 ]
-
-MakeNamedMedium "/mat/pbrt_medium_homogeneous1" "string type" "homogeneous" "float scale" [ 0.1 ] "rgb sigma_a" [ 0.01 0.01 0.01 ]
-MediumInterface "" "/mat/pbrt_medium_homogeneous1"
 
 WorldBegin	# {
 

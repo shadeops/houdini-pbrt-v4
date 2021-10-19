@@ -30,7 +30,9 @@ WorldBegin	# {
 
     #  ==================================================
     #  NamedMedium Definitions
-    MakeNamedMedium "/mat/pbrt_medium_nanovdb1" "string type" "nanovdb" "string filename" [ "../../resources/sphere.nvdb" ] "rgb sigma_s" [ 0.9 1.2 1.5 ]
+    AttributeBegin	# {
+	MakeNamedMedium "/mat/pbrt_medium_nanovdb1" "string type" "nanovdb" "string filename" [ "../../resources/sphere.nvdb" ] "rgb sigma_s" [ 0.9 1.2 1.5 ]
+    AttributeEnd	# }
 
     #  ==================================================
     #  Object Instance Definitions

@@ -30,7 +30,9 @@ WorldBegin	# {
 
     #  ==================================================
     #  NamedMedium Definitions
-    MakeNamedMedium "/mat/pbrt_medium_cloud1" "string type" "cloud" "float density" [ 10 ] "point3 p0" [ -1 -1 -1 ]
+    AttributeBegin	# {
+	MakeNamedMedium "/mat/pbrt_medium_cloud1" "string type" "cloud" "float density" [ 10 ] "point3 p0" [ -1 -1 -1 ]
+    AttributeEnd	# }
 
     #  ==================================================
     #  Object Instance Definitions

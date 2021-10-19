@@ -30,7 +30,9 @@ WorldBegin	# {
 
     #  ==================================================
     #  NamedMedium Definitions
-    MakeNamedMedium "/mat/pbrt_medium_homogeneous1" "string type" "homogeneous"
+    AttributeBegin	# {
+	MakeNamedMedium "/mat/pbrt_medium_homogeneous1" "string type" "homogeneous"
+    AttributeEnd	# }
 
     #  ==================================================
     #  Object Instance Definitions

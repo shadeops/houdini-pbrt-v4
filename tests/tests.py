@@ -318,6 +318,12 @@ class TestParamSet(unittest.TestCase):
         self.assertEqual(len(paramset_c), 1)
         self.assertEqual(paramset_c.find_param("float", "my_float").value, [2.0])
 
+    def test_contains(self):
+        paramset = self.ParamSet()
+        paramset.add(self.PBRTParam("float", "my_float", 1.0))
+        param = self.PBRTParam("float", "my_float", 2.0)
+        self.assertTrue(param in paramset)
+
 
 class TestRoot(unittest.TestCase):
     @classmethod
@@ -1607,16 +1613,16 @@ class TestShapes(TestRoot):
         self.compare_scene()
 
     def test_volume_sigma(self):
-        sigma_a = build_volume(self.geo, name="density.sigma_a")
-        sigma_s = build_volume(self.geo, name="density.sigma_s")
+        sigma_a = build_volume(self.geo, rgb=True, name="sigma_a")
+        sigma_s = build_volume(self.geo, rgb=True, name="sigma_s")
         merge = self.geo.createNode("merge")
         merge.setInput(0, sigma_a)
         merge.setInput(1, sigma_s)
         merge.setRenderFlag(True)
         self.compare_scene()
 
-    def test_volume_rgb_Lescale(self):
-        density = build_volume(self.geo, rgb=True, name="density")
+    def test_volume_density_Lescale(self):
+        density = build_volume(self.geo, name="density")
         Lescale = build_volume(self.geo, name="Lescale")
         merge = self.geo.createNode("merge")
         merge.setInput(0, density)
@@ -1624,27 +1630,27 @@ class TestShapes(TestRoot):
         merge.setRenderFlag(True)
         self.compare_scene()
 
-    def test_volume_floats_rgb(self):
+    def test_volume_density_sigma(self):
         density_float1 = build_volume(self.geo, name="density")
         density_float2 = build_volume(self.geo, name="density")
-        density_rgb = build_volume(self.geo, rgb=True, name="density")
+        sigma_s = build_volume(self.geo, rgb=True, name="sigma_s")
         merge = self.geo.createNode("merge")
         merge.setInput(0, density_float1)
         merge.setInput(1, density_float2)
-        merge.setInput(2, density_rgb)
+        merge.setInput(2, sigma_s)
         merge.setRenderFlag(True)
         self.compare_scene()
 
     def test_volume_floats_sigma(self):
         density_float1 = build_volume(self.geo, name="density")
         density_float2 = build_volume(self.geo, name="density")
-        density_rgb = build_volume(self.geo, rgb=True, name="density")
-        density_sigma_a = build_volume(self.geo, name="density.sigma_a")
-        density_sigma_s = build_volume(self.geo, name="density.sigma_s")
+        density_Le = build_volume(self.geo, rgb=True, name="Le")
+        density_sigma_a = build_volume(self.geo, rgb=True, name="sigma_a")
+        density_sigma_s = build_volume(self.geo, rgb=True, name="sigma_s")
         merge = self.geo.createNode("merge")
         merge.setInput(0, density_float1)
         merge.setInput(1, density_float2)
-        merge.setInput(2, density_rgb)
+        merge.setInput(2, density_Le)
         merge.setInput(3, density_sigma_a)
         merge.setInput(4, density_sigma_s)
         merge.setRenderFlag(True)
@@ -1660,19 +1666,6 @@ class TestShapes(TestRoot):
             "v@sigma_a = {0.01, 0.02, 0.03};\n"
             "v@sigma_s = {1, 2, 3};\n"
             "v@Le = {2,2,2};\n"
-        )
-        wrangler.setFirstInput(volume)
-        wrangler.setRenderFlag(True)
-        self.compare_scene()
-
-    def test_volume_attribs_preset(self):
-        volume = build_volume(self.geo)
-        wrangler = self.geo.createNode("attribwrangle")
-        wrangler.parm("class").set("primitive")
-        wrangler.parm("snippet").set(
-            's@preset = "Regular Milk";'
-            "v@sigma_a = {0.01, 0.02, 0.03};\n"
-            "v@sigma_s = {1, 2, 3};\n"
         )
         wrangler.setFirstInput(volume)
         wrangler.setRenderFlag(True)
@@ -1755,19 +1748,6 @@ class TestShapes(TestRoot):
         merge.setInput(1, temp1)
         merge.setInput(2, temp2)
         merge.setRenderFlag(True)
-        self.compare_scene()
-
-    def test_vdb_attribs_preset(self):
-        vdb = build_vdb(self.geo)
-        wrangler = self.geo.createNode("attribwrangle")
-        wrangler.parm("class").set("primitive")
-        wrangler.parm("snippet").set(
-            's@preset = "Regular Milk";'
-            "v@sigma_a = {0.01, 0.02, 0.03};\n"
-            "v@sigma_s = {1, 2, 3};\n"
-        )
-        wrangler.setFirstInput(vdb)
-        wrangler.setRenderFlag(True)
         self.compare_scene()
 
     def test_vdb_attribs_medium(self):
