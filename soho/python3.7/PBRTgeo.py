@@ -570,10 +570,10 @@ class OutputGeo(object):
                 header.append("property int face_indices")
             header.extend(["end_header", ""])
 
-            f_handle.write("\r\n".join(header))
+            f_handle.write(("\r\n".join(header)).encode("ascii"))
 
             data_pool = array.array("f")
-            data_pool.frombytes("\x00" * 4 * num_elements * self.num_points)
+            data_pool.frombytes(b"\x00" * 4 * num_elements * self.num_points)
 
             tmp = array.array("f")
             tmp.frombytes(self.gdp.pointFloatAttribValuesAsString("P"))
