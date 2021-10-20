@@ -396,9 +396,6 @@ class OutputGeo(object):
     def _init_mesh(self, mesh_gdp):
         self._gdp = mesh_gdp
 
-        self.num_points = len(self.gdp.iterPoints())
-        self.num_prims = len(self.gdp.iterPrims())
-
         N_attrib = self.gdp.findVertexAttrib("N")
         if N_attrib is None:
             N_attrib = self.gdp.findPointAttrib("N")
@@ -456,6 +453,9 @@ class OutputGeo(object):
                 sort_verb = hou.sopNodeTypeCategory().nodeVerb("sort")
                 sort_verb.setParms({"ptsort": 1})
                 sort_verb.execute(self.gdp, [self.gdp])
+
+        self.num_points = len(self.gdp.iterPoints())
+        self.num_prims = len(self.gdp.iterPrims())
 
     @property
     def gdp(self):
