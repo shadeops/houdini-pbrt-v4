@@ -1,7 +1,10 @@
 import os
+import sys
 import shutil
 import filecmp
 import unittest
+
+import warnings
 
 import hou
 
@@ -328,6 +331,12 @@ class TestParamSet(unittest.TestCase):
 class TestRoot(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        # A stock distribution of the Python 3 builds of Houdini 18.5 have various
+        # DeprecationWarnings and ResourceWarnings. Some of which are addressed in
+        # Houdini 19.0, for now we'll bulk ignore them.
+        warnings.filterwarnings("ignore", category=DeprecationWarning)
+        if sys.version_info.major > 2:
+            warnings.filterwarnings("ignore", category=ResourceWarning)
         hou.hipFile.clear(suppress_save_prompt=True)
 
     @classmethod
@@ -352,7 +361,7 @@ class TestRoot(unittest.TestCase):
 class TestROP(TestRoot):
     @classmethod
     def setUpClass(cls):
-        hou.hipFile.clear(suppress_save_prompt=True)
+        super(TestROP, cls).setUpClass()
         cls.cam = build_cam()
 
     def setUp(self):
@@ -397,14 +406,12 @@ class TestROP(TestRoot):
 class TestArchive(TestRoot):
     @classmethod
     def setUpClass(cls):
-        hou.hipFile.clear(suppress_save_prompt=True)
+        super(TestArchive, cls).setUpClass()
         cls.cam = build_cam()
 
     @classmethod
     def tearDownClass(cls):
-        hou.hipFile.clear(suppress_save_prompt=True)
-        if CLEANUP_FILES:
-            shutil.rmtree("tests/tmp")
+        super(TestArchive, cls).tearDownClass()
 
     def setUp(self):
         self.geo = build_ground()
@@ -428,15 +435,13 @@ class TestArchive(TestRoot):
 class TestLights(TestRoot):
     @classmethod
     def setUpClass(cls):
-        hou.hipFile.clear(suppress_save_prompt=True)
+        super(TestLights, cls).setUpClass()
         cls.cam = build_cam()
         cls.geo = build_ground()
 
     @classmethod
     def tearDownClass(cls):
-        hou.hipFile.clear(suppress_save_prompt=True)
-        if CLEANUP_FILES:
-            shutil.rmtree("tests/tmp")
+        super(TestLights, cls).tearDownClass()
 
     def setUp(self):
         self.light = hou.node("/obj").createNode("hlight")
@@ -561,6 +566,7 @@ class TestLights(TestRoot):
 class TestGeoLight(TestRoot):
     @classmethod
     def setUpClass(cls):
+        super(TestGeoLight, cls).setUpClass()
         cls.cam = build_cam()
         cls.geo = build_ground()
 
@@ -601,15 +607,13 @@ class TestGeoLight(TestRoot):
 class TestInstance(TestRoot):
     @classmethod
     def setUpClass(cls):
-        hou.hipFile.clear(suppress_save_prompt=True)
+        super(TestInstance, cls).setUpClass()
         cls.env = build_envlight()
         cls.cam = build_cam()
 
     @classmethod
     def tearDownClass(cls):
-        hou.hipFile.clear(suppress_save_prompt=True)
-        if CLEANUP_FILES:
-            shutil.rmtree("tests/tmp")
+        super(TestInstance, cls).tearDownClass()
 
     def setUp(self):
         self.geo1 = build_geo()
@@ -710,13 +714,11 @@ class TestInstance(TestRoot):
 class TestMediums(TestRoot):
     @classmethod
     def setUpClass(cls):
-        hou.hipFile.clear(suppress_save_prompt=True)
+        super(TestMediums, cls).setUpClass()
 
     @classmethod
     def tearDownClass(cls):
-        hou.hipFile.clear(suppress_save_prompt=True)
-        if CLEANUP_FILES:
-            shutil.rmtree("tests/tmp")
+        super(TestMediums, cls).tearDownClass()
 
     def setUp(self):
         self.geo = build_geo()
@@ -811,15 +813,13 @@ class TestMediums(TestRoot):
 class TestProperties(TestRoot):
     @classmethod
     def setUpClass(cls):
-        hou.hipFile.clear(suppress_save_prompt=True)
+        super(TestProperties, cls).setUpClass()
         cls.env = build_envlight()
         cls.cam = build_cam()
 
     @classmethod
     def tearDownClass(cls):
-        hou.hipFile.clear(suppress_save_prompt=True)
-        if CLEANUP_FILES:
-            shutil.rmtree("tests/tmp")
+        super(TestProperties, cls).tearDownClass()
 
     def setUp(self):
         self.geo = build_geo()
@@ -848,15 +848,13 @@ class TestProperties(TestRoot):
 class TestMaterials(TestRoot):
     @classmethod
     def setUpClass(cls):
-        hou.hipFile.clear(suppress_save_prompt=True)
+        super(TestMaterials, cls).setUpClass()
         cls.env = build_envlight()
         cls.cam = build_cam()
 
     @classmethod
     def tearDownClass(cls):
-        hou.hipFile.clear(suppress_save_prompt=True)
-        if CLEANUP_FILES:
-            shutil.rmtree("tests/tmp")
+        super(TestMaterials, cls).tearDownClass()
 
     def setUp(self):
         self.geo = build_geo()
@@ -925,15 +923,13 @@ class TestMaterials(TestRoot):
 class TestSpectrum(TestRoot):
     @classmethod
     def setUpClass(cls):
-        hou.hipFile.clear(suppress_save_prompt=True)
+        super(TestSpectrum, cls).setUpClass()
         cls.env = build_envlight()
         cls.cam = build_cam()
 
     @classmethod
     def tearDownClass(cls):
-        hou.hipFile.clear(suppress_save_prompt=True)
-        if CLEANUP_FILES:
-            shutil.rmtree("tests/tmp")
+        super(TestSpectrum, cls).tearDownClass()
 
     def setUp(self):
         self.geo = build_geo()
@@ -993,14 +989,12 @@ class TestSpectrum(TestRoot):
 class TestMotionBlur(TestRoot):
     @classmethod
     def setUpClass(cls):
-        hou.hipFile.clear(suppress_save_prompt=True)
+        super(TestMotionBlur, cls).setUpClass()
         cls.env = build_envlight()
 
     @classmethod
     def tearDownClass(cls):
-        hou.hipFile.clear(suppress_save_prompt=True)
-        if CLEANUP_FILES:
-            shutil.rmtree("tests/tmp")
+        super(TestMotionBlur, cls).tearDownClass()
 
     def setUp(self):
         self.cam = build_zcam()
@@ -1043,15 +1037,13 @@ class TestMotionBlur(TestRoot):
 class TestShapes(TestRoot):
     @classmethod
     def setUpClass(cls):
-        hou.hipFile.clear(suppress_save_prompt=True)
+        super(TestShapes, cls).setUpClass()
         cls.cam = build_cam()
         cls.env = build_envlight()
 
     @classmethod
     def tearDownClass(cls):
-        hou.hipFile.clear(suppress_save_prompt=True)
-        if CLEANUP_FILES:
-            shutil.rmtree("tests/tmp")
+        super(TestShapes, cls).setUpClass()
 
     def setUp(self):
         exr = "%s.exr" % self.name
@@ -1831,4 +1823,5 @@ class TestShapes(TestRoot):
 
 
 if __name__ == "__main__":
+    warnings.filterwarnings("ignore", category=DeprecationWarning)
     unittest.main()
