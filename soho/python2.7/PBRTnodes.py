@@ -136,6 +136,9 @@ class PBRTParam(object):
         """The type and name of the param"""
         return "%s %s" % (self.param_type, self.name)
 
+    def value_str(self):
+        return soho.arrayToString("", self.value, "", self.type != "bool")
+
     def as_str(self):
         """Returns param as a string suitable for a pbrt scene file"""
         # self.type != "bool" is because we don't want our true/false values

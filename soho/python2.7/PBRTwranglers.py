@@ -398,21 +398,21 @@ def wrangle_sampler(obj, wrangler, now):
 
 def wrangle_options(obj, wrangler, now):
     parm_selection = {
-        "disablepixeljitter": SohoPBRT("disablepixeljitter", "bool", [0], True),
+        "disablepixeljitter": SohoPBRT("disablepixeljitter", "bool", [False], True),
         "disablewavelengthjitter": SohoPBRT(
-            "disablewavelengthjitter", "bool", [0], True
+            "disablewavelengthjitter", "bool", [False], True
         ),
         "msereferenceimage": SohoPBRT("msereferenceimage", "string", [""], True),
         "msereferenceout": SohoPBRT("msereferenceout", "string", [""], True),
         "seed": SohoPBRT("seed", "integer", [0], True),
-        "forcediffuse": SohoPBRT("forcediffuse", "bool", [0], True),
-        "pixelstats": SohoPBRT("pixelstats", "bool", [0], True),
-        "wavefront": SohoPBRT("wavefront", "bool", [0], True),
+        "forcediffuse": SohoPBRT("forcediffuse", "bool", [False], True),
+        "pixelstats": SohoPBRT("pixelstats", "bool", [False], True),
+        "wavefront": SohoPBRT("wavefront", "bool", [False], True),
     }
     parms = obj.evaluate(parm_selection, now)
 
     for parm in parms:
-        yield (parm, parms[parm].Value[0])
+        yield (parm, parms[parm].to_pbrt())
 
 
 def wrangle_integrator(obj, wrangler, now):

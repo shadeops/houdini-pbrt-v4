@@ -406,6 +406,20 @@ class TestROP(TestRoot):
         self.rop.parm("accelerator").set("kdtree")
         self.compare_scene()
 
+    def test_options(self):
+        ptg = self.rop.parmTemplateGroup()
+        wavefront = hou.properties.parmTemplate("pbrt-v4", "wavefront")
+        seed = hou.properties.parmTemplate("pbrt-v4", "seed")
+        mse_ref = hou.properties.parmTemplate("pbrt-v4", "msereferenceout")
+        ptg.append(wavefront)
+        ptg.append(seed)
+        ptg.append(mse_ref)
+        self.rop.setParmTemplateGroup(ptg)
+        self.rop.parm("wavefront").set(True)
+        self.rop.parm("seed").set(42)
+        self.rop.parm("msereferenceout").set("ref_out")
+        self.compare_scene()
+
 
 class TestArchive(TestRoot):
     @classmethod

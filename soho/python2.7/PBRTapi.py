@@ -19,6 +19,12 @@ def _api_call_with_args(directive, *args):
     soho.printArray(" ", args, "\n")
 
 
+# Option "wavefront" true
+def _api_call_with_param(directive, name, param):
+    soho.indent()
+    print("{} \"{}\" {}".format(directive, name, param.value_str()))
+
+
 # ActiveTransform StartTime
 def _api_call_with_cmds(directive, *args):
     soho.indent()
@@ -217,8 +223,8 @@ def ColorSpace(name):
     _api_call_with_args("ColorSpace", name)
 
 
-def Option(name, value):
-    _api_call_with_args("Option", name, value)
+def Option(name, param):
+    _api_call_with_param("Option", name, param)
 
 
 @contextmanager
