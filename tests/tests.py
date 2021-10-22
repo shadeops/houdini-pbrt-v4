@@ -346,16 +346,24 @@ class TestRoot(unittest.TestCase):
             shutil.rmtree("tests/tmp")
 
     @property
+    def name(self):
+        return self.id().split(".")[-1]
+
+    @property
+    def path(self):
+        return os.path.join(*self.id().split(".")[1:])
+
+    @property
     def testfile(self):
-        return "tests/tmp/%s.pbrt" % "/".join(self.id().split(".")[1:])
+        return "tests/tmp/{}.pbrt".format(self.path)
 
     @property
     def basefile(self):
-        return "tests/scenes/%s.pbrt" % "/".join(self.id().split(".")[1:])
+        return "tests/scenes/{}.pbrt".format(self.path)
 
-    @property
-    def name(self):
-        return self.id().split(".")[-1]
+    def compare_scene(self):
+        self.rop.render()
+        self.assertTrue(file_cmp_clean(self.testfile, self.basefile))
 
 
 class TestROP(TestRoot):
@@ -372,10 +380,6 @@ class TestROP(TestRoot):
         self.rop.destroy()
         if CLEANUP_FILES:
             os.remove(self.testfile)
-
-    def compare_scene(self):
-        self.rop.render()
-        self.assertTrue(file_cmp_clean(self.testfile, self.basefile))
 
     def test_filter_gaussian(self):
         self.rop.parm("filter").set("gaussian")
@@ -423,10 +427,6 @@ class TestArchive(TestRoot):
         if CLEANUP_FILES:
             os.remove(self.testfile)
 
-    def compare_scene(self):
-        self.rop.render()
-        self.assertTrue(file_cmp_clean(self.testfile, self.basefile))
-
     def test_singlegeo(self):
         self.rop.parm("vobject").set(self.geo.path())
         self.compare_scene()
@@ -455,10 +455,6 @@ class TestLights(TestRoot):
         self.rop.destroy()
         if CLEANUP_FILES:
             os.remove(self.testfile)
-
-    def compare_scene(self):
-        self.rop.render()
-        self.assertTrue(file_cmp_clean(self.testfile, self.basefile))
 
     def test_pointlight_no_color(self):
         self.light.parm("light_type").set("point")
@@ -570,10 +566,6 @@ class TestGeoLight(TestRoot):
         cls.cam = build_cam()
         cls.geo = build_ground()
 
-    def compare_scene(self):
-        self.rop.render()
-        self.assertTrue(file_cmp_clean(self.testfile, self.basefile))
-
     def setUp(self):
         self.light = hou.node("/obj").createNode("hlight")
         self.light.parm("ty").set(1.5)
@@ -639,10 +631,6 @@ class TestInstance(TestRoot):
         clear_mat()
         if CLEANUP_FILES:
             os.remove(self.testfile)
-
-    def compare_scene(self):
-        self.rop.render()
-        self.assertTrue(file_cmp_clean(self.testfile, self.basefile))
 
     def test_instance(self):
         add_sop = self.instance.createNode("add")
@@ -739,10 +727,6 @@ class TestMediums(TestRoot):
         if CLEANUP_FILES:
             os.remove(self.testfile)
 
-    def compare_scene(self):
-        self.rop.render()
-        self.assertTrue(file_cmp_clean(self.testfile, self.basefile))
-
     def add_medium_shaders(self, node, interior=None, exterior=None):
         if interior is None and exterior is None:
             return None
@@ -832,10 +816,6 @@ class TestProperties(TestRoot):
         if CLEANUP_FILES:
             os.remove(self.testfile)
 
-    def compare_scene(self):
-        self.rop.render()
-        self.assertTrue(file_cmp_clean(self.testfile, self.basefile))
-
     def test_include(self):
         ptg = self.geo.parmTemplateGroup()
         parm = hou.properties.parmTemplate("pbrt-v4", "pbrt_include")
@@ -867,10 +847,6 @@ class TestMaterials(TestRoot):
         clear_mat()
         if CLEANUP_FILES:
             os.remove(self.testfile)
-
-    def compare_scene(self):
-        self.rop.render()
-        self.assertTrue(file_cmp_clean(self.testfile, self.basefile))
 
     def test_mix_material(self):
         matte1 = hou.node("/mat").createNode("pbrt_material_diffuse")
@@ -950,10 +926,6 @@ class TestSpectrum(TestRoot):
         if CLEANUP_FILES:
             os.remove(self.testfile)
 
-    def compare_scene(self):
-        self.rop.render()
-        self.assertTrue(file_cmp_clean(self.testfile, self.basefile))
-
     def test_rgb(self):
         self.spectrum.parmTuple("rgb").set([0.25, 0.5, 0.75])
         self.spectrum.parm("type").set("rgb")
@@ -1009,10 +981,6 @@ class TestMotionBlur(TestRoot):
         if CLEANUP_FILES:
             os.remove(self.testfile)
 
-    def compare_scene(self):
-        self.rop.render()
-        self.assertTrue(file_cmp_clean(self.testfile, self.basefile))
-
     def test_obj_mb(self):
         self.geo.parm("tx").setExpression("$FF-1")
         self.rop.parm("allowmotionblur").set(True)
@@ -1057,6 +1025,13 @@ class TestShapes(TestRoot):
         if CLEANUP_FILES:
             os.remove(self.testfile)
 
+    def compare_ply(self, suffix):
+        test_name = os.path.basename(self.path)
+        test_dir = os.path.dirname(self.path)
+        test_ply = "tests/tmp/{}/geometry/{}{}.ply".format(test_dir, test_name, suffix)
+        control_ply = "tests/scenes/{}/geometry/{}{}.ply".format(test_dir, test_name, suffix)
+        self.assertTrue(filecmp.cmp(test_ply, control_ply))
+
     def add_alpha_texture(self):
         alpha_tex = hou.node("/mat").createNode("pbrt_texture_dots")
         alpha_tex.parm("uscale").set(10)
@@ -1066,10 +1041,6 @@ class TestShapes(TestRoot):
         ptg.append(parm)
         self.geo.setParmTemplateGroup(ptg)
         self.geo.parm("pbrt_alpha_texture").set(alpha_tex.path())
-
-    def compare_scene(self):
-        self.rop.render()
-        self.assertTrue(file_cmp_clean(self.testfile, self.basefile))
 
     def test_sphere(self):
         self.geo.createNode("sphere")
@@ -1269,6 +1240,19 @@ class TestShapes(TestRoot):
         wrangler.setFirstInput(divide)
         wrangler.setRenderFlag(True)
         self.compare_scene()
+
+    def test_plymesh_vtxN_ptUV(self):
+        box = self.geo.createNode("box")
+        box.parm("vertexnormals").set(True)
+        uvtex = self.geo.createNode("texture")
+        uvtex.parm("type").set("polar")
+        uvtex.parm("coord").set("point")
+        uvtex.setRenderFlag(True)
+        uvtex.setFirstInput(box)
+        self.rop.parm("pbrt_geo_location").set("./geometry")
+        self.rop.parm("pbrt_allow_geofiles").set("always")
+        self.compare_scene()
+        self.compare_ply("+uvtexture1+0")
 
     def test_bilinear_mesh(self):
         box = self.geo.createNode("box")
