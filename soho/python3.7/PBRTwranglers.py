@@ -169,27 +169,24 @@ def process_full_pt_instance_medium(instance_info, medium_type):
 
     medium_paramset = ParamSet(medium_node.paramset)
 
-    # TODO: Currently both this and the geometry overrides
-    #       for mediums only, support "rgb" and not spectrums.
-    # TODO pbrt-v4, support the different Medium types
-    parms = {
-        "sigma_a": "rgb",
-        "sigma_s": "rgb",
-        "preset": "string",
-        "g": "float",
-        "scale": "float",
-    }
+    # Look for attributes to create an override dictionary
+    pt_attribs = gdp.globalValue("geo:pointattribs")
+    api.Comment(pt_attribs)
 
-    for parm, ptype in parms.items():
-        attrib_name = "%s_%s" % (medium_type, parm)
-        attrib_h = gdp.attribute("geo:point", attrib_name)
+    overrides = {}
+    for attrib in pt_attribs:
+        if not attrib.startswith("{}_".format(medium_type)):
+            continue
+        if attrib in ("pbrt_interior", "pbrt_exterior"):
+            continue
+        parm_name = attrib.split("_", 1)[1]
+        attrib_h = gdp.attribute("geo:point", attrib)
         if attrib_h < 0:
             continue
-        # TODO: Checks?
-        # attrib_size = gdp.attribProperty(attrib_h, "geo:vectorsize")[0]
-        # attrib_storage = gdp.attribProperty(attrib_h, "geo:storage")[0]
         val = gdp.value(attrib_h, instance_info.number)
-        medium_paramset.replace(PBRTParam(ptype, parm, val))
+        overrides[parm_name] = val
+    if overrides:
+        medium_paramset.update(medium_node.override_paramset(overrides))
 
     # We might be outputing a named medium even if its not going to be needed
     # as in the case of instancing volume prims
