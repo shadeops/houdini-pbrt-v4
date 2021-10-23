@@ -1,0 +1,74 @@
+
+Film "rgb" "string filename" [ "test_full_pt_instance_mat_overrides.exr" ] "integer xresolution" [ 320 ] "integer yresolution" [ 240 ]
+PixelFilter "gaussian" "float xradius" [ 2 ] "float yradius" [ 2 ]
+Sampler "zsobol" "integer pixelsamples" [ 16 ]
+Integrator "volpath" "integer maxdepth" [ 5 ]
+Accelerator "bvh"
+
+#  /obj/cam1
+Transform [ 0.6691 -0.4263 -0.6087 0 0 0.8192 -0.5736 0 -0.7431 -0.3838 -0.5481 0 0.5921 -0.07283 13.84 1 ]
+Camera "perspective" "float fov" [ 45 ] "float screenwindow" [ -1 1 -0.75 0.75 ]
+
+WorldBegin	# {
+
+    #  ==================================================
+    #  Light Definitions
+    #  /obj/envlight1
+    AttributeBegin	# {
+	Transform [ 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 ]
+	Scale 1 1 -1
+	Rotate 90 0 0 1
+	Rotate 90 0 1 0
+	LightSource "infinite" "float scale" [ 0.5 ]
+    AttributeEnd	# }
+
+
+    #  ==================================================
+    #  NamedMaterial Definitions
+    Texture "/mat/pbrt_texture_checkerboard1" "spectrum" "checkerboard" "rgb tex1" [ 0.1 0.1 0.1 ] "rgb tex2" [ 0.375 0.5 0.5 ] "float uscale" [ 10 ] "float vscale" [ 10 ]
+    MakeNamedMaterial "/mat/pbrt_material_diffuse1" "string type" "diffuse" "texture reflectance" [ "/mat/pbrt_texture_checkerboard1" ]
+
+    MakeNamedMaterial "/mat/pbrt_material_diffuse2" "string type" "diffuse" "rgb reflectance" [ 1 0 0 ]
+
+
+    #  ==================================================
+    #  NamedMedium Definitions
+
+    #  ==================================================
+    #  Object Instance Definitions
+
+    #  ==================================================
+    #  Object Definitions
+    #  --------------------------------------------------
+    #  /obj/geo1:/obj/instance1:0
+    AttributeBegin	# {
+	ConcatTransform [ 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 ]
+	Material "diffuse" "rgb reflectance" [ 0 1 0 ]
+	AttributeBegin	# {
+	    ReverseOrientation
+	    AttributeBegin	# {
+		ConcatTransform [ 1 0 0 0 0 0 -1 0 0 1 0 0 0 0 0 1 ]
+		Scale 1 1 -1
+		Shape "sphere"
+	    AttributeEnd	# }
+	AttributeEnd	# }
+    AttributeEnd	# }
+
+    #  --------------------------------------------------
+    #  /obj/geo1:/obj/instance1:1
+    AttributeBegin	# {
+	ConcatTransform [ 1 0 0 0 0 1 0 0 0 0 1 0 2 0 0 1 ]
+	Texture "/mat/pbrt_texture_checkerboard1:/obj/instance1:1" "spectrum" "checkerboard" "rgb tex1" [ 0 0 1 ] "rgb tex2" [ 1 0 0 ] "float uscale" [ 10 ] "float vscale" [ 10 ]
+	Material "diffuse" "texture reflectance" [ "/mat/pbrt_texture_checkerboard1:/obj/instance1:1" ]
+	AttributeBegin	# {
+	    ReverseOrientation
+	    AttributeBegin	# {
+		ConcatTransform [ 1 0 0 0 0 0 -1 0 0 1 0 0 0 0 0 1 ]
+		Scale 1 1 -1
+		Shape "sphere"
+	    AttributeEnd	# }
+	AttributeEnd	# }
+    AttributeEnd	# }
+
+
+	# }

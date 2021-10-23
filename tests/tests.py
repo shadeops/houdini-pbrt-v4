@@ -51,7 +51,7 @@ def build_checker_material():
     checks.parm("uscale").set(10)
     checks.parm("vscale").set(10)
     matte.setNamedInput("reflectance", checks, "output")
-    return matte
+    return matte,checks
 
 
 def clear_mat():
@@ -629,7 +629,7 @@ class TestInstance(TestRoot):
         self.geo2.createNode("sphere")
         self.geo2.setDisplayFlag(False)
         self.instance = build_instance()
-        self.mat = build_checker_material()
+        self.mat,self.checks = build_checker_material()
 
         exr = "%s.exr" % self.name
         self.rop = build_rop(filename=exr, diskfile=self.testfile)
@@ -710,6 +710,59 @@ class TestInstance(TestRoot):
         attrib2_sop.setRenderFlag(True)
         self.instance.parm("instancepath").set(self.geo1.path())
         self.instance.parm("ptinstance").set("fast")
+        self.compare_scene()
+
+    def test_full_pt_instance_mats(self):
+        self.instance.parm("instancepath").set(self.geo1.path())
+        self.instance.parm("ptinstance").set("on")
+        self.mat_red = hou.node("/mat").createNode("pbrt_material_diffuse")
+        self.mat_red.parmTuple("reflectance").set([1,0,0])
+        self.mat_blue = hou.node("/mat").createNode("pbrt_material_diffuse")
+        self.mat_blue.parmTuple("reflectance").set([0,0,1])
+        add_sop = self.instance.createNode("add")
+        add_sop.parm("points").set(2)
+        add_sop.parm("usept0").set(True)
+        add_sop.parm("usept1").set(True)
+        add_sop.parmTuple("pt1").set([2, 0, 0])
+        material = self.instance.createNode("material")
+        material.parm("num_materials").set(2)
+        material.parm("style").set("point")
+        material.parm("shop_materialpath1").set(self.mat_red.path())
+        material.parm("group2").set("1")
+        material.parm("shop_materialpath2").set(self.mat_blue.path())
+        material.setFirstInput(add_sop)
+        material.setRenderFlag(True)
+        self.compare_scene()
+
+    def test_full_pt_instance_mat_overrides(self):
+        self.instance.parm("instancepath").set(self.geo1.path())
+        self.instance.parm("ptinstance").set("on")
+        self.mat_red = hou.node("/mat").createNode("pbrt_material_diffuse")
+        self.mat_red.parmTuple("reflectance").set([1,0,0])
+        add_sop = self.instance.createNode("add")
+        add_sop.parm("points").set(2)
+        add_sop.parm("usept0").set(True)
+        add_sop.parm("usept1").set(True)
+        add_sop.parmTuple("pt1").set([2, 0, 0])
+        material = self.instance.createNode("material")
+        material.parm("num_materials").set(2)
+        material.parm("style").set("point")
+        material.parm("shop_materialpath1").set(self.mat_red.path())
+        material.parm("num_local1").set(1)
+        material.parm("local1_name1").set("reflectance")
+        material.parm("local1_type1").set("color")
+        material.parmTuple("local1_cval1").set([0, 1, 0])
+        material.parm("group2").set("1")
+        material.parm("shop_materialpath2").set(self.mat.path())
+        material.parm("num_local2").set(2)
+        material.parm("local2_name1").set("{}/tex1_s".format(self.checks.name()))
+        material.parm("local2_type1").set("color")
+        material.parmTuple("local2_cval1").set([0, 0, 1])
+        material.parm("local2_name2").set("{}/tex2_s".format(self.checks.name()))
+        material.parm("local2_type2").set("color")
+        material.parmTuple("local2_cval2").set([1, 0, 0])
+        material.setFirstInput(add_sop)
+        material.setRenderFlag(True)
         self.compare_scene()
 
 
