@@ -602,24 +602,31 @@ class BaseNode(object):
         # PBRT: bool
         if parm_type == hou.parmTemplateType.Toggle:
             pbrt_type = "bool"
-            pbrt_value = parm.eval()
+            pbrt_value = parm.eval() if value_override is None else value_override
         # PBRT: string (menu)
         elif parm_type == hou.parmTemplateType.Menu:
             pbrt_type = "string"
-            pbrt_value = parm.evalAsStrings()
+            pbrt_value = (
+                parm.evalAsStrings() if value_override is None else value_override
+            )
         # PBRT: string
         elif parm_type == hou.parmTemplateType.String:
             pbrt_type = "string"
-            pbrt_value = parm.evalAsStrings()
+            pbrt_value = (
+                parm.evalAsStrings() if value_override is None else value_override
+            )
         # PBRT: integer
         elif parm_type == hou.parmTemplateType.Int:
             pbrt_type = "integer"
-            pbrt_value = parm.eval()
+            pbrt_value = parm.eval() if value_override is None else value_override
         # PBRT: spectrum
         elif parm_scheme == hou.parmNamingScheme.RGBA:
-            if coshader is None:
+            if coshader is None or (
+                coshader.directive_type == "pbrt_spectrum"
+                and value_override is not None
+            ):
                 pbrt_type = "rgb"
-                pbrt_value = parm.eval()
+                pbrt_value = parm.eval() if value_override is None else value_override
             elif coshader.directive_type == "pbrt_spectrum":
                 # If the coshader is a spectrum node then it will
                 # only have one param in the paramset
@@ -642,7 +649,7 @@ class BaseNode(object):
         # PBRT: point*/vector*/normal/float
         elif parm_type == hou.parmTemplateType.Float:
             pbrt_type = "float"
-            pbrt_value = parm.eval()
+            pbrt_value = parm.eval() if value_override is None else value_override
         # PBRT: wut is dis?
         else:
             raise HouParmException("Can't convert %s to pbrt type" % (parm))
@@ -653,9 +660,7 @@ class BaseNode(object):
             pbrt_type = parm_tags["pbrt.type"]
 
         # If there is a coshader we can't override the value as there is a connection
-        if value_override is not None and coshader is None:
-            pbrt_value = value_override
-        elif "pbrt.callback" in parm_tags:
+        if value_override is None and coshader is None and "pbrt.callback" in parm_tags:
             callback_name = parm_tags["pbrt.callback"]
             node = parm.node()
             try:
