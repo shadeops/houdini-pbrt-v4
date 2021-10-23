@@ -21,7 +21,7 @@ def _api_call_with_args(directive, *args):
 # Option "wavefront" true
 def _api_call_with_param(directive, name, param):
     soho.indent()
-    print("{} \"{}\" {}".format(directive, name, param.value_str()))
+    print('{} "{}" {}'.format(directive, name, param.value_str()))
 
 
 # ActiveTransform StartTime

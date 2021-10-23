@@ -51,7 +51,7 @@ def build_checker_material():
     checks.parm("uscale").set(10)
     checks.parm("vscale").set(10)
     matte.setNamedInput("reflectance", checks, "output")
-    return matte,checks
+    return matte, checks
 
 
 def clear_mat():
@@ -629,7 +629,7 @@ class TestInstance(TestRoot):
         self.geo2.createNode("sphere")
         self.geo2.setDisplayFlag(False)
         self.instance = build_instance()
-        self.mat,self.checks = build_checker_material()
+        self.mat, self.checks = build_checker_material()
 
         exr = "%s.exr" % self.name
         self.rop = build_rop(filename=exr, diskfile=self.testfile)
@@ -716,9 +716,9 @@ class TestInstance(TestRoot):
         self.instance.parm("instancepath").set(self.geo1.path())
         self.instance.parm("ptinstance").set("on")
         self.mat_red = hou.node("/mat").createNode("pbrt_material_diffuse")
-        self.mat_red.parmTuple("reflectance").set([1,0,0])
+        self.mat_red.parmTuple("reflectance").set([1, 0, 0])
         self.mat_blue = hou.node("/mat").createNode("pbrt_material_diffuse")
-        self.mat_blue.parmTuple("reflectance").set([0,0,1])
+        self.mat_blue.parmTuple("reflectance").set([0, 0, 1])
         add_sop = self.instance.createNode("add")
         add_sop.parm("points").set(2)
         add_sop.parm("usept0").set(True)
@@ -738,7 +738,7 @@ class TestInstance(TestRoot):
         self.instance.parm("instancepath").set(self.geo1.path())
         self.instance.parm("ptinstance").set("on")
         self.mat_red = hou.node("/mat").createNode("pbrt_material_diffuse")
-        self.mat_red.parmTuple("reflectance").set([1,0,0])
+        self.mat_red.parmTuple("reflectance").set([1, 0, 0])
         add_sop = self.instance.createNode("add")
         add_sop.parm("points").set(2)
         add_sop.parm("usept0").set(True)
@@ -1096,7 +1096,9 @@ class TestShapes(TestRoot):
         test_name = os.path.basename(self.path)
         test_dir = os.path.dirname(self.path)
         test_ply = "tests/tmp/{}/geometry/{}{}.ply".format(test_dir, test_name, suffix)
-        control_ply = "tests/scenes/{}/geometry/{}{}.ply".format(test_dir, test_name, suffix)
+        control_ply = "tests/scenes/{}/geometry/{}{}.ply".format(
+            test_dir, test_name, suffix
+        )
         self.assertTrue(filecmp.cmp(test_ply, control_ply))
 
     def add_alpha_texture(self):
@@ -1427,7 +1429,7 @@ class TestShapes(TestRoot):
         wrangler.parm("class").set("primitive")
         wrangler.parm("snippet").set(
             's@displacement = "{}";\n'
-            'f@displacement_edgelength = 0.1;'.format(texture.path())
+            "f@displacement_edgelength = 0.1;".format(texture.path())
         )
         wrangler.setFirstInput(filesop)
         wrangler.setRenderFlag(True)
