@@ -30,7 +30,7 @@ def create_suffix(
     override = "+{}".format(override_num) if override_num is not None else ""
     prim = "[{}]".format(prim_num) if prim_num is not None else ""
 
-    return "{oppath}{shape}{override}{prim}{instance}".format(
+    return ":{oppath}{shape}{override}{prim}{instance}".format(
         oppath=oppath, shape=shape, override=override, prim=prim, instance=instance
     )
 

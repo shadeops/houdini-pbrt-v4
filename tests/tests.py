@@ -1358,6 +1358,28 @@ class TestShapes(TestRoot):
         pack.setRenderFlag(True)
         self.compare_scene()
 
+    def test_packed_ply(self):
+        filesop = self.geo.createNode("file")
+        filesop.parm("file").set("./tests/resources/grid.ply")
+        filesop.parm("loadtype").set("delayed")
+        filesop.setRenderFlag(True)
+        self.compare_scene()
+
+    def test_packed_ply_displacement(self):
+        texture = hou.node("/mat").createNode("pbrt_texture_fbm")
+        filesop = self.geo.createNode("file")
+        filesop.parm("file").set("./tests/resources/grid.ply")
+        filesop.parm("loadtype").set("delayed")
+        wrangler = self.geo.createNode("attribwrangle")
+        wrangler.parm("class").set("primitive")
+        wrangler.parm("snippet").set(
+            's@displacement = "{}";\n'
+            'f@displacement_edgelength = 0.1;'.format(texture.path())
+        )
+        wrangler.setFirstInput(filesop)
+        wrangler.setRenderFlag(True)
+        self.compare_scene()
+
     def test_unsupported_heightfield(self):
         hf = self.geo.createNode("heightfield")
         hf.parmTuple("size").set([10, 10])
