@@ -366,6 +366,46 @@ class TestRoot(unittest.TestCase):
         self.assertTrue(file_cmp_clean(self.testfile, self.basefile))
 
 
+class TestCamera(TestRoot):
+    @classmethod
+    def setUpClass(cls):
+        super(TestCamera, cls).setUpClass()
+
+    def setUp(self):
+        exr = "%s.exr" % self.name
+        self.cam = build_cam()
+        self.rop = build_rop(filename=exr, diskfile=self.testfile)
+
+    def tearDown(self):
+        self.rop.destroy()
+        self.cam.destroy()
+        if CLEANUP_FILES:
+            os.remove(self.testfile)
+
+    def test_camera_persp_dof(self):
+        self.rop.parm("pbrt_dof").set(True)
+        self.cam.parm("focal").set(50)
+        self.cam.parm("fstop").set(1)
+        self.cam.parm("focus").set(5)
+        self.compare_scene()
+
+    def test_camera_ortho(self):
+        self.cam.parm("projection").set("ortho")
+        self.cam.parm("orthowidth").set(10)
+        self.compare_scene()
+
+    def test_camera_spherical(self):
+        self.cam.parm("projection").set("sphere")
+        self.compare_scene()
+
+    def test_camera_persp_crop(self):
+        self.cam.parm("cropl").set(0.25)
+        self.cam.parm("cropr").set(0.75)
+        self.cam.parm("cropb").set(0.25)
+        self.cam.parm("cropt").set(0.75)
+        self.compare_scene()
+
+
 class TestROP(TestRoot):
     @classmethod
     def setUpClass(cls):

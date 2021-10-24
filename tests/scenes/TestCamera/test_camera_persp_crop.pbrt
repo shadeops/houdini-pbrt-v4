@@ -1,0 +1,29 @@
+
+Film "rgb" "float cropwindow" [ 0.25 0.75 0.25 0.75 ] "string filename" [ "test_camera_persp_crop.exr" ] "integer xresolution" [ 320 ] "integer yresolution" [ 240 ]
+PixelFilter "gaussian" "float xradius" [ 2 ] "float yradius" [ 2 ]
+Sampler "zsobol" "integer pixelsamples" [ 16 ]
+Integrator "volpath" "integer maxdepth" [ 5 ]
+Accelerator "bvh"
+
+#  /obj/cam1
+Transform [ 0.6691 -0.4263 -0.6087 0 0 0.8192 -0.5736 0 -0.7431 -0.3838 -0.5481 0 0.5921 -0.07283 13.84 1 ]
+Camera "perspective" "float fov" [ 45 ] "float screenwindow" [ -1 1 -0.75 0.75 ]
+
+WorldBegin	# {
+
+    #  ==================================================
+    #  Light Definitions
+
+    #  ==================================================
+    #  NamedMaterial Definitions
+
+    #  ==================================================
+    #  NamedMedium Definitions
+
+    #  ==================================================
+    #  Object Instance Definitions
+
+    #  ==================================================
+    #  Object Definitions
+
+	# }

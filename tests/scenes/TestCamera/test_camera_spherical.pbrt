@@ -1,0 +1,30 @@
+
+Film "rgb" "string filename" [ "test_camera_spherical.exr" ] "integer xresolution" [ 320 ] "integer yresolution" [ 240 ]
+PixelFilter "gaussian" "float xradius" [ 2 ] "float yradius" [ 2 ]
+Sampler "zsobol" "integer pixelsamples" [ 16 ]
+Integrator "volpath" "integer maxdepth" [ 5 ]
+Accelerator "bvh"
+
+#  /obj/cam1
+Rotate -180 0 1 0
+Transform [ -0.6691 -0.4263 -0.6087 0 0 0.8192 -0.5736 0 0.7431 -0.3838 -0.5481 0 -0.5921 -0.07283 13.84 1 ]
+Camera "spherical"
+
+WorldBegin	# {
+
+    #  ==================================================
+    #  Light Definitions
+
+    #  ==================================================
+    #  NamedMaterial Definitions
+
+    #  ==================================================
+    #  NamedMedium Definitions
+
+    #  ==================================================
+    #  Object Instance Definitions
+
+    #  ==================================================
+    #  Object Definitions
+
+	# }
