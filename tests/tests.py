@@ -400,6 +400,12 @@ class TestROP(TestRoot):
 
     def test_sampler_stratified(self):
         self.rop.parm("sampler").set("stratified")
+        self.rop.parm("jitter").set(False)
+        self.compare_scene()
+
+    def test_sampler_paddedsobol(self):
+        self.rop.parm("sampler").set("paddedsobol")
+        self.rop.parm("randomization").set("none")
         self.compare_scene()
 
     def test_accelerator_kdtree(self):

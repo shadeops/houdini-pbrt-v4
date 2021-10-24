@@ -1,7 +1,7 @@
 
-Film "rgb" "string filename" [ "test_sampler_stratified.exr" ] "integer xresolution" [ 320 ] "integer yresolution" [ 240 ]
+Film "rgb" "string filename" [ "test_sampler_paddedsobol.exr" ] "integer xresolution" [ 320 ] "integer yresolution" [ 240 ]
 PixelFilter "gaussian" "float xradius" [ 2 ] "float yradius" [ 2 ]
-Sampler "stratified" "bool jitter" [ false ] "integer xsamples" [ 4 ] "integer ysamples" [ 4 ]
+Sampler "paddedsobol" "integer pixelsamples" [ 16 ] "string randomization" [ "none" ]
 Integrator "volpath" "integer maxdepth" [ 5 ]
 Accelerator "bvh"
 
