@@ -54,7 +54,6 @@
         }
         parmtag { "filechooser_mode" "read" }
         parmtag { "filechooser_pattern" "*.exr" }
-    }
         help    "Specifies an image file with an aperture shape, also accepts implicit names."
         parmtag { "filechooser_mode" "read" }
     }
