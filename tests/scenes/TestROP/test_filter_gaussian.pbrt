@@ -1,6 +1,6 @@
 
 Film "rgb" "string filename" [ "test_filter_gaussian.exr" ] "integer xresolution" [ 320 ] "integer yresolution" [ 240 ]
-PixelFilter "gaussian" "float xradius" [ 1.5 ] "float yradius" [ 1.5 ]
+PixelFilter "gaussian" "float sigma" [ 1 ] "float xradius" [ 1.5 ] "float yradius" [ 1.5 ]
 Sampler "zsobol" "integer pixelsamples" [ 16 ]
 Integrator "volpath" "integer maxdepth" [ 5 ]
 Accelerator "bvh"

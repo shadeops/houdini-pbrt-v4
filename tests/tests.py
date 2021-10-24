@@ -384,7 +384,7 @@ class TestROP(TestRoot):
     def test_filter_gaussian(self):
         self.rop.parm("filter").set("gaussian")
         self.rop.parmTuple("filter_radius").set([1.5, 1.5])
-        self.rop.parm("gauss_alpha").set(3)
+        self.rop.parm("gauss_sigma").set(1)
         self.compare_scene()
 
     def test_filter_mitchell(self):
@@ -763,6 +763,29 @@ class TestInstance(TestRoot):
         material.parmTuple("local2_cval2").set([1, 0, 0])
         material.setFirstInput(add_sop)
         material.setRenderFlag(True)
+        self.compare_scene()
+
+    def test_full_pt_instance_mediums(self):
+        medium = hou.node("/mat").createNode("pbrt_medium_homogeneous")
+        self.instance.parm("instancepath").set(self.geo1.path())
+        self.instance.parm("ptinstance").set("on")
+        add_sop = self.instance.createNode("add")
+        add_sop.parm("points").set(2)
+        add_sop.parm("usept0").set(True)
+        add_sop.parm("usept1").set(True)
+        add_sop.parmTuple("pt1").set([2, 0, 0])
+        wrangler = self.instance.createNode("attribwrangle")
+        wrangler.setFirstInput(add_sop)
+        wrangler.parm("snippet").set(
+            's@pbrt_interior = "{}";'
+            "@interior_scale = 0.5;\n"
+            "v@interior_sigma_a = {{3, 2, 1}};\n"
+            "v@interior_sigma_s = {{1, 2, 3}};\n"
+            "if (@ptnum == 1)\n"
+            "  v@interior_sigma_a = {{0,1,0}};\n"
+            "".format(medium.path())
+        )
+        wrangler.setRenderFlag(True)
         self.compare_scene()
 
 

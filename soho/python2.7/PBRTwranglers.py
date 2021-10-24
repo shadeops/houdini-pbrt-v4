@@ -173,8 +173,6 @@ def process_full_pt_instance_medium(instance_info, medium_type):
 
     # Look for attributes to create an override dictionary
     pt_attribs = gdp.globalValue("geo:pointattribs")
-    api.Comment(pt_attribs)
-
     overrides = {}
     for attrib in pt_attribs:
         if not attrib.startswith("{}_".format(medium_type)):
@@ -330,7 +328,7 @@ def wrangle_filter(obj, wrangler, now):
     parm_selection = {
         "filter": SohoPBRT("filter", "string", ["gaussian"], False),
         "filter_radius": SohoPBRT("filter_radius", "float", [1.5, 1.5], False),
-        "sigma": SohoPBRT("gauss_alpha", "float", [0.5], True, key="sigma"),
+        "sigma": SohoPBRT("gauss_sigma", "float", [0.5], True, key="sigma"),
         "B": SohoPBRT("mitchell_B", "float", [0.333333], True, key="B"),
         "C": SohoPBRT("mitchell_C", "float", [0.333333], True, key="C"),
         "tau": SohoPBRT("sinc_tau", "float", [3], True, key="tau"),
@@ -344,8 +342,8 @@ def wrangle_filter(obj, wrangler, now):
     paramset.add(PBRTParam("float", "xradius", xradius))
     paramset.add(PBRTParam("float", "yradius", yradius))
 
-    if filter_name == "gaussian" and "alpha" in parms:
-        paramset.add(parms["alpha"].to_pbrt())
+    if filter_name == "gaussian" and "sigma" in parms:
+        paramset.add(parms["sigma"].to_pbrt())
     if filter_name == "mitchell" and "B" in parms:
         paramset.add(parms["B"].to_pbrt())
     if filter_name == "mitchell" and "C" in parms:

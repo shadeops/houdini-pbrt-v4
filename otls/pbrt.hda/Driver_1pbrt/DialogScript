@@ -1019,13 +1019,13 @@
                 range   { -1 1 }
             }
             parm {
-                name    "gauss_alpha"
-                label   "Alpha"
+                name    "gauss_sigma"
+                label   "Sigma"
                 type    float
-                default { "2" }
-                help    "alpha controls the falloff rate of the Gaussian filter. Smaller values give a blurrier image. "
+                default { "0.5" }
+                help    ""
                 hidewhen "{ filter != gaussian }"
-                range   { 0 10 }
+                range   { 0 2 }
             }
             parm {
                 name    "mitchell_B"
