@@ -940,9 +940,20 @@ def wrangle_obj(obj, wrangler, now, ignore_xform=False, concat_xform=False):
         output_xform(obj, now, concat=concat_xform)
 
     if has_ptinstance and ptinstance[0] == 2:
+        shutter_times = wrangle_motionblur(obj, now)
+        ptmotionblur = []
+        has_ptmotionblur = obj.evalString("ptmotionblur", now, ptmotionblur)
+        if (
+            shutter_times is not None
+            and has_ptmotionblur
+            and ptmotionblur[0] == "deform"
+        ):
+            times = (shutter_times.open, shutter_times.close)
+        else:
+            times = (now,)
         # This is "fast instancing", "full instancing" results in Soho outputing
         # actual objects which independently need to be wrangled.
-        PBRTinstancing.wrangle_fast_instances(obj, now)
+        PBRTinstancing.wrangle_fast_instances(obj, times)
         return
 
     wrangle_geo(obj, wrangler, now)

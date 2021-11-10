@@ -66,17 +66,19 @@ def find_referenced_instances(obj):
             yield instance_obj.path()
 
 
-def wrangle_fast_instances(obj, now):
+def wrangle_fast_instances(obj, times):
     """Output instanced geoemtry defined by fast instancing"""
 
-    # We need hou.Node handles so we can resolve relative paths
-    # since soho does not do this.
-    # NOTE: the above isn't true, some cleverness from RIBsettings shows
-    # if len(shop_path) > 0:
-    #   if not posixpath.isabs(shop_path):
-    #     # make the shop_path absolute
-    #     obj_path = obj.getDefaultedString("object:name", now, [''])[0]
-    #     shop_path = posixpath.normpath(posixpath.join(obj_path, shop_path))
+    # NOTE: Homogenous volumes work when applied to a ObjectBegin/End however
+    #       Heterogenous volumes do not. The p0 p1 params aren't being
+    #       transformed properly by the instance's CTM.
+
+    if len(times) == 2:
+        now, close = times
+    else:
+        now = times[0]
+        close = None
+
     soppath = []
     if not obj.evalString("object:soppath", now, soppath):
         api.Comment("Can not find soppath for object")
@@ -113,9 +115,13 @@ def wrangle_fast_instances(obj, now):
         # 'material_override',
     )
 
-    # NOTE: Homogenous volumes work when applied to a ObjectBegin/End however
-    #       Heterogenous volumes do not. The p0 p1 params aren't being
-    #       transformed properly by the instance's CTM.
+    instancepath = []
+    obj.evalString("instancepath", now, instancepath)
+    instance_node = obj_node.node(instancepath[0])
+    if instance_node is not None:
+        default_instance_geo = instance_node.path()
+    else:
+        default_instance_geo = ""
 
     pt_attrib_map = {}
     for attrib in pt_attribs:
@@ -127,15 +133,29 @@ def wrangle_fast_instances(obj, now):
         api.Comment("Can not find instance xform attribs, skipping")
         return
 
-    instancepath = []
-    obj.evalString("instancepath", now, instancepath)
-    instance_node = obj_node.node(instancepath[0])
-    if instance_node is not None:
-        default_instance_geo = instance_node.path()
-    else:
-        default_instance_geo = ""
+    if close is not None:
+        geo_1 = SohoGeometry(sop, close)
+        if geo_1.Handle < 0:
+            api.Comment("No geometry at shutter close available, skipping")
+            return
 
-    for pt in xrange(num_pts):
+        num_pts_1 = geo_1.globalValue("geo:pointcount")[0]
+        if not num_pts_1:
+            api.Comment("No points at shutter close, skipping")
+            return
+
+        if num_pts != num_pts_1:
+            api.Comment("Point count mismatch between shutter open and close, skipping")
+            return
+
+        pointxform_1_h = geo_1.attribute("geo:point", "geo:pointxform")
+        if pointxform_1_h < 0:
+            api.Comment(
+                "Can not find instance xform attribs in shutter close, skipping"
+            )
+            return
+
+    for pt in range(num_pts):
         instance_geo = default_instance_geo
         if "instance" in pt_attrib_map:
             pt_instance_geo = geo.value(pt_attrib_map["instance"], pt)[0]
@@ -149,6 +169,14 @@ def wrangle_fast_instances(obj, now):
         with api.AttributeBlock():
             api.Comment("%s:%i" % (sop, pt))
             xform = geo.value(pt_attrib_map["geo:pointxform"], pt)
-            api.ConcatTransform(xform)
+            if close is None:
+                api.ConcatTransform(xform)
+            else:
+                api.ActiveTransform("StartTime")
+                api.ConcatTransform(xform)
+                api.ActiveTransform("EndTime")
+                xform = geo_1.value(pointxform_1_h, pt)
+                api.ConcatTransform(xform)
+                api.ActiveTransform("All")
             api.ObjectInstance(instance_geo)
     return
