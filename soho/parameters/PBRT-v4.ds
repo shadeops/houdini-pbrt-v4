@@ -71,6 +71,15 @@
         help        "What range within the ActiveTransform StartTime/EndTime in which the motion occurs."
         default     { 0 1 }
     }
+    parm {
+        SOHO_INT(xform_motionsamples, "Xform Time Samples", "Sampling", 2)
+        disablewhen  "{ allowmotionblur == 0 }"
+    }
+    parm {
+        SOHO_INT(geo_motionsamples, "Geo Time Samples", "Sampling", 1)
+        disablewhen  "{ allowmotionblur == 0 }"
+        range { 1 2 }
+    }
     collection {
         name    pbrt_subdivision
         label   "PBRT Subdivision Parameters"
