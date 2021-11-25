@@ -400,6 +400,9 @@ def wrangle_options(obj, wrangler, now):
         ),
         "msereferenceimage": SohoPBRT("msereferenceimage", "string", [""], True),
         "msereferenceout": SohoPBRT("msereferenceout", "string", [""], True),
+        # The PBRT default is "cameraworld" but due to instancing interpolation issues
+        # we'll default to "world" instead and force it to be output
+        "rendercoordsys": SohoPBRT("rendercoordsys", "string", ["world"], False),
         "seed": SohoPBRT("seed", "integer", [0], True),
         "displacementedgescale": SohoPBRT("displacementedgescale", "float", [1.0], True),
         "forcediffuse": SohoPBRT("forcediffuse", "bool", [False], True),
