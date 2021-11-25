@@ -248,7 +248,7 @@ def process_full_pt_instance_material(instance_info):
 def wrangle_motionblur(obj, now):
     mb_parms = [
         soho.SohoParm("allowmotionblur", "int", [0], False),
-        soho.SohoParm("shutter", "float", [0.5], False),
+        soho.SohoParm("shutter", "float", [scene_state.shutter], False),
         soho.SohoParm("shutteroffset", "float", [None], False),
         soho.SohoParm("motionstyle", "string", ["trailing"], False),
     ]

@@ -247,6 +247,11 @@ def render(cam, now):
     api.Comment(cam.getName())
     api.Camera(*wrangle_camera(cam, wrangler, now))
 
+    # Stash the camera's shutter as the default.
+    scene_state.shutter = cam.wrangleFloat(
+        wrangler, "shutter", now, [scene_state.shutter]
+    )[0]
+
     print()
 
     output_transform_times(cam, now)

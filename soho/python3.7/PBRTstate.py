@@ -76,6 +76,7 @@ if gdp is not None:
         self.fps = None
         self.ver = None
         self.now = None
+        self.shutter = 0.5
 
         self.inv_fps = None
         return
@@ -207,6 +208,7 @@ if gdp is not None:
         self.interior = None
         self.exterior = None
         self.have_nanovdb_convert = True
+        self.shutter = 0.5
         self.remove_tesselator()
         return
 
