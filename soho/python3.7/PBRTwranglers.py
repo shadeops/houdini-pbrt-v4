@@ -391,6 +391,7 @@ def wrangle_sampler(obj, wrangler, now):
 
 def wrangle_options(obj, wrangler, now):
     parm_selection = {
+        "disabletexturefiltering": SohoPBRT("disabletexturefiltering", "bool", [False], True),
         "disablepixeljitter": SohoPBRT("disablepixeljitter", "bool", [False], True),
         "disablewavelengthjitter": SohoPBRT(
             "disablewavelengthjitter", "bool", [False], True
@@ -398,6 +399,7 @@ def wrangle_options(obj, wrangler, now):
         "msereferenceimage": SohoPBRT("msereferenceimage", "string", [""], True),
         "msereferenceout": SohoPBRT("msereferenceout", "string", [""], True),
         "seed": SohoPBRT("seed", "integer", [0], True),
+        "displacementedgescale": SohoPBRT("displacementedgescale", "float", [1.0], True),
         "forcediffuse": SohoPBRT("forcediffuse", "bool", [False], True),
         "pixelstats": SohoPBRT("pixelstats", "bool", [False], True),
         "wavefront": SohoPBRT("wavefront", "bool", [False], True),

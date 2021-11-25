@@ -16,10 +16,17 @@
         SOHO_TOGGLE(disablepixeljitter, "Disable Pixel Jitter", "Options", 0)
     }
     parm {
+        SOHO_TOGGLE(disabletexturefiltering, "Disable Texture Filtering", "Options", 0)
+    }
+    parm {
         SOHO_TOGGLE(disablewavelengthjitter, "Disable Wavelength Jitter", "Options", 0)
     }
     parm {
         SOHO_TOGGLE(forcediffuse, "Force Diffuse", "Options", 0)
+    }
+    parm {
+        SOHO_FLOAT(displacementedgescale, "Displacement Edge Scale", "Options", 1.0)
+        range        { 0 1 }
     }
     parm {
         SOHO_TOGGLE(pixelstats, "Pixel Stats", "Options", 0)
