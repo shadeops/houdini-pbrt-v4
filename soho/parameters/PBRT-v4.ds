@@ -44,6 +44,14 @@
         SOHO_TOGGLE(wavefront, "Wavefront Rendering", "Options", 0)
     }
     parm {
+        SOHO_STRING(rendercoordsys, "Render Coordinate System", "Options", "cameraworld")
+        menu {
+            "camera"      "Camera"
+            "cameraworld"    "CameraWorld"
+            "world"  "World"
+        }
+    }
+    parm {
         SOHO_TOGGLE(pbrt_dof, "Allow Depth of Field", "Camera", 0)
     }
     parm {
