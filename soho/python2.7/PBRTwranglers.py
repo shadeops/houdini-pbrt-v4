@@ -402,9 +402,12 @@ def wrangle_options(obj, wrangler, now):
         ),
         "msereferenceimage": SohoPBRT("msereferenceimage", "string", [""], True),
         "msereferenceout": SohoPBRT("msereferenceout", "string", [""], True),
-        # The PBRT default is "cameraworld" but due to instancing interpolation issues
-        # we'll default to "world" instead and force it to be output
-        "rendercoordsys": SohoPBRT("rendercoordsys", "string", ["world"], False),
+        # NOTE:
+        # The PBRT default is "cameraworld" but this can cause instancing interpolation issues
+        # For now we'll use the PBRT default and expect the user to switch to world, but depending
+        # on the resolution of https://github.com/mmp/pbrt-v4/issues/206 we may need to default
+        # this to "world"
+        "rendercoordsys": SohoPBRT("rendercoordsys", "string", ["cameraworld"], True),
         "seed": SohoPBRT("seed", "integer", [0], True),
         "displacementedgescale": SohoPBRT(
             "displacementedgescale", "float", [1.0], True
