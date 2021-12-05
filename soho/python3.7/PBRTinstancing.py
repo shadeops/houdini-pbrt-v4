@@ -131,6 +131,13 @@ def wrangle_fast_instances(obj, times):
         api.Comment("Can not find instance xform attribs, skipping")
         return
 
+    instance_tmpl = """
+        AttributeBegin  # {{
+            #  {}:{}
+            ConcatTransform [ {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} ]
+            ObjectInstance "{}"
+        AttributeEnd    # }}""".format
+
     if close is not None:
         geo_1 = SohoGeometry(sop, close)
         if geo_1.Handle < 0:
@@ -153,6 +160,17 @@ def wrangle_fast_instances(obj, times):
             )
             return
 
+        instance_tmpl = """
+            AttributeBegin  # {{
+                #  {}:{}
+                ActiveTransform StartTime
+                ConcatTransform [ {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} ]
+                ActiveTransform EndTime
+                ConcatTransform [ {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} ]
+                ActiveTransform All
+                ObjectInstance "{}"
+            AttributeEnd    # }}""".format
+
     for pt in range(num_pts):
         instance_geo = default_instance_geo
         if "instance" in pt_attrib_map:
@@ -164,17 +182,38 @@ def wrangle_fast_instances(obj, times):
         if not instance_geo:
             continue
 
-        with api.AttributeBlock():
-            api.Comment("%s:%i" % (sop, pt))
-            xform = geo.value(pt_attrib_map["geo:pointxform"], pt)
-            if close is None:
-                api.ConcatTransform(xform)
-            else:
-                api.ActiveTransform("StartTime")
-                api.ConcatTransform(xform)
-                api.ActiveTransform("EndTime")
-                xform = geo_1.value(pointxform_1_h, pt)
-                api.ConcatTransform(xform)
-                api.ActiveTransform("All")
-            api.ObjectInstance(instance_geo)
+        xform = geo.value(pt_attrib_map["geo:pointxform"], pt)
+
+        ## Optimizaiton Start
+
+        # The following is an optimization due to this being a hot section of the code
+        # Avoiding the overhead of the various api.* calls and their handling of of
+        # arrays can result in significant speeds ups.
+        # In the case of 3,200,000 instances the overhead of wrangle_fast_instances
+        # goes from 90.4s to 37.4s
+
+        # Note: fstrings were compared against a str.format() and the resultant timings
+        # were about the same but the format tmpl being cleaner on the code side.
+        if close is None:
+            print(instance_tmpl(sop, pt, *xform, instance_geo))
+        else:
+            xform1 = geo_1.value(pointxform_1_h, pt)
+            print(instance_tmpl(sop, pt, *xform, *xform1, instance_geo))
+
+        # The above replaces the following logic.
+        # with api.AttributeBlock():
+        #    api.Comment("%s:%i" % (sop, pt))
+        #    xform = geo.value(pt_attrib_map["geo:pointxform"], pt)
+        #    if close is None:
+        #        api.ConcatTransform(xform)
+        #    else:
+        #        api.ActiveTransform("StartTime")
+        #        api.ConcatTransform(xform)
+        #        api.ActiveTransform("EndTime")
+        #        xform = geo_1.value(pointxform_1_h, pt)
+        #        api.ConcatTransform(xform)
+        #        api.ActiveTransform("All")
+        #    api.ObjectInstance(instance_geo)
+
+        ## Optimizaiton End
     return
