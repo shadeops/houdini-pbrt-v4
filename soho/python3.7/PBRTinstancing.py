@@ -131,12 +131,19 @@ def wrangle_fast_instances(obj, times):
         api.Comment("Can not find instance xform attribs, skipping")
         return
 
-    instance_tmpl = """
-        AttributeBegin  # {{
-            #  {}:{}
-            ConcatTransform [ {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} ]
-            ObjectInstance "{}"
-        AttributeEnd    # }}""".format
+    # Default is 9 from CommonControl.ds
+    soho_precision = []
+    obj.evalInt("soho_precision", now, soho_precision)
+    soho_precision = soho_precision[0] if soho_precision else 9
+
+    concat_fmt = ("{{:.{}g}} ".format(soho_precision)) * 16
+    instance_tmpl = (
+        "\tAttributeBegin\t# {{\n"
+        "\t    #  {}:{}\n"
+        "\t    ConcatTransform [ " + concat_fmt + "]\n"
+        '\t    ObjectInstance "{}"\n'
+        "\tAttributeEnd\t# }}"
+    ).format
 
     if close is not None:
         geo_1 = SohoGeometry(sop, close)
@@ -160,16 +167,17 @@ def wrangle_fast_instances(obj, times):
             )
             return
 
-        instance_tmpl = """
-            AttributeBegin  # {{
-                #  {}:{}
-                ActiveTransform StartTime
-                ConcatTransform [ {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} ]
-                ActiveTransform EndTime
-                ConcatTransform [ {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} ]
-                ActiveTransform All
-                ObjectInstance "{}"
-            AttributeEnd    # }}""".format
+        instance_tmpl = (
+            "\tAttributeBegin\t# {{\n"
+            "\t    #  {}:{}\n"
+            "\t    ActiveTransform StartTime\n"
+            "\t    ConcatTransform [ " + concat_fmt + "]\n"
+            "\t    ActiveTransform EndTime\n"
+            "\t    ConcatTransform [ " + concat_fmt + "]\n"
+            "\t    ActiveTransform All\n"
+            '\t    ObjectInstance "{}"\n'
+            "\tAttributeEnd\t# }}"
+        ).format
 
     for pt in range(num_pts):
         instance_geo = default_instance_geo
@@ -190,7 +198,7 @@ def wrangle_fast_instances(obj, times):
         # Avoiding the overhead of the various api.* calls and their handling of of
         # arrays can result in significant speeds ups.
         # In the case of 3,200,000 instances the overhead of wrangle_fast_instances
-        # goes from 90.4s to 37.4s
+        # goes from 90.4s to 19.6s
 
         # Note: fstrings were compared against a str.format() and the resultant timings
         # were about the same but the format tmpl being cleaner on the code side.

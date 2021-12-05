@@ -133,12 +133,19 @@ def wrangle_fast_instances(obj, times):
         api.Comment("Can not find instance xform attribs, skipping")
         return
 
-    instance_tmpl = """
-        AttributeBegin  # {{
-            #  {}:{}
-            ConcatTransform [ {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} ]
-            ObjectInstance "{}"
-        AttributeEnd    # }}""".format
+    # Default is 9 from CommonControl.ds
+    soho_precision = []
+    obj.evalInt("soho_precision", now, soho_precision)
+    soho_precision = soho_precision[0] if soho_precision else 9
+
+    concat_fmt = ("{{:.{}g}} ".format(soho_precision)) * 16
+    instance_tmpl = (
+        "\tAttributeBegin\t# {{\n"
+        "\t    #  {}:{}\n"
+        "\t    ConcatTransform [ " + concat_fmt + "]\n"
+        '\t    ObjectInstance "{}"\n'
+        "\tAttributeEnd\t# }}"
+    ).format
 
     if close is not None:
         geo_1 = SohoGeometry(sop, close)
@@ -162,16 +169,17 @@ def wrangle_fast_instances(obj, times):
             )
             return
 
-        instance_tmpl = """
-            AttributeBegin  # {{
-                #  {}:{}
-                ActiveTransform StartTime
-                ConcatTransform [ {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} ]
-                ActiveTransform EndTime
-                ConcatTransform [ {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} ]
-                ActiveTransform All
-                ObjectInstance "{}"
-            AttributeEnd    # }}""".format
+        instance_tmpl = (
+            "\tAttributeBegin\t# {{\n"
+            "\t    #  {}:{}\n"
+            "\t    ActiveTransform StartTime\n"
+            "\t    ConcatTransform [ " + concat_fmt + "]\n"
+            "\t    ActiveTransform EndTime\n"
+            "\t    ConcatTransform [ " + concat_fmt + "]\n"
+            "\t    ActiveTransform All\n"
+            '\t    ObjectInstance "{}"\n'
+            "\tAttributeEnd\t# }}"
+        ).format
 
     for pt in range(num_pts):
         instance_geo = default_instance_geo
@@ -192,15 +200,43 @@ def wrangle_fast_instances(obj, times):
         # Avoiding the overhead of the various api.* calls and their handling of of
         # arrays can result in significant speeds ups.
         # In the case of 3,200,000 instances the overhead of wrangle_fast_instances
-        # goes from 90.4s to 37.4s
+        # goes from 90.4s to 19.6s
 
         # Note: fstrings were compared against a str.format() and the resultant timings
         # were about the same but the format tmpl being cleaner on the code side.
         if close is None:
-            print(instance_tmpl(sop, pt, *xform, instance_geo))
+            print(
+                instance_tmpl(
+                    sop,
+                    pt,
+                    # fmt: off
+                    xform[0], xform[1], xform[2], xform[3],
+                    xform[4], xform[5], xform[6], xform[7],
+                    xform[8], xform[9], xform[10],xform[11],
+                    xform[12],xform[13],xform[14],xform[15],
+                    # fmt: on
+                    instance_geo,
+                )
+            )
         else:
             xform1 = geo_1.value(pointxform_1_h, pt)
-            print(instance_tmpl(sop, pt, *xform, *xform1, instance_geo))
+            print(
+                instance_tmpl(
+                    sop,
+                    pt,
+                    # fmt: off
+                    xform[0], xform[1], xform[2], xform[3],
+                    xform[4], xform[5], xform[6], xform[7],
+                    xform[8], xform[9], xform[10],xform[11],
+                    xform[12],xform[13],xform[14],xform[15],
+                    xform1[0], xform1[1], xform1[2], xform1[3],
+                    xform1[4], xform1[5], xform1[6], xform1[7],
+                    xform1[8], xform1[9], xform1[10],xform1[11],
+                    xform1[12],xform1[13],xform1[14],xform1[15],
+                    # fmt: on
+                    instance_geo,
+                )
+            )
 
         # The above replaces the following logic.
         # with api.AttributeBlock():
