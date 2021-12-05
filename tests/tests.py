@@ -1510,13 +1510,13 @@ class TestShapes(TestRoot):
         self.compare_scene()
 
     def test_curve_bezier(self):
-        curve = self.geo.createNode("curve")
+        curve = self.geo.createNode("curve::")
         curve.parm("coords").set("-1,0,0 -1,0,-1 0,0,-1 0,0,0")
         curve.parm("type").set("bezier")
         self.compare_scene()
 
     def test_curve_bezier_many(self):
-        curve = self.geo.createNode("curve")
+        curve = self.geo.createNode("curve::")
         curve.parm("coords").set("-1,0,0 -1,0,-1 0,0,-1 0,0,0")
         curve.parm("type").set("bezier")
         copy = self.geo.createNode("copyxform")
@@ -1527,7 +1527,7 @@ class TestShapes(TestRoot):
         self.compare_scene()
 
     def test_curve_bezier_long(self):
-        curve = self.geo.createNode("curve")
+        curve = self.geo.createNode("curve::")
         curve.parm("coords").set(
             "-1,0,0 -1,0,-1 0,0,-1 "
             "0,0,0 0,0,1 1,0,1 "
@@ -1540,7 +1540,7 @@ class TestShapes(TestRoot):
         self.compare_scene()
 
     def test_curve_bezier_types(self):
-        curve = self.geo.createNode("curve")
+        curve = self.geo.createNode("curve::")
         curve.parm("coords").set("-1,0,0 -1,0,-1 0,0,-1 0,0,0")
         curve.parm("type").set("bezier")
         copy = self.geo.createNode("copyxform")
@@ -1559,7 +1559,7 @@ class TestShapes(TestRoot):
         self.compare_scene()
 
     def test_curve_bezier_width(self):
-        curve = self.geo.createNode("curve")
+        curve = self.geo.createNode("curve::")
         curve.parm("coords").set("-1,0,0 -1,0,-1 0,0,-1 0,0,0")
         curve.parm("type").set("bezier")
         wrangler = self.geo.createNode("attribwrangle")
@@ -1570,7 +1570,7 @@ class TestShapes(TestRoot):
         self.compare_scene()
 
     def test_curve_bezier_width01(self):
-        curve = self.geo.createNode("curve")
+        curve = self.geo.createNode("curve::")
         curve.parm("coords").set("-1,0,0 -1,0,-1 0,0,-1 0,0,0")
         curve.parm("type").set("bezier")
         wrangler = self.geo.createNode("attribwrangle")
@@ -1581,7 +1581,7 @@ class TestShapes(TestRoot):
         self.compare_scene()
 
     def test_curve_bezier_vtxwidth(self):
-        curve = self.geo.createNode("curve")
+        curve = self.geo.createNode("curve::")
         curve.parm("coords").set("-1,0,0 -1,0,-1 0,0,-1 0,0,0")
         curve.parm("type").set("bezier")
         wrangler = self.geo.createNode("attribwrangle")
@@ -1592,7 +1592,7 @@ class TestShapes(TestRoot):
         self.compare_scene()
 
     def test_curve_bezier_ptwidth(self):
-        curve = self.geo.createNode("curve")
+        curve = self.geo.createNode("curve::")
         curve.parm("coords").set("-1,0,0 -1,0,-1 0,0,-1 0,0,0")
         curve.parm("type").set("bezier")
         wrangler = self.geo.createNode("attribwrangle")
@@ -1608,7 +1608,7 @@ class TestShapes(TestRoot):
         ptg.append(parm)
         self.geo.setParmTemplateGroup(ptg)
         self.geo.parm("pbrt_curvetype").set("cylinder")
-        curve = self.geo.createNode("curve")
+        curve = self.geo.createNode("curve::")
         curve.parm("coords").set("-1,0,0 -1,0,-1 0,0,-1 0,0,0")
         curve.parm("type").set("bezier")
         self.compare_scene()
@@ -1619,7 +1619,7 @@ class TestShapes(TestRoot):
         ptg.append(parm)
         self.geo.setParmTemplateGroup(ptg)
         self.geo.parm("pbrt_splitdepth").set(9)
-        curve = self.geo.createNode("curve")
+        curve = self.geo.createNode("curve::")
         curve.parm("coords").set(
             "-1,0,0 -1,0,-1 0,0,-1 "
             "0,0,0 0,0,1 1,0,1 "
@@ -1637,7 +1637,7 @@ class TestShapes(TestRoot):
         ptg.append(parm)
         self.geo.setParmTemplateGroup(ptg)
         self.geo.parm("pbrt_curvetype").set("ribbon")
-        curve = self.geo.createNode("curve")
+        curve = self.geo.createNode("curve::")
         curve.parm("coords").set("-1,0,0 -1,0,-1 0,0,-1 0,0,0")
         curve.parm("type").set("bezier")
         wrangler = self.geo.createNode("attribwrangle")
@@ -1651,13 +1651,13 @@ class TestShapes(TestRoot):
         hou.applicationVersion() < (17, 5), "Only supported in Houdini 17.5 and higher"
     )
     def test_curve_bspline(self):
-        curve = self.geo.createNode("curve")
+        curve = self.geo.createNode("curve::")
         curve.parm("coords").set("-1,0,0 -1,0,-1 0,0,-1 0,0,0")
         curve.parm("type").set("nurbs")
         self.compare_scene()
 
     def test_curve_bezier_bad_order(self):
-        curve = self.geo.createNode("curve")
+        curve = self.geo.createNode("curve::")
         curve.parm("coords").set(
             "-1,0,0 -1,0,-1 0,0,-1 "
             "0,0,0 0,0,1 1,0,1 "
