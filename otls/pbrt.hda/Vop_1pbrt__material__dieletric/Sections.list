@@ -6,4 +6,5 @@ Tools.shelf	Tools.shelf
 CreateScript	CreateScript
 IconImage	IconImage
 FunctionName	FunctionName
+OnCreated	OnCreated
 ExtraFileOptions	ExtraFileOptions
