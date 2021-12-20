@@ -278,7 +278,7 @@ class BaseNode(object):
     """
 
     override_pat = re.compile(
-        r"^((?P<node>\w+)/)?(?P<parm>\w+)(:(?P<spectrum>spectrum|blackbody|rgb))?$"
+        r"^((?P<node>\w[\w.-]*)/)?(?P<parm>\w+)(:(?P<spectrum>spectrum|blackbody|rgb))?$"
     )
 
     @staticmethod
