@@ -56,6 +56,7 @@
         default { "" }
         help    "RGB image"
         parmtag { "filechooser_mode" "read" }
+        parmtag { "ogl_normalmap" "1" }
     }
 
     groupsimple {

@@ -30,6 +30,7 @@
         default { "" }
         help    "RGB image"
         parmtag { "filechooser_mode" "read" }
+        parmtag { "ogl_normalmap" "1" }
     }
 
     parm {
@@ -39,5 +40,6 @@
         default { "" }
         help    "File that stores the Fourier BSDF description."
         parmtag { "filechooser_mode" "read" }
+        parmtag { "filechooser_pattern" "*.bsdf" }
     }
 }

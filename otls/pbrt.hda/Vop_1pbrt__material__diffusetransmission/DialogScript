@@ -34,6 +34,7 @@
         default { "" }
         help    "RGB image"
         parmtag { "filechooser_mode" "read" }
+        parmtag { "ogl_normalmap" "1" }
     }
 
     parm {
@@ -43,6 +44,7 @@
         size    3
         default { "0.25" "0.25" "0.25" }
         range   { 0 1 }
+        parmtag { "ogl_diff" "1" }
     }
     parm {
         name    "transmittance"

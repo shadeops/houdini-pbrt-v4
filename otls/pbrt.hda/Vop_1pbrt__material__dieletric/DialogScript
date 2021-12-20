@@ -38,6 +38,7 @@
         default { "" }
         help    "RGB image"
         parmtag { "filechooser_mode" "read" }
+        parmtag { "ogl_normalmap" "1" }
     }
     parm {
         name    "eta"
@@ -60,6 +61,7 @@
         default { "0" }
         disablewhen "{ anisotropic_roughness == 1 }"
         range   { 0 1 }
+        parmtag { "ogl_rough" "1" }
     }
     parm {
         name    "uroughness"
