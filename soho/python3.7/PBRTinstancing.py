@@ -100,6 +100,12 @@ def wrangle_fast_instances(obj, times):
         api.Comment("No points, skipping")
         return
 
+    # If motion blur is enabled, but our geometry isn't time dependent use one sample
+    if close is not None:
+        time_dependent = geo.globalValue("geo:timedependent")[0]
+        if not time_dependent:
+            close = None
+
     pt_attribs = (
         "geo:pointxform",
         "instance",
