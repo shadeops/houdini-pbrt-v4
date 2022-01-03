@@ -53,6 +53,7 @@
         default { "1" "1" "1" }
         range   { 0 1 }
         disablewhen "{ do_reflectance == 1 }"
+        parmtag { "pbrt.force" "1" }
     }
     parm {
         name    "k"
@@ -62,6 +63,7 @@
         default { "1" "1" "1" }
         range   { 0 1 }
         disablewhen "{ do_reflectance == 1 }"
+        parmtag { "pbrt.force" "1" }
     }
     parm {
         name    "do_reflectance"
