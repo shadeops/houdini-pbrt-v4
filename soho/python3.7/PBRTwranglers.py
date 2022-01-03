@@ -984,6 +984,7 @@ def wrangle_geo(obj, wrangler, now):
         "shop_materialpath": SohoPBRT(
             "shop_materialpath", "shaderhandle", skipdefault=False
         ),
+        "soho_precision": SohoPBRT("soho_precision", "integer", [9], False),
         "pbrt_rendersubd": SohoPBRT("pbrt_rendersubd", "bool", [False], False),
         "pbrt_subdlevels": SohoPBRT(
             "pbrt_subdlevels", "integer", [3], False, key="levels"
@@ -1023,6 +1024,7 @@ def wrangle_geo(obj, wrangler, now):
         "pbrt_geofile_threshold": soho.SohoParm(
             "pbrt_geofile_threshold", "integer", [10000], False
         ),
+        "pbrt_renderpoints": soho.SohoParm("pbrt_renderpoints", "bool", [False], False),
     }
     properties = obj.evaluate(parm_selection, now)
 
@@ -1110,5 +1112,15 @@ def wrangle_geo(obj, wrangler, now):
         api.Comment("Can not find soppath for object")
         return
 
-    PBRTgeo.output_geo(soppath, now, properties)
+    shutter_times = wrangle_motionblur(obj, now)
+    if shutter_times is not None:
+        times = (shutter_times.open, shutter_times.close)
+    else:
+        times = (now,)
+
+    if properties["pbrt_renderpoints"].Value[0]:
+        PBRTgeo.output_pts(soppath, times, properties)
+    else:
+        PBRTgeo.output_geo(soppath, now, properties)
+
     return

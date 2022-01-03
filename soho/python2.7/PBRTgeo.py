@@ -191,6 +191,67 @@ def sphere_wrangler(gdp, paramset=None, properties=None):
     return
 
 
+def point_wrangler(gdp, paramset=None, properties=None):
+
+    P_vals = array.array("f")
+    P_vals.fromstring(gdp.pointFloatAttribValuesAsString("P"))
+
+    P_close_atr = gdp.findPointAttrib("__pbrt_P_close")
+    if P_close_atr is not None:
+        P_close_vals = array.array("f")
+        P_close_vals.fromstring(gdp.pointFloatAttribValuesAsString(P_close_atr.name()))
+    else:
+        P_close_vals = None
+
+    pscale_atr = gdp.findPointAttrib("pscale")
+
+    concat_fmt = ("{{:.{}g}} ".format(properties["soho_precision"].Value[0])) * 3
+    sphere_tmpl = (
+        "\tAttributeBegin\t# {{\n"
+        "\t    Translate " + concat_fmt + "\n"
+        '\t    Shape "sphere" "float radius" [ {} ]\n'
+        "\tAttributeEnd\t# }}"
+    ).format
+
+    sphere_anim_tmpl = (
+        "\tAttributeBegin\t# {{\n"
+        "\t    ActiveTransform StartTime\n"
+        "\t    Translate " + concat_fmt + "\n"
+        "\t    ActiveTransform EndTime\n"
+        "\t    Translate " + concat_fmt + "\n"
+        "\t    ActiveTransform All\n"
+        '\t    Shape "sphere" "float radius" [ {} ]\n'
+        "\tAttributeEnd\t# }}"
+    ).format
+
+    for i, pt in enumerate(gdp.iterPoints()):
+        # pbrt-v4 gets upset if the same transform is used for both start and end
+        # this sanitizes on export (in an expensive manner).
+        if P_close_atr is not None and not hou.Vector3(
+            P_vals[i * 3 : i * 3 + 3]
+        ).isAlmostEqual(hou.Vector3(P_close_vals[i * 3 : i * 3 + 3])):
+            print(
+                sphere_anim_tmpl(
+                    P_vals[i * 3],
+                    P_vals[i * 3 + 1],
+                    P_vals[i * 3 + 2],
+                    P_close_vals[i * 3],
+                    P_close_vals[i * 3 + 1],
+                    P_close_vals[i * 3 + 2],
+                    0.1 if not pscale_atr else pt.attribValue(pscale_atr),
+                )
+            )
+        else:
+            print(
+                sphere_tmpl(
+                    P_vals[i * 3],
+                    P_vals[i * 3 + 1],
+                    P_vals[i * 3 + 2],
+                    0.1 if not pscale_atr else pt.attribValue(pscale_atr),
+                )
+            )
+
+
 # NOTE: HOUDINI COMPATIBILITY
 #   The parameteric uvs do not match between the two. The u coordinate is
 #   flipped. This is not resolvable within the export.
@@ -2082,24 +2143,38 @@ def partition_by_attrib(input_gdp, attrib):
         attrib_name = attrib.name()
     else:
         attrib = input_gdp.findPrimAttrib(attrib)
-
+        if attrib is None:
+            attrib = input_gdp.findPointAttrib(attrib)
     if attrib.size() > 1:
         raise ValueError("Primitive attribute must be size 1")
 
     sort_verb = hou.sopNodeTypeCategory().nodeVerbs()["sort"]
-    sort_verb.setParms({"primsort": 11, "primattrib": attrib_name})
+    if attrib.type() == hou.attribType.Point:
+        sort_verb.setParms({"ptsort": 12, "pointattrib": attrib_name})
+    else:
+        sort_verb.setParms({"primsort": 11, "primattrib": attrib_name})
     sort_verb.execute(input_gdp, [input_gdp])
 
-    if attrib.dataType() == hou.attribData.String:
-        prim_values = input_gdp.primStringAttribValues(attrib_name)
-    elif attrib.dataType() == hou.attribData.Int:
-        prim_values = input_gdp.primIntAttribValues(attrib_name)
-    elif attrib.dataType() == hou.attribData.Float:
-        prim_values = input_gdp.primFloatAttribValues(attrib_name)
+    if attrib.type() == hou.attribType.Point:
+        if attrib.dataType() == hou.attribData.String:
+            attrib_values = input_gdp.pointStringAttribValues(attrib_name)
+        elif attrib.dataType() == hou.attribData.Int:
+            attrib_values = input_gdp.pointIntAttribValues(attrib_name)
+        elif attrib.dataType() == hou.attribData.Float:
+            attrib_values = input_gdp.pointFloatAttribValues(attrib_name)
+        else:
+            raise ValueError("Invalid attribute type")
+        group_type = 3
     else:
-        raise ValueError("Invalid attribute type")
-
-    split_gdps = {}
+        if attrib.dataType() == hou.attribData.String:
+            attrib_values = input_gdp.primStringAttribValues(attrib_name)
+        elif attrib.dataType() == hou.attribData.Int:
+            attrib_values = input_gdp.primIntAttribValues(attrib_name)
+        elif attrib.dataType() == hou.attribData.Float:
+            attrib_values = input_gdp.primFloatAttribValues(attrib_name)
+        else:
+            raise ValueError("Invalid attribute type")
+        group_type = 4
 
     def _put_in_cache(v, cache):
         if v in cache:
@@ -2108,22 +2183,30 @@ def partition_by_attrib(input_gdp, attrib):
         return True
 
     cache = set()
-    run_lengths = [(v, i) for i, v in enumerate(prim_values) if _put_in_cache(v, cache)]
-    run_lengths.append((prim_values[-1], len(prim_values)))
+    run_lengths = [
+        (v, i) for i, v in enumerate(attrib_values) if _put_in_cache(v, cache)
+    ]
+    run_lengths.append((attrib_values[-1], len(attrib_values)))
+
+    split_gdps = {}
 
     blast_verb = hou.sopNodeTypeCategory().nodeVerbs()["blast"]
-
     for i, encoded_v in enumerate(run_lengths[:-1]):
         prim_value, start = encoded_v
         end = run_lengths[i + 1][1] - 1
         blast_verb.setParms(
-            {"negate": 1, "grouptype": 4, "group": "{}-{}".format(start, end)}
+            {"negate": 1, "grouptype": group_type, "group": "{}-{}".format(start, end)}
         )
 
         gdp = hou.Geometry()
         blast_verb.execute(gdp, [input_gdp])
+        # For unknown reasons the execute can change gdp to be input_gdp
+        # This is possibly an optimization in the blast SOP when based on the negate
+        # and a full range becomes a no-op. Because our logic assumes the creation of
+        # new geometry we'll force it.
+        if gdp.vexAttribDataId() == input_gdp.vexAttribDataId():
+            gdp = hou.Geometry(gdp)
         split_gdps[prim_value] = gdp
-
     return split_gdps
 
 
@@ -2305,4 +2388,167 @@ def output_geo(soppath, now, properties=None):
 
         if material_node is not None:
             api.AttributeEnd()
+    return
+
+
+def output_pts(soppath, times, properties=None):
+    """Output the geometry by calling the appropriate wrangler
+
+    Geometry is partitioned into subparts based on the shop_materialpath
+    and material_override prim attributes.
+
+    Args:
+        soppath (str): oppath to SOP
+        properties (dict, None): Dictionary of SohoParms
+                                 (Optional, defaults to None)
+    Returns:
+        None
+    """
+
+    # split by material
+    # else deal with overrides per point
+    #
+    # NOTE: We won't be splitting based on medium interior/exterior
+    #       those will be left as a object level assignment only.
+    #       Note, that in the case of Houdini Volumes they will look
+    #       for the appropriate medium parameters as prim vars
+
+    if properties is None:
+        properties = {}
+
+    ignore_materials = False
+    if "pbrt_ignorematerials" in properties:
+        ignore_materials = properties["pbrt_ignorematerials"].Value[0]
+
+    node = hou.node(soppath)
+    if node is None or node.type().category() != hou.sopNodeTypeCategory():
+        return
+
+    input_gdp = node.geometryAtFrame(hou.timeToFrame(times[0]))
+    if input_gdp is None:
+        return
+
+    gdp = hou.Geometry()
+    gdp.merge(input_gdp.freeze())
+
+    # Because we'll be partitioning this geometry we'll need to capture the P of the geo
+    # at shutter close and carry it along for the ride.
+    if len(times) == 2 and node.isTimeDependent():
+        input_gdp_close = node.geometryAtFrame(hou.timeToFrame(times[1]))
+        P_close = input_gdp_close.pointFloatAttribValuesAsString("P")
+        P_close_atr = gdp.addAttrib(
+            hou.attribType.Point, "__pbrt_P_close", (0.0, 0.0, 0.0)
+        )
+        try:
+            gdp.setPointFloatAttribValuesFromString(P_close_atr.name(), P_close)
+        except hou.OperationFailed:
+            # Mismatched point count, we can't do motion blur
+            P_close_atr.destroy()
+        del P_close
+        input_gdp_close.clear()
+        del input_gdp_close
+
+    default_material = ""
+    default_override = ""
+    if not ignore_materials:
+        try:
+            default_material = gdp.stringAttribValue("shop_materialpath")
+        except hou.OperationFailed:
+            pass
+        if default_material not in scene_state.shading_nodes:
+            default_material = ""
+
+        try:
+            default_override = gdp.stringAttribValue("material_override")
+        except hou.OperationFailed:
+            default_override = ""
+
+    # These handles are only valid until until we clear the geo
+    pt_material_h = gdp.findPointAttrib("shop_materialpath")
+    pt_override_h = gdp.findPointAttrib("material_override")
+
+    has_pt_overrides = bool(
+        not ignore_materials and pt_override_h is not None and pt_material_h is not None
+    )
+
+    if pt_material_h is not None and not ignore_materials:
+        material_gdps = partition_by_attrib(gdp, pt_material_h)
+        gdp.clear()
+        del gdp
+    else:
+        material_gdps = {default_material: gdp}
+
+    # The gdp these point to may have been cleared
+    del pt_override_h
+    del pt_material_h
+
+    instance_info = properties.get(".instance_info")
+
+    for material, material_gdp in material_gdps.items():
+        if material not in scene_state.shading_nodes:
+            if material in scene_state.invalid_shading_nodes:
+                api.Comment("Did not apply %s as it was not a PBRT material" % material)
+            material_node = None
+        else:
+            api.AttributeBegin()
+            api.NamedMaterial(material)
+            material_node = MaterialNode(material)
+
+        # Aggregate overrides, instead of per prim
+        if has_pt_overrides:
+            override_attrib_h = material_gdp.findPointAttrib("material_override")
+            override_gdps = partition_by_attrib(material_gdp, override_attrib_h)
+            material_gdp.clear()
+            del material_gdp
+            del override_attrib_h
+        else:
+            override_gdps = {default_override: material_gdp}
+
+        override_count = 0
+        for override_str, override_gdp in override_gdps.items():
+
+            node_cache = {}
+            param_cache = {}
+
+            base_paramset = ParamSet()
+            base_paramset |= primitive_alpha_texs(properties)
+
+            if override_str:
+                suffix = create_suffix(
+                    soppath,
+                    shape_num=None,
+                    override_num=override_count,
+                    instance_info=instance_info,
+                )
+                api.AttributeBegin()
+                override_count += 1
+                overrides = eval(override_str, {}, {})
+
+                wrangle_shading_network(
+                    material,
+                    use_named=False,
+                    exported_nodes=set(),
+                    name_suffix=suffix,
+                    overrides=overrides,
+                    node_cache=node_cache,
+                    param_cache=param_cache,
+                )
+
+            # At this point the gdps are partitioned
+            # * First by material
+            # * Lastly, for each different material override there is additional
+            #   partitioning
+            #
+            # At this point we will NOT have varying types or materials within the
+            # wrangler.
+
+            properties[".override_count"] = override_count
+
+            point_wrangler(override_gdp, base_paramset, properties)
+            override_gdp.clear()
+            if override_str:
+                api.AttributeEnd()
+
+    if material_node is not None:
+        api.AttributeEnd()
     return

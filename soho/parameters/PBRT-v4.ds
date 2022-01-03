@@ -110,6 +110,9 @@
         }
     }
     parm {
+        SOHO_TOGGLE(pbrt_renderpoints, "Render Only Points (pbrt)", "Geometry", 0)
+    }
+    parm {
         SOHO_TOGGLE(pbrt_computeN, "Auto Create Normals if Missing (pbrt)", "Geometry", 1)
     }
     parm {
