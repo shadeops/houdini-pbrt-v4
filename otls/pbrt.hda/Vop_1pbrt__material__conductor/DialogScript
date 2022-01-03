@@ -78,6 +78,7 @@
         default { "1" "1" "1" }
         help    " The reflectivity of the surface."
         disablewhen "{ do_reflectance == 0 }"
+        parmtag { "pbrt.force" "1" }
         range   { 0 1 }
     }
     parm {
