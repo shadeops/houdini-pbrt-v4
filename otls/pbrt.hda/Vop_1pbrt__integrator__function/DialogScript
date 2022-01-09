@@ -32,8 +32,21 @@
         }
     }
     parm {
+        name    "skipbad"
+        label   "Skip Bad"
+        type    toggle
+        default { "1" }
+    }
+    parm {
         name    "filename"
         label   "Filename"
+        type    file
+        default { "" }
+        parmtag { "filechooser_mode" "write" }
+    }
+    parm {
+        name    "imagefilename"
+        label   "Image Filename"
         type    file
         default { "" }
         parmtag { "filechooser_mode" "write" }
