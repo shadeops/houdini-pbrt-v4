@@ -25,7 +25,7 @@ WorldBegin	# {
 
     #  ==================================================
     #  NamedMaterial Definitions
-    MakeNamedMaterial "/mat/pbrt_material_coatedconductor1" "string type" "coatedconductor" "float interface.roughness" [ 0.2 ]
+    MakeNamedMaterial "/mat/pbrt_material_coatedconductor1" "string type" "coatedconductor" "rgb conductor.eta" [ 1 1 1 ] "rgb conductor.k" [ 1 1 1 ] "float interface.roughness" [ 0.2 ]
 
 
     #  ==================================================
