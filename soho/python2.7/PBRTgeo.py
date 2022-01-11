@@ -114,7 +114,7 @@ def linear_vtx_gen(gdp, vtx_per_face_hint=None):
         vertices = mesh_vtx_gen(gdp)
         return vtx_attrib_gen(vertices, None)
 
-    return range(len(gdp.iterPrims()) * vtx_per_face_hint)
+    return range(gdp.intrinsicValue("primitivecount") * vtx_per_face_hint)
 
 
 def prim_transform(prim):
@@ -515,8 +515,8 @@ class OutputGeo(object):
                 sort_verb.setParms({"ptsort": 1})
                 sort_verb.execute(self.gdp, [self.gdp])
 
-        self.num_points = len(self.gdp.iterPoints())
-        self.num_prims = len(self.gdp.iterPrims())
+        self.num_points = self.gdp.intrinsicValue("pointcount")
+        self.num_prims = self.gdp.intrinsicValue("primitivecount")
 
     @property
     def gdp(self):
@@ -730,7 +730,7 @@ def mesh_wrangler(gdp, paramset=None, properties=None):
     gdp = scene_state.tesselate_geo(gdp)
 
     # Exit out if there are no prims
-    if not any(gdp.iterPrims()):
+    if not gdp.intrinsicValue("primitivecount"):
         api.Comment("No primitives found")
         return None
 
@@ -826,7 +826,7 @@ def patch_wrangler(gdp, paramset=None, properties=None):
     blast_verb.execute(gdp, [gdp])
 
     # Exit out if there are no prims
-    if not any(gdp.iterPrims()):
+    if not gdp.intrinsicValue("primitivecount"):
         api.Comment("No primitives found")
         return None
 
@@ -2060,7 +2060,7 @@ def tesselated_wrangler(gdp, paramset=None, properties=None):
 
 def not_supported(gdp, paramset=None, properties=None):
     """Wrangler for unsupported prim types"""
-    num_prims = len(gdp.iterPrims())
+    num_prims = gdp.intrinsicValue("primitivecount")
     prim_name = gdp.iterPrims()[0].intrinsicValue("typename")
     api.Comment("Ignoring %i prims, %s is not supported" % (num_prims, prim_name))
     return
