@@ -16,6 +16,7 @@ Vop_1pbrt__sampler__paddedsobol	Vop/pbrt_sampler_paddedsobol
 Vop_1pbrt__sampler__zsobol	Vop/pbrt_sampler_zsobol
 Vop_1pbrt__sampler__stratified	Vop/pbrt_sampler_stratified
 Vop_1pbrt__film__rgb	Vop/pbrt_film_rgb
+Vop_1pbrt__film__spectral	Vop/pbrt_film_spectral
 Vop_1pbrt__film__gbuffer	Vop/pbrt_film_gbuffer
 Vop_1pbrt__filter__box	Vop/pbrt_filter_box
 Vop_1pbrt__filter__gaussian	Vop/pbrt_filter_gaussian

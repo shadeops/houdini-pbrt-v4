@@ -649,6 +649,7 @@
                 menu {
                     "rgb"      "RGB"
                     "gbuffer"  "G-Buffer"
+                    "spectral" "Spectral"
                 }
             }
             parm {
@@ -675,6 +676,16 @@
                 help    " Diagonal length of the film, in mm. (This value is only used when the RealisticCamera is used.)"
                 range   { 0 10 }
                 parmtag { "autoscope" "0000000000000000" }
+            }
+            parm {
+                name    "buckets"
+                label   "Buckets"
+                type    integer
+                default { "16" }
+                help    ""
+                range   { 4 64 }
+                parmtag { "autoscope" "0000000000000000" }
+				disablewhen "{ film != spectral }"
             }
             parm {
                 name    "savefp16"

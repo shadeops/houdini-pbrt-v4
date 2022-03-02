@@ -312,6 +312,10 @@ def wrangle_film(obj, wrangler, now):
         "whitebalance": SohoPBRT("whitebalance", "float", [0], True),
         "sensor": SohoPBRT("sensor", "string", ["cie1931"], True),
     }
+
+    if film_name == "spectral":
+        parm_selection["buckets"] = SohoPBRT("buckets", "integer", [16], True)
+
     parms = obj.evaluate(parm_selection, now)
     for parm in parms.values():
         paramset.add(parm.to_pbrt())

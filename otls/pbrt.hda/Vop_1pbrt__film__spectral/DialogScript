@@ -1,0 +1,179 @@
+# Dialog script for pbrt_film_spectral automatically generated
+
+{
+    name	pbrt_film_spectral
+    script	image
+    label	"PBRT SpectralFilm"
+
+    rendermask	PBRT
+    externalshader 1
+    shadertype	generic
+    signature	"Default Inputs"	default	{ }
+
+    outputoverrides	default
+    {
+    }
+
+    help {
+    }
+
+    parm {
+        name    "filename"
+        label   "Filename"
+        type    file
+        default { "pbrt.exr" }
+        parmtag { "filechooser_mode" "write" }
+    }
+    parm {
+        name    "xresolution"
+        label   "Resolution X"
+        type    integer
+        default { "1280" }
+        help    "The number of pixels in the x direction."
+        range   { 1! 4096 }
+    }
+    parm {
+        name    "yresolution"
+        label   "Resolution Y"
+        type    integer
+        default { "720" }
+        help    "The number of pixels in the y direction."
+        range   { 1! 4096 }
+    }
+    parm {
+        name    "cropwindow"
+        label   "Crop Window"
+        type    float
+        size    4
+        default { "0" "1" "0" "1" }
+        help    "The subregion of the image to render. The four values specified should be fractions in the range [0,1], and they represent x_min, x_max, y_min, and y_max, respectively. These values are in normalized device coordinates, with (0,0) in the upper-left corner of the image."
+        disablewhen "{ do_pixelbounds 1 }"
+        range   { -1 1 }
+    }
+    parm {
+        name    "do_pixelbounds"
+        label   "Pixel Bounds"
+        type    toggle
+        nolabel
+        joinnext
+        default { "0" }
+        parmtag { "pbrt.meta" "1" }
+    }
+    parm {
+        name    "pixelbounds"
+        label   "Pixel Bounds"
+        type    integer
+        size    4
+        default { "0" "1280" "0" "720" }
+        help    ""
+        disablewhen "{ do_pixelbounds 0 }"
+        range   { 0 1024 }
+    }
+    parm {
+        name    "scale"
+        label   "Scale"
+        type    float
+        default { "1" }
+        help    "Scale factor to apply to film pixel values before saving the image."
+        range   { 0 10 }
+    }
+    parm {
+        name    "diagonal"
+        label   "Diagonal"
+        type    float
+        default { "35" }
+        help    " Diagonal length of the film, in mm. (This value is only used when the RealisticCamera is used.)"
+        range   { 0 10 }
+    }
+    parm {
+        name    "nbuckets"
+        label   "Num Buckets"
+        type   integer 
+        default { "16" }
+        help    ""
+        range   { 4 64 }
+    }
+    parm {
+        name    "lambdamin"
+        label   "Lambda Min"
+        type  float 
+        default { "360" }
+        help    ""
+        range   { 300 500 }
+    }
+    parm {
+        name    "lambdamax"
+        label   "Lambda Max"
+        type  float 
+        default { "830" }
+        help    ""
+        range   { 700 900 }
+    }
+    parm {
+        name    "do_maxcomponentvalue"
+        label   "Max Component Value"
+        type    toggle
+        nolabel
+        joinnext
+        default { "0" }
+        parmtag { "pbrt.meta" "1" }
+    }
+    parm {
+        name    "maxcomponentvalue"
+        label   "Max Component Value"
+        type    float
+        default { "1e+38" }
+        help    "Image sample values with luminance greater than this value are clamped to have this luminance. (This is a hack, but can be useful for eliminating large variance spikes in scenes with difficult light transport.)"
+        disablewhen "{ do_maxcomponentvalue == 0 }"
+        range   { 0 10 }
+    }
+    parm {
+        name    "savefp16"
+        label   "Save Half (16bit)"
+        type    toggle
+        default { "1" }
+    }
+    parm {
+        name    "iso"
+        label   "Iso"
+        type    float
+        default { "100" }
+        help    ""
+        range   { 50 1600 }
+    }
+    parm {
+        name    "whitebalance"
+        label   "White Balance"
+        type    float
+        default { "0" }
+        help    ""
+        range   { 5400 7200 }
+    }
+    parm {
+        name    "sensor"
+        label   "Sensor"
+        type    string
+        default { "cie1931" }
+        help    ""
+		menu { 
+			"cie1931"	"CIE 1931"
+			"canon_eos_100d"	"Canon EOS 100D"
+			"canon_eos_1dx_mkii"	"Canon EOS 1D X Mark II"
+			"canon_eos_200d"	"Canon EOS-200D"
+			"canon_eos_200d_mkii"	"Canon EOS 200D Mark II"
+			"canon_eos_5d"	"Canon EOS 5D"
+			"canon_eos_5d_mkii"	"Canon EOS 5D Mark II"
+			"canon_eos_5d_mkiii"	"Canon EOS 5D Mark III"
+			"canon_eos_5d_mkiv"	"Canon EOS 5D Mark IV"
+			"canon_eos_5ds"	"Canon EOS 5DS"
+			"canon_eos_m"	"Canon EOS M"
+			"hasselblad_l1d_20c"	"Hasselblad L1D-20C"
+			"nikon_d810"	"Nikon D810"
+			"nikon_d850"	"Nikon D850"
+			"sony_ilce_6400"	"Sony A6400"
+			"sony_ilce_7m3"	"Sony A7 Mark III"
+			"sony_ilce_7rm3"	"Sony A7R Mark III"
+			"sony_ilce_9"	"Sony A9"
+		}
+    }
+}
