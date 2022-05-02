@@ -22,7 +22,7 @@
         name    "LeScale"
         label   "LeScale"
         type    float
-        default { "1" }
+        default { "0" }
         help    "Scale the emissive light"
         range   { 0 10 }
     }
