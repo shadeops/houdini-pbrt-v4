@@ -21,8 +21,8 @@ Design Goals
 
 Installation
 ------------
-For now clone the repo in anywhere within the $HOUDINI_PATH. More details in the wiki.
+For now clone the repo in anywhere within the $HOUDINI_PATH. More details in the [wiki](../../wiki/Installation).
 
 Usage
 -----
-See the Wiki for documentation on usage.
+See the [Wiki](../../wiki) for documentation on usage.
