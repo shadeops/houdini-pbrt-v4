@@ -685,7 +685,7 @@
                 help    ""
                 range   { 4 64 }
                 parmtag { "autoscope" "0000000000000000" }
-				disablewhen "{ film != spectral }"
+                disablewhen "{ film != spectral }"
             }
             parm {
                 name    "savefp16"
@@ -731,9 +731,9 @@
                 default { "fastowen" }
                 menu {
                     "none"              "None"
-					"owen"              "Owen"
+                    "owen"              "Owen"
                     "fastowen"          "Fast Owen"
-					"premutedigits"     "Premute Digits"
+                    "premutedigits"     "Premute Digits"
                 }
                 hidewhen "{ sampler != sobol sampler != paddedsobol sampler != zsobol sampler != halton}"
             }
@@ -1242,115 +1242,129 @@
             name    "soho_output"
             label   "SOHO Output"
 
-			parm {
-				name    "soho_pipecmd"
-				label   "Render Command"
-				type    string
-				default { "pbrt" }
-				menureplace {
-					"pbrt"	"pbrt"
-					"pbrt --display-server localhost:14158" "pbrt & tev"
-				}
-				disablewhen "{ soho_outputmode != 0 }"
-			}
-			parm {
-				name    "soho_outputmode"
-				label   "Output Mode"
-				type    ordinal
-				default { "0" }
-				menu {
-					"0" "Pipe to Cmd"
-					"1" "Save To Disk"
-					"2" "Stdout"
-				}
-			}
-			parm {
-				name    "soho_diskfile"
-				label   "Disk File"
-				type    file
-				default { "$HIP/scene.pbrt" }
-				disablewhen "{ soho_outputmode != 1 }"
-				parmtag { "filechooser_mode" "write" }
-			}
-			parm {
-				name    "soho_mkpath"
-				label   "Create Intermediate Directories"
-				type    toggle
-				default { "1" }
-			}
-			parm {
-				name    "soho_viewport_menu"
-				label   "Show In Viewport Menu"
-				type    toggle
-				default { "1" }
-				help    "By default SOHO output drivers do not appear in the viewport menu.  Adding this property and turning it on will cause the driver to show up."
-				parmtag { "spare_category" "Menu" }
-			}
-			parm {
-				name    "soho_foreground"
-				label   "Block Until Render Completes"
-				type    toggle
-				default { "0" }
-				help    "When rendering to the soho_pipecmd, turning this on will block Houdini until the pipe command completes."
-				disablewhen "{ soho_outputmode != 0 }"
-				parmtag { "spare_category" "SOHO Intrinsics" }
-			}
-			parm {
-				name    "soho_spoolrenderoutput"
-				label   "Render Output"
-				type    ordinal
-				default { "off" }
-				help    "Controls whether to capture the render output and add to the node info"
-				menu {
-					"off"   "Don't capture render output"
-					"on"    "Capture render output for graphical apps"
-					"force" "Capture render output for all apps"
-				}
-			}
-		}
+            parm {
+                name    "soho_pipecmd"
+                label   "Render Command"
+                type    string
+                default { "pbrt" }
+                disablewhen "{ soho_outputmode != 0 }"
+                menureplace {
+                    [ "import os" ]
+                    [ "" ]
+                    [ "display_server = \"--display-server {}\".format(" ]
+                    [ "    os.environ.get(\"TEV_HOST\", \"127.0.0.1:14158\")" ]
+                    [ ")" ]
+                    [ "" ]
+                    [ "ret = (" ]
+                    [ "    \"pbrt\", \"pbrt\"," ]
+                    [ "    \"pbrt {}\".format(display_server), \"pbrt & tev\"," ]
+                    [ "    \"pbrt --gpu {}\".format(display_server), \"pbrt --gpu & tev\"," ]
+                    [ "    \"pbrt --gpu --interactive\", \"pbrt --gpu --interactive\"," ]
+                    [ "    \"pbrt --wavefront --interactive\", \"pbrt --wavefront --interactive\"," ]
+                    [ ")" ]
+                    [ "" ]
+                    [ "return ret" ]
+                    language python
+                }
+            }
+            parm {
+                name    "soho_outputmode"
+                label   "Output Mode"
+                type    ordinal
+                default { "0" }
+                menu {
+                    "0" "Pipe to Cmd"
+                    "1" "Save To Disk"
+                    "2" "Stdout"
+                }
+            }
+            parm {
+                name    "soho_diskfile"
+                label   "Disk File"
+                type    file
+                default { "$HIP/scene.pbrt" }
+                disablewhen "{ soho_outputmode != 1 }"
+                parmtag { "filechooser_mode" "write" }
+            }
+            parm {
+                name    "soho_mkpath"
+                label   "Create Intermediate Directories"
+                type    toggle
+                default { "1" }
+            }
+            parm {
+                name    "soho_viewport_menu"
+                label   "Show In Viewport Menu"
+                type    toggle
+                default { "1" }
+                help    "By default SOHO output drivers do not appear in the viewport menu.  Adding this property and turning it on will cause the driver to show up."
+                parmtag { "spare_category" "Menu" }
+            }
+            parm {
+                name    "soho_foreground"
+                label   "Block Until Render Completes"
+                type    toggle
+                default { "0" }
+                help    "When rendering to the soho_pipecmd, turning this on will block Houdini until the pipe command completes."
+                disablewhen "{ soho_outputmode != 0 }"
+                parmtag { "spare_category" "SOHO Intrinsics" }
+            }
+            parm {
+                name    "soho_spoolrenderoutput"
+                label   "Render Output"
+                type    ordinal
+                default { "off" }
+                help    "Controls whether to capture the render output and add to the node info"
+                menu {
+                    "off"   "Don't capture render output"
+                    "on"    "Capture render output for graphical apps"
+                    "force" "Capture render output for all apps"
+                }
+            }
+        }
         groupsimple {
             name    "soho_geo_output"
             label   "SOHO Geo Output"
-			
-			parm {
-				name    "pbrt_allow_geofiles"
-				label   "Allow Geo Archives"
-				type    ordinal
-				default { "threshold" }
-				help    "When outputing we have the option to save NanoVDB and meshes to separate files."
-				menu {
-					"off" "Disable geometry archives (ply and nvdb)"
-					"threshold" "Save nvdb and meshes as ply after threshold"
-					"always" "Always save nvdb and meshes as ply"
-				}
-			}
-			parm {
-				name    "pbrt_geo_location"
-				label   "Geometry Output Path"
-				type    directory
-				default { "geometry" }
-				disablewhen "{ pbrt_allow_geofiles off }"
-			}
-			parm {
-				name    "pbrt_nanovdb_converter"
-				label   "VDB -> NanoVDB Tool"
-				type    file
-				default { "nanovdb_convert -z -f {vdb} {nanovdb}" }
-				disablewhen "{ pbrt_allow_geofiles off }"
-			}
+            
+            parm {
+                name    "pbrt_allow_geofiles"
+                label   "Allow Geo Archives"
+                type    ordinal
+                default { "threshold" }
+                help    "When outputing we have the option to save NanoVDB and meshes to separate files."
+                menu {
+                    "off" "Disable geometry archives (ply and nvdb)"
+                    "threshold" "Save nvdb and meshes as ply after threshold"
+                    "always" "Always save nvdb and meshes as ply"
+                }
+            }
+            parm {
+                name    "pbrt_geo_location"
+                label   "Geometry Output Path"
+                type    directory
+                default { "geometry" }
+                disablewhen "{ pbrt_allow_geofiles off }"
+            }
+            parm {
+                name    "pbrt_nanovdb_converter"
+                label   "VDB -> NanoVDB Tool"
+                type    file
+                default { "nanovdb_convert -z -f {vdb} {nanovdb}" }
+                disablewhen "{ pbrt_allow_geofiles off }"
+            }
             parm {
                 name    "pbrt_geofile_threshold"
                 label   "Geo. File Threshold"
                 type    integer
                 default { "10000" }
                 help    "Threshold for when PLY files are used"
-				disablewhen "{ pbrt_allow_geofiles != threshold }"
+                disablewhen "{ pbrt_allow_geofiles != threshold }"
             }
-		}
+        }
         groupsimple {
             name    "soho_config"
             label   "SOHO Config"
-			invisible
+            invisible
 
             parm {
                 name    "soho_program"

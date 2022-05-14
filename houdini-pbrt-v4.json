@@ -1,0 +1,29 @@
+{
+    "env": [
+		// If tev or nanovdb_convert are not in your $PATH, you can uncomment this
+		// section and update their locations
+		//{
+		//	"PATH" :
+		//	{
+		//		"value":
+		//		[
+		//			"/opt/tev/bin",
+		//			"/opt/openvdb/openvdb-9.0.0/bin"
+		//		],
+		//		"method" : "append"
+		//	}
+		//},
+        { 
+            // If you wish to default tev to another host/port you may set it here.
+			"TEV_HOST" : "127.0.0.1:14158" 
+		},
+		{
+            // Location of the houdini-pbrt-v4 install, this can be separate from the
+            // houdini-pbrt-v4.json file if desired.
+            "HOUDINI_PBRT_V4_PATH" : "$HOUDINI_PACKAGE_PATH"
+        }
+    ],
+    "path" : "$HOUDINI_PBRT_V4_PATH",
+    "load_package_once" : true,
+    "enable" : true
+}
