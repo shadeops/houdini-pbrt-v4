@@ -694,20 +694,26 @@ class TestInstance(TestRoot):
 
     def test_instance(self):
         add_sop = self.instance.createNode("add")
+        add_sop.parm("points").set(1)
         add_sop.parm("usept0").set(True)
+        add_sop.setRenderFlag(True)
         self.instance.parm("instancepath").set(self.geo1.path())
         self.compare_scene()
 
     def test_full_instance(self):
         add_sop = self.instance.createNode("add")
+        add_sop.parm("points").set(1)
         add_sop.parm("usept0").set(True)
+        add_sop.setRenderFlag(True)
         self.instance.parm("instancepath").set(self.geo1.path())
         self.instance.parm("ptinstance").set("on")
         self.compare_scene()
 
     def test_fast_instance(self):
         add_sop = self.instance.createNode("add")
+        add_sop.parm("points").set(1)
         add_sop.parm("usept0").set(True)
+        add_sop.setRenderFlag(True)
         self.instance.parm("instancepath").set(self.geo1.path())
         self.instance.parm("ptinstance").set("fast")
         self.compare_scene()
