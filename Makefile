@@ -26,13 +26,21 @@ clean:
 	/bin/rm -fvr ./tests/tmp
 
 .PHONY: package
-package: hda
-	/bin/rm -fv package/soho_pbrt-v4.zip
-	mkdir -p package/
-	zip -r package/soho_pbrt-v4.zip \
-		otls/pbrt.hda \
-		soho \
-		vop \
-		examples/*.hip \
-		-x *.pyc
+package:
+	/bin/rm -frv package
+	mkdir -p package/houdini-pbrt-v4
+	mkdir package/houdini-pbrt-v4/otls
+	hotl -C otls/pbrt.hda package/houdini-pbrt-v4/otls/pbrt.hda
+	cp -av soho package/houdini-pbrt-v4/
+	cp -av package/houdini-pbrt-v4/soho/python3.7 package/houdini-pbrt-v4/soho/python3.9
+	cp -av vop package/houdini-pbrt-v4/
+	cp -av houdini-pbrt-v4.json package/
+	cd package; zip -r houdini-pbrt-v4.zip \
+		houdini-pbrt-v4/otls/pbrt.hda \
+		houdini-pbrt-v4/soho \
+		houdini-pbrt-v4/vop \
+		houdini-pbrt-v4/examples/*.hip \
+		houdini-pbrt-v4.json \
+		-x *.pyc \
+		-9
 
