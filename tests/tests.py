@@ -1504,7 +1504,7 @@ class TestShapes(TestRoot):
         wrangler.parm("class").set("primitive")
         wrangler.parm("snippet").set(
             's@displacement = "{}";\n'
-            "f@displacement_edgelength = 0.1;".format(texture.path())
+            "f@edgelength = 0.1;".format(texture.path())
         )
         wrangler.setFirstInput(filesop)
         wrangler.setRenderFlag(True)

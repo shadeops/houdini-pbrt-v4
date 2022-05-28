@@ -41,7 +41,7 @@ WorldBegin	# {
 	AttributeBegin	# {
 	    ConcatTransform [ 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 ]
 	    Texture "/mat/pbrt_texture_fbm1:/obj/test_packed_ply_displacement/attribwrangle1=0+0[0]" "float" "fbm"
-	    Shape "plymesh" "texture displacement" [ "/mat/pbrt_texture_fbm1:/obj/test_packed_ply_displacement/attribwrangle1=0+0[0]" ] "float displacement.edgelength" [ 0.1 ] "string filename" [ "./tests/resources/grid.ply" ]
+	    Shape "plymesh" "texture displacement" [ "/mat/pbrt_texture_fbm1:/obj/test_packed_ply_displacement/attribwrangle1=0+0[0]" ] "float edgelength" [ 0.1 ] "string filename" [ "./tests/resources/grid.ply" ]
 	AttributeEnd	# }
     AttributeEnd	# }
 

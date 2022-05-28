@@ -10,7 +10,7 @@
     shadertype	generic
     input	float	displacement	displacement
     input	struct_PBRTSpectrum	sigma_a	"Sigma a"
-    input	struct_PBRTSpectrum	color	Color
+    input	struct_PBRTSpectrum	reflectance	Reflectance
     input	float	eumelanin	Eumelanin
     input	float	pheomelanin	Pheomelanin
     input	float	eta	Eta
@@ -20,7 +20,7 @@
     output	struct_PBRTMaterial	material	material
     inputflags	displacement	0
     inputflags	sigma_a	0
-    inputflags	color	0
+    inputflags	reflectance	0
     inputflags	eumelanin	0
     inputflags	pheomelanin	0
     inputflags	eta	0
@@ -46,7 +46,7 @@
         default { "sigma_a" }
         menu {
             "sigma_a"   "Sigma A"
-            "color"     "Color"
+            "reflectance"     "Reflectance"
             "eumelanin" "Eumelanin/Pheomelanin"
         }
         parmtag { "pbrt.meta" "1" }
@@ -62,13 +62,13 @@
         range   { 0 1 }
     }
     parm {
-        name    "color"
-        label   "Color"
+        name    "reflectance"
+        label   "Reflectance"
         type    color
         size    3
         default { "0.2" "0.2" "0.2" }
         help    "If specified, a value of the absorption coefficient is computed using an approximation that leads to the hair having roughly this color, after multiple scattering in the hair during rendering."
-        disablewhen "{ mode != color }"
+        disablewhen "{ mode != reflectance}"
         range   { 0 1 }
     }
     parm {

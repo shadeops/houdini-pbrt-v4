@@ -317,10 +317,10 @@ def ply_displacement_wrangler(prim, properties):
     )
     texture_name = "%s%s" % (disp_tex, suffix)
     paramset.add(PBRTParam("texture", "displacement", texture_name))
-    edgelen_attrib = prim.geometry().findPrimAttrib("displacement_edgelength")
+    edgelen_attrib = prim.geometry().findPrimAttrib("edgelength")
     if edgelen_attrib is not None:
         edgelen_val = prim.attribValue(edgelen_attrib)
-        paramset.add(PBRTParam("float", "displacement.edgelength", edgelen_val))
+        paramset.add(PBRTParam("float", "edgelength", edgelen_val))
 
     return paramset
 
