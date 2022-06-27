@@ -42,11 +42,21 @@
         range   { 0 10 }
     }
     parm {
+        name    "do_seed"
+        label   "Seed"
+        type    toggle
+        nolabel
+        joinnext
+        default { "0" }
+        parmtag { "pbrt.meta" "1" }
+    }
+    parm {
         name    "seed"
         label   "Seed"
         type    integer
-        default { "6502" }
-        help    ""
-        range   { 0 10 }
+        size    1
+        default { "0" }
+        disablewhen "{ do_seed == 0 }"
+        range   { 0 1000 }
     }
 }

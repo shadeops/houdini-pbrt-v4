@@ -835,16 +835,6 @@
                 range   { 0 10 }
             }
             parm {
-                name    "sppm_seed"
-                label   "Seed"
-                type    integer
-                default { "6502" }
-                help    ""
-                hidewhen "{ integrator != sppm }"
-                parmtag { "pbrt.alias" "seed" }
-                range   { 0 10 }
-            }
-            parm {
                 name    "radius"
                 label   "Radius"
                 type    float

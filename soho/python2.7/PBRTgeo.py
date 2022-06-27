@@ -1132,8 +1132,8 @@ def vdb_wrangler(gdp, paramset=None, properties=None):
         exterior = "" if exterior is None else exterior
 
         extra_attribs = [
-            ("float", "LeScale"),
-            ("float", "temperaturecutoff"),
+            ("float", "Lescale"),
+            ("float", "temperatureoffet"),
             ("float", "temperaturescale"),
             ("rgb", "sigma_a"),
             ("rgb", "sigma_s"),
@@ -1852,7 +1852,7 @@ def smoke_prim_wrangler(grids, paramset=None, properties=None):
         if grid.gridtype == "uniformgrid":
             extra_attribs = [("rgb", "Le"), ("rgb", "sigma_a"), ("rgb", "sigma_s")]
         else:
-            extra_attribs = [("float", "LeScale")]
+            extra_attribs = [("float", "Lescale")]
         medium_prim_overrides = medium_prim_paramset(
             grid.refprim, medium_paramset, extra_attribs=extra_attribs
         )

@@ -68,15 +68,15 @@
         parmtag { "script_callback_language" "python" }
     }
     parm {
-        name    "LeScale"
+        name    "Lescale"
         label   "Le Scale"
         type    float
         default { "1" }
         range   { 0 10 }
     }
     parm {
-        name    "temperaturecutoff"
-        label   "Temperature Cutoff"
+        name    "temperatureoffset"
+        label   "Temperature Offset"
         type    float
         default { "0" }
         range   { 0 10 }

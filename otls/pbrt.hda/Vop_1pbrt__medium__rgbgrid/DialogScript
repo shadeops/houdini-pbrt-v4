@@ -19,8 +19,8 @@
     }
 
     parm {
-        name    "LeScale"
-        label   "LeScale"
+        name    "Lescale"
+        label   "Lescale"
         type    float
         default { "0" }
         help    "Scale the emissive light"
