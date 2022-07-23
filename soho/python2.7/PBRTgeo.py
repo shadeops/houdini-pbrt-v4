@@ -13,7 +13,7 @@ import soho
 import PBRTapi as api
 from PBRTnodes import BaseNode, MaterialNode, PBRTParam, ParamSet
 from PBRTshading import wrangle_shading_network
-from PBRTstate import scene_state, temporary_file, HVER_17_5, HVER_18
+from PBRTstate import scene_state, temporary_file
 
 
 def create_suffix(
@@ -493,11 +493,7 @@ class OutputGeo(object):
         self.unique_points = True if to_promote else False
 
         if self.unique_points:
-            if hou.applicationVersion() >= HVER_18:
-                unique_verb = hou.sopNodeTypeCategory().nodeVerb("splitpoints")
-            else:
-                unique_verb = hou.sopNodeTypeCategory().nodeVerb("facet")
-                unique_verb.setParms({"unique": True})
+            unique_verb = hou.sopNodeTypeCategory().nodeVerb("splitpoints")
             unique_verb.execute(self.gdp, [self.gdp])
 
             promote_verb = hou.sopNodeTypeCategory().nodeVerb("attribpromote")
@@ -1897,10 +1893,6 @@ def _convert_nurbs_to_bezier(gdp):
         gdp (hou.Geometry): Input geo
     Returns: None (Replaces input gdp)
     """
-
-    # The Convert SOP is only available as a Verb in H17.5 and greater
-    if hou.applicationVersion() < HVER_17_5:
-        return
 
     convert_verb = hou.sopNodeTypeCategory().nodeVerb("convert")
     # fromtype: "nurbCurve", totype: "bezCurve"

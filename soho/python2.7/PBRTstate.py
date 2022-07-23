@@ -8,17 +8,7 @@ import tempfile
 import hou
 import soho
 
-# Baseline Support is Houdini 17.0
-
-# Houdini 17.5:
-#   Supports Convert SOP as a Verb (this allows for the tesselator to be verb chain)
-HVER_17_5 = (17, 5, 0)
-
-# Houdini 18.0:
-#   Changes from a Fuse SOP to a Split Points SOP
-#   Support for getting full vertex lists directly from the gdp
-HVER_18 = (18, 0, 0)
-
+# Baseline Support is Houdini 18.0
 
 @contextlib.contextmanager
 def temporary_file(suffix=None):
@@ -67,7 +57,6 @@ if gdp is not None:
         # level
         self.interior = None
         self.exterior = None
-        self.tesselator = None
         self.have_nanovdb_convert = True
         self.nanovdb_converter = None
         self.rop = None
@@ -121,7 +110,6 @@ if gdp is not None:
     def __enter__(self):
         self.reset()
         self.init_state()
-        self.tesselator = self.create_tesselator()
         return
 
     def __exit__(self, *args):
@@ -211,15 +199,9 @@ if gdp is not None:
         self.exterior = None
         self.have_nanovdb_convert = True
         self.shutter = 0.5
-        self.remove_tesselator()
         return
 
-    def tesselate_geo(self, geo):
-        if hou.applicationVersion() >= HVER_17_5:
-            return self.tesselate_geo_with_verbs(geo)
-        return self.tesselate_geo_with_network(geo)
-
-    def tesselate_geo_with_verbs(self, gdp):
+    def tesselate_geo(self, gdp):
 
         # Delete open primitives as PBRT does not support them
         convert_verb = hou.sopNodeTypeCategory().nodeVerb("convert")
@@ -234,74 +216,6 @@ if gdp is not None:
         blast_verb.execute(gdp, [gdp])
 
         return gdp
-
-    def tesselate_geo_with_network(self, geo):
-        """Takes an hou.Geometry and returns a tesselated version"""
-
-        if self.tesselator is None:
-            raise TypeError("Tesselator is None")
-        self.tesselator.setCachedUserData("gdp", geo)
-        self.tesselator.node("python").cook(force=True)
-        gdp = self.tesselator.node("OUT").geometry().freeze()
-        return gdp
-
-    def create_tesselator(self):
-        """Builds a SOP network for the tesselating geometry"""
-
-        if hou.applicationVersion() >= HVER_17_5:
-            return None
-
-        # A network is created instead of a chain of Verbs because currently
-        # the Convert SOP doesn't exist in Verb form.
-        sopnet = hou.node("/out").createNode("sopnet")
-
-        py_node = sopnet.createNode(
-            "python", node_name="python", run_init_scripts=False
-        )
-        convert_node = sopnet.createNode(
-            "convert", node_name="to_polys", run_init_scripts=False
-        )
-        divide_node = sopnet.createNode(
-            "divide", node_name="triangulate", run_init_scripts=False
-        )
-        wrangler_node = sopnet.createNode(
-            "attribwrangle", node_name="cull_open", run_init_scripts=False
-        )
-        out_node = sopnet.createNode("output", node_name="OUT", run_init_scripts=False)
-
-        py_node.setUnloadFlag(True)
-        convert_node.setUnloadFlag(True)
-        out_node.setDisplayFlag(True)
-        out_node.setRenderFlag(True)
-
-        py_node.parm("python").set(self._tesslate_py)
-
-        convert_node.parm("lodu").set(1)
-        convert_node.parm("lodv").set(1)
-
-        # Remove any primitives that are not closed as pbrt can not handle them
-        wrangler_node.parm("class").set("primitive")
-        wrangler_node.parm("snippet").set(
-            'if (!primintrinsic(geoself(), "closed", @primnum)) '
-            "removeprim(geoself(), @primnum, 1);"
-        )
-
-        convert_node.setFirstInput(py_node)
-        divide_node.setFirstInput(convert_node)
-        wrangler_node.setFirstInput(divide_node)
-        out_node.setFirstInput(wrangler_node)
-
-        return sopnet
-
-    def remove_tesselator(self):
-        """Tear down the previously created tesselator network"""
-        if self.tesselator is None:
-            return
-        self.tesselator.destroyCachedUserData("gdp")
-        self.tesselator.destroy()
-        self.tesselator = None
-        return
-
 
 # Module global to hold the overall state of the export
 scene_state = PBRTState()
