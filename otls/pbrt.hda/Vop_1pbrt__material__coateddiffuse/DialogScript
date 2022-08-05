@@ -148,13 +148,5 @@
             range   { 0 10 }
             parmtag { "script_callback_language" "python" }
         }
-        parm {
-            name    "twosided"
-            label   "Two Sided"
-            type    toggle
-            default { "1" }
-            parmtag { "script_callback_language" "python" }
-        }
     }
-
 }
