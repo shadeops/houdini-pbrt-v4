@@ -36,16 +36,6 @@ class PBRTState(object):
     and destory them on exit.
     """
 
-    # TODO replace the cachedUserData workflow with a hou.Geometry parm
-    _tesslate_py = """
-node = hou.pwd()
-geo = node.geometry()
-geo.clear()
-gdp = hou.node('..').cachedUserData('gdp')
-if gdp is not None:
-    geo.merge(gdp)
-"""
-
     def __init__(self):
         self.shading_nodes = set()
         self.invalid_shading_nodes = set()
