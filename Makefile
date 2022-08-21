@@ -8,7 +8,7 @@ tests:
 
 .PHONY: coverage
 coverage:
-	hython $(COVERAGE) run --branch --source=soho/python2.7 tests/tests.py
+	hython `which $(COVERAGE)` run --branch --source=soho/python3.7 tests/tests.py
 	$(COVERAGE) html
 
 .PHONY: lint
@@ -16,12 +16,13 @@ lint:
 	$(BLACK) soho/python2.7/*.py
 	$(BLACK) soho/python3.7/*.py
 	$(BLACK) tests/tests.py
-	$(LINTER) --max-line-length=88 soho/python2.7/*.py
-	$(LINTER) --max-line-length=88 tests/tests.py
+	$(LINTER) soho/python3.7/*.py
+	$(LINTER) tests/tests.py
 
 .PHONY: clean
 clean:
 	/bin/rm -fv ./soho/python2.7/*.pyc
+	/bin/rm -fv ./soho/python3.7/*.pyc
 	/bin/rm -fvr ./package
 	/bin/rm -fvr ./tests/tmp
 
