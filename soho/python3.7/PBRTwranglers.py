@@ -405,10 +405,11 @@ def wrangle_options(obj, wrangler, now):
         "msereferenceimage": SohoPBRT("msereferenceimage", "string", [""], True),
         "msereferenceout": SohoPBRT("msereferenceout", "string", [""], True),
         # NOTE:
-        # The PBRT default is "cameraworld" but this can cause instancing interpolation issues
-        # For now we'll use the PBRT default and expect the user to switch to world, but depending
-        # on the resolution of https://github.com/mmp/pbrt-v4/issues/206 we may need to default
-        # this to "world"
+        # The PBRT default is "cameraworld" but this can cause instancing interpolation
+        # issues. For now we'll use the PBRT default and expect the user to switch to
+        # world, but depending on the resolution of
+        # https://github.com/mmp/pbrt-v4/issues/206
+        # we may need to default this to "world"
         "rendercoordsys": SohoPBRT("rendercoordsys", "string", ["cameraworld"], True),
         "seed": SohoPBRT("seed", "integer", [0], True),
         "displacementedgescale": SohoPBRT(
@@ -619,7 +620,7 @@ def _to_light_scale(parms):
     """Converts light_intensity, light_exposure to a single scale value"""
     intensity = parms["light_intensity"].Value[0]
     exposure = parms["light_exposure"].Value[0]
-    scale = intensity * (2.0 ** exposure)
+    scale = intensity * (2.0**exposure)
     return PBRTParam("float", "scale", [scale])
 
 

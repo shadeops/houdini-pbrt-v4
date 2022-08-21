@@ -748,7 +748,7 @@ def mesh_wrangler(gdp, paramset=None, properties=None):
     if "pbrt_computeN" in properties:
         computeN = properties["pbrt_computeN"].Value[0]
 
-    output_geo = OutputGeo(gdp, computeN)
+    out_geo = OutputGeo(gdp, computeN)
 
     # There are various conditions which must be met in order to save a ply file
     geofile_mode = properties["pbrt_allow_geofiles"].Value[0]
@@ -759,12 +759,12 @@ def mesh_wrangler(gdp, paramset=None, properties=None):
         False
         if (
             geofile_mode == 1
-            and output_geo.num_prims <= properties["pbrt_geofile_threshold"].Value[0]
+            and out_geo.num_prims <= properties["pbrt_geofile_threshold"].Value[0]
         )
         else True
     )
     # If the geometry uses an S attribute which ply does not support we can't use it
-    save_ply &= False if output_geo.has_S else True
+    save_ply &= False if out_geo.has_S else True
 
     if save_ply:
         shape = "plymesh"
@@ -774,11 +774,11 @@ def mesh_wrangler(gdp, paramset=None, properties=None):
             "ply",
             properties[".time_dependent"],
         )
-        output_geo.save_ply(save_locations.save_path)
+        out_geo.save_ply(save_locations.save_path)
         wrangler_paramset = ParamSet()
         wrangler_paramset.add(PBRTParam("string", "filename", save_locations.pbrt_path))
     else:
-        wrangler_paramset = output_geo.mesh_params()
+        wrangler_paramset = out_geo.mesh_params()
 
     mesh_paramset.update(wrangler_paramset)
     api.Shape(shape, mesh_paramset)
@@ -846,8 +846,8 @@ def patch_wrangler(gdp, paramset=None, properties=None):
         for emission_file, emission_gdp in patch_gdps.iteritems():
             prim_paramset = ParamSet(paramset)
 
-            output_geo = OutputGeo(emission_gdp, computeN, is_patchmesh=True)
-            wrangler_paramset = output_geo.mesh_params()
+            out_geo = OutputGeo(emission_gdp, computeN, is_patchmesh=True)
+            wrangler_paramset = out_geo.mesh_params()
 
             # pbrt-v4 does not support emissionfilename if there are uvs
             if emission_file and PBRTParam("point2", "uv") not in wrangler_paramset:
@@ -1129,7 +1129,7 @@ def vdb_wrangler(gdp, paramset=None, properties=None):
 
         extra_attribs = [
             ("float", "Lescale"),
-            ("float", "temperatureoffet"),
+            ("float", "temperatureoffset"),
             ("float", "temperaturescale"),
             ("rgb", "sigma_a"),
             ("rgb", "sigma_s"),
@@ -1562,7 +1562,7 @@ def build_uniform_grid_list(sop_path, gdp):
         is_one_sigma = is_one_sigma_s or is_one_sigma_a
 
         if (
-            ## density and Lescale
+            # density and Lescale
             medium_counts["density"] == 1
             and medium_counts["Lescale"] <= 1
             and medium_counts["temperature"] <= 1

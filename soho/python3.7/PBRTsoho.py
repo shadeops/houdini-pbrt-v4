@@ -1,7 +1,4 @@
-from contextlib import contextmanager
-
 import soho
-import sohoglue
 
 from PBRTnodes import PBRTParam
 
@@ -18,12 +15,3 @@ class SohoPBRT(soho.SohoParm):
             pbrt_type = to_pbrt_type.get(self.Type, self.Type)
         pbrt_name = self.Key
         return PBRTParam(pbrt_type, pbrt_name, self.Value)
-
-
-# This is a replacement for soho.PropertyOverride
-@contextmanager
-def soho_override_block(options):
-    """Context for overriding properties"""
-    sohoglue.pushOverrides(options)
-    yield
-    sohoglue.popOverrides()

@@ -200,7 +200,7 @@ def wrangle_fast_instances(obj, times):
 
         xform = geo.value(pt_attrib_map["geo:pointxform"], pt)
 
-        ## Optimizaiton Start
+        # Optimizaiton Start
 
         # The following is an optimization due to this being a hot section of the code
         # Avoiding the overhead of the various api.* calls and their handling of of
@@ -259,5 +259,5 @@ def wrangle_fast_instances(obj, times):
         #        api.ActiveTransform("All")
         #    api.ObjectInstance(instance_geo)
 
-        ## Optimizaiton End
+        # Optimizaiton End
     return

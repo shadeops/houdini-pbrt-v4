@@ -10,6 +10,7 @@ import soho
 
 # Baseline Support is Houdini 18.0
 
+
 @contextlib.contextmanager
 def temporary_file(suffix=None):
     """Creates a temporary file that is cleaned up on exiting the context
@@ -17,7 +18,7 @@ def temporary_file(suffix=None):
     This wraps NamedTemporaryFile as we need another process to read and write
     to the file.
 
-  """
+    """
     try:
         f_handle = tempfile.NamedTemporaryFile(suffix=suffix, delete=False)
         file_name = f_handle.name
@@ -206,6 +207,7 @@ class PBRTState(object):
         blast_verb.execute(gdp, [gdp])
 
         return gdp
+
 
 # Module global to hold the overall state of the export
 scene_state = PBRTState()
