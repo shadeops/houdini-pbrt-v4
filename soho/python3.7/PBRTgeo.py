@@ -192,12 +192,12 @@ def sphere_wrangler(gdp, paramset=None, properties=None):
 def point_wrangler(gdp, paramset=None, properties=None):
 
     P_vals = array.array("f")
-    P_vals.fromstring(gdp.pointFloatAttribValuesAsString("P"))
+    P_vals.frombytes(gdp.pointFloatAttribValuesAsString("P"))
 
     P_close_atr = gdp.findPointAttrib("__pbrt_P_close")
     if P_close_atr is not None:
         P_close_vals = array.array("f")
-        P_close_vals.fromstring(gdp.pointFloatAttribValuesAsString(P_close_atr.name()))
+        P_close_vals.frombytes(gdp.pointFloatAttribValuesAsString(P_close_atr.name()))
     else:
         P_close_vals = None
 
@@ -1844,7 +1844,13 @@ def smoke_prim_wrangler(grids, paramset=None, properties=None):
         smoke_paramset.add(PBRTParam("point", "p1", [1, 1, 1]))
 
         if grid.gridtype == "uniformgrid":
-            extra_attribs = [("rgb", "Le"), ("rgb", "sigma_a"), ("rgb", "sigma_s")]
+            extra_attribs = [
+                ("rgb", "Le"),
+                ("rgb", "sigma_a"),
+                ("rgb", "sigma_s"),
+                ("float", "temperatureoffset"),
+                ("float", "temperaturescale"),
+            ]
         else:
             extra_attribs = [("float", "Lescale")]
         medium_prim_overrides = medium_prim_paramset(

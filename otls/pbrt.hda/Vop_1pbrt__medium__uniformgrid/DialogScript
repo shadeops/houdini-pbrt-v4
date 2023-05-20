@@ -66,6 +66,20 @@
         help    "The phase function asymmetry parameter."
         range   { -1 1 }
     }
+    parm {
+        name    "temperatureoffset"
+        label   "Temperature Offset"
+        type    float
+        default { "0" }
+        range   { 0 10 }
+    }
+    parm {
+        name    "temperaturescale"
+        label   "Temperature Scale"
+        type    float
+        default { "1" }
+        range   { 0 10 }
+    }
     groupsimple {
         name    "derived"
         label   "Parameters Derived From Volume Prims"

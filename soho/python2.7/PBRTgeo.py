@@ -1846,7 +1846,13 @@ def smoke_prim_wrangler(grids, paramset=None, properties=None):
         smoke_paramset.add(PBRTParam("point", "p1", [1, 1, 1]))
 
         if grid.gridtype == "uniformgrid":
-            extra_attribs = [("rgb", "Le"), ("rgb", "sigma_a"), ("rgb", "sigma_s")]
+            extra_attribs = [
+                ("rgb", "Le"),
+                ("rgb", "sigma_a"),
+                ("rgb", "sigma_s"),
+                ("float", "temperatureoffset"),
+                ("float", "temperaturescale"),
+            ]
         else:
             extra_attribs = [("float", "Lescale")]
         medium_prim_overrides = medium_prim_paramset(

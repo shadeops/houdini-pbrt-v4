@@ -620,7 +620,7 @@ def _to_light_scale(parms):
     """Converts light_intensity, light_exposure to a single scale value"""
     intensity = parms["light_intensity"].Value[0]
     exposure = parms["light_exposure"].Value[0]
-    scale = intensity * (2.0**exposure)
+    scale = intensity * (2.0 ** exposure)
     return PBRTParam("float", "scale", [scale])
 
 
