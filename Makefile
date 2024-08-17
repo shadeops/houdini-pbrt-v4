@@ -34,6 +34,8 @@ package:
 	hotl -C otls/pbrt.hda package/houdini-pbrt-v4/otls/pbrt.hda
 	cp -av soho package/houdini-pbrt-v4/
 	cp -av package/houdini-pbrt-v4/soho/python3.7 package/houdini-pbrt-v4/soho/python3.9
+	cp -av package/houdini-pbrt-v4/soho/python3.7 package/houdini-pbrt-v4/soho/python3.10
+	cp -av package/houdini-pbrt-v4/soho/python3.7 package/houdini-pbrt-v4/soho/python3.11
 	cp -av vop package/houdini-pbrt-v4/
 	cp -av houdini-pbrt-v4.json package/
 	cd package; zip -r houdini-pbrt-v4.zip \
