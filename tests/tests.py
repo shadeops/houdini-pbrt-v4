@@ -1236,11 +1236,13 @@ class TestShapes(TestRoot):
         self.compare_scene()
 
     def test_disk(self):
-        self.geo.createNode("circle")
+        disk = self.geo.createNode("circle")
+        disk.parm("reverse").set(False)
         self.compare_scene()
 
     def test_disk_xformed(self):
         disk = self.geo.createNode("circle")
+        disk.parm("reverse").set(False)
         disk.parmTuple("rad").set([1.5, 0.75])
         disk.parmTuple("t").set([1, 2, 3])
         disk.parm("ry").set(15)
@@ -1249,6 +1251,7 @@ class TestShapes(TestRoot):
 
     def test_disk_attribs(self):
         disk = self.geo.createNode("circle")
+        disk.parm("reverse").set(False)
         wrangler = self.geo.createNode("attribwrangle")
         wrangler.parm("class").set("primitive")
         wrangler.parm("snippet").set("@innerradius=0.25;\n" "@phimax=180;\n")
@@ -1258,6 +1261,7 @@ class TestShapes(TestRoot):
 
     def test_disk_many(self):
         disk = self.geo.createNode("circle")
+        disk.parm("reverse").set(False)
         disk.parm("scale").set(0.1)
         copy = self.geo.createNode("copyxform")
         copy.parm("ncy").set(5)
@@ -1267,7 +1271,8 @@ class TestShapes(TestRoot):
         self.compare_scene()
 
     def test_disk_alpha(self):
-        self.geo.createNode("circle")
+        disk = self.geo.createNode("circle")
+        disk.parm("reverse").set(False)
         self.add_alpha_texture()
         self.compare_scene()
 
