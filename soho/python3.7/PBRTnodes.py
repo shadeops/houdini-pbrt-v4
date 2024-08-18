@@ -380,7 +380,9 @@ class BaseNode(object):
             if self.node.coshaderNodes(parm_name):
                 # Instead of adding checks for this multiple
                 # times, check once and then continue
-                parms[parm_name] = parm_tup
+                if not parm_tup.isHidden():
+                    # If hidden, then wrong signature
+                    parms[parm_name] = parm_tup
                 continue
 
             if parm_tup.isDisabled() or parm_tup.isHidden():

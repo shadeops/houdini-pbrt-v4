@@ -929,7 +929,7 @@ class TestMediums(TestRoot):
 
     def test_exterior_cam_interior_obj(self):
         # TODO / NOTE:
-        # I don't believe this test is givign the expected results
+        # I don't believe this test is giving the expected results
         # as there is no mediums attached to the lights.
         # This is a lack of understanding on how pbrt-v4 works and
         # will require some experiments
@@ -1045,6 +1045,30 @@ class TestMaterials(TestRoot):
         checks.parm("dimension").set(3)
         checks.parm("texture_space").set(space.path())
         matte.setNamedInput("reflectance", checks, "output")
+        self.geo.parm("shop_materialpath").set(matte.path())
+        self.compare_scene()
+
+    def test_texture_mixing_material(self):
+        space = hou.node("/obj").createNode("null")
+        space.parmTuple("t").set([1, 2, 3])
+        space.parmTuple("s").set([5, 10, 20])
+        matte = hou.node("/mat").createNode("pbrt_material_diffuse")
+        checks_float = hou.node("/mat").createNode("pbrt_texture_checkerboard")
+        checks_spectrum = hou.node("/mat").createNode("pbrt_texture_checkerboard")
+        mix_float = hou.node("/mat").createNode("pbrt_texture_mix")
+        mix_spectrum = hou.node("/mat").createNode("pbrt_texture_mix")
+        checks_float.parm("signature").set("default")
+        checks_float.parm("dimension").set(2)
+        mix_float.parm("signature").set("default")
+        mix_float.parm("amount").set(0.4)
+        checks_spectrum.parm("signature").set("s")
+        checks_spectrum.parm("dimension").set(2)
+        mix_spectrum.parm("signature").set("s")
+        mix_spectrum.parm("amount").set(0.4)
+        mix_float.setNamedInput("tex1", checks_float, "output")
+        mix_spectrum.setNamedInput("tex1", checks_spectrum, "output")
+        mix_spectrum.setNamedInput("amount", mix_float, "output")
+        matte.setNamedInput("reflectance", mix_spectrum, "output")
         self.geo.parm("shop_materialpath").set(matte.path())
         self.compare_scene()
 
